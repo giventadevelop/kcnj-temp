@@ -57,6 +57,11 @@ export default async function EditTenantSettingsPage({ params }: PageProps) {
     error = err instanceof Error ? err.message : 'Failed to load settings';
   }
 
+  const organizationName =
+    settings?.tenantOrganization?.organizationName?.trim() ||
+    organizations.find((org) => org.tenantId === settings?.tenantId)?.organizationName?.trim() ||
+    '—';
+
 
 
   if (error) {
@@ -191,6 +196,26 @@ export default async function EditTenantSettingsPage({ params }: PageProps) {
         <p className="mt-2 text-sm text-gray-600">
           Update tenant configuration settings
         </p>
+        {settings && (
+          <dl className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+            <div>
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                Tenant ID
+              </dt>
+              <dd className="mt-1 text-sm font-semibold text-gray-900 break-all">
+                {settings.tenantId || '—'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                Organization
+              </dt>
+              <dd className="mt-1 text-sm font-semibold text-gray-900">
+                {organizationName}
+              </dd>
+            </div>
+          </dl>
+        )}
       </div>
 
       {/* Tip about upload features */}
