@@ -56,9 +56,9 @@ export default function HomePageClient({
   const [hasCheckedRedirect, setHasCheckedRedirect] = useState(false);
 
   useEffect(() => {
-    document.body.classList.add('modernist-home');
+    document.body.classList.add('modernist-home', 'organic-home');
     return () => {
-      document.body.classList.remove('modernist-home');
+      document.body.classList.remove('modernist-home', 'organic-home');
     };
   }, []);
 

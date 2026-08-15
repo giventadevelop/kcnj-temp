@@ -22,8 +22,8 @@ import type { EventDetailsDTO } from '@/types';
 
 /** Bundled poster when no event/tenant hero slides are available. */
 const DEFAULT_HERO_IMAGE = '/images/modernist/mcefee/kathakali_hero.png';
-/** Transparent brand mark — left overlay on hero (no opaque plate). */
-const HERO_LOGO = '/images/logos/Mcefee/mcefee_logo_black_border_transparent.png';
+/** Transparent brand mark — Organic left hero panel. */
+const HERO_LOGO = '/images/KCNJ/logo_latest-transparent.png';
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const CROSSFADE_MS = 420;
 
@@ -328,108 +328,113 @@ export default function ModernistPosterHero() {
   };
 
   return (
-    <section
-      className="mh-poster-hero"
-      aria-label="Homepage hero"
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => setShowControls(false)}
-      onTouchStart={bumpControls}
-    >
-      <figure className="mh-poster-hero-media">
-        <Image
-          key={current.url + String(index)}
-          src={current.url}
-          alt={current.overlayTitle || 'MCEFEE cultural hero'}
-          fill
-          priority
-          sizes="100vw"
-          className={`mh-poster-hero-img${fadeIn ? ' is-visible' : ''}`}
-          /* Desktop cover is CSS default; mobile overrides to contain via modernist-homepage.css */
-          style={{ objectPosition: 'center top' }}
-        />
-      </figure>
-      <div className="mh-poster-hero-scrim" aria-hidden />
+    <section className="mh-poster-hero" aria-label="Homepage hero">
+      <div className="mh-poster-hero-orb mh-poster-hero-orb--accent" aria-hidden />
+      <div className="mh-poster-hero-orb mh-poster-hero-orb--olive" aria-hidden />
 
-      <div className="mh-poster-hero-logo">
-        <Link href="/" title="MCEFEE home" aria-label="MCEFEE home" className="mh-poster-hero-logo-link">
-          <Image
-            src={HERO_LOGO}
-            alt="MCEFEE"
-            width={900}
-            height={900}
-            className="mh-poster-hero-logo-img"
-            priority
-          />
-        </Link>
-      </div>
+      <div className="mh-poster-hero-inner">
+        <div className="mh-poster-hero-panels">
+          <div className="mh-poster-hero-logo-panel">
+            <Link href="/" title="KCNJ Home" aria-label="KCNJ Home" className="mh-poster-hero-logo-link">
+              <Image
+                src={HERO_LOGO}
+                alt="KCNJ"
+                width={900}
+                height={900}
+                className="mh-poster-hero-logo-img"
+                priority
+              />
+            </Link>
+          </div>
 
-      <div className="mh-poster-hero-content">
-        <div className="mh-cta-row">
-          <Link href={eventHref} className="mh-btn mh-btn-primary">
-            {current.eventId != null ? 'View event' : 'Browse all events'}
+          <div
+            className="mh-poster-hero-slide-panel"
+            onMouseEnter={() => setShowControls(true)}
+            onMouseLeave={() => setShowControls(false)}
+            onTouchStart={bumpControls}
+          >
+            <figure className="mh-poster-hero-media">
+              <Image
+                key={current.url + String(index)}
+                src={current.url}
+                alt={current.overlayTitle || 'MCEFEE cultural hero'}
+                fill
+                priority
+                sizes="(min-width: 1024px) 60vw, 100vw"
+                className={`mh-poster-hero-img${fadeIn ? ' is-visible' : ''}`}
+                style={{ objectPosition: 'center center' }}
+              />
+            </figure>
+
+            {overlayInfo && (
+              <div className="mh-poster-hero-ticket-overlay">
+                <Link
+                  href={overlayInfo.href}
+                  className="block cursor-pointer hover:scale-105 transition-transform duration-300"
+                  onClick={(e) => e.stopPropagation()}
+                  title={overlayInfo.alt}
+                  aria-label={overlayInfo.alt}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- CTA asset sized per hero_section_image_rotation.mdc */}
+                  <img
+                    src={overlayInfo.image}
+                    alt={overlayInfo.alt}
+                    className="object-contain w-[150px] h-[52px] sm:w-[200px] sm:h-[70px]"
+                  />
+                </Link>
+              </div>
+            )}
+
+            {hasMultiple && showControls && (
+              <div className="mh-poster-hero-controls" aria-label="Hero slideshow controls">
+                <button
+                  type="button"
+                  className="mh-poster-hero-control"
+                  title="Previous Image"
+                  aria-label="Previous Image"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    goPrev();
+                  }}
+                >
+                  <ChevronLeft size={22} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className="mh-poster-hero-control"
+                  title={isPaused ? 'Play' : 'Pause'}
+                  aria-label={isPaused ? 'Play' : 'Pause'}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsPaused((p) => !p);
+                  }}
+                >
+                  {isPaused ? <Play size={20} aria-hidden /> : <Pause size={20} aria-hidden />}
+                </button>
+                <button
+                  type="button"
+                  className="mh-poster-hero-control"
+                  title="Next Image"
+                  aria-label="Next Image"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    goNext();
+                  }}
+                >
+                  <ChevronRight size={22} aria-hidden />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mh-poster-hero-browse">
+          <Link href={eventHref} className="mh-btn mh-btn-secondary">
+            {current.eventId != null ? 'View event' : 'Browse all upcoming events'}
+            <ChevronRight size={17} aria-hidden />
           </Link>
         </div>
       </div>
-
-      {overlayInfo && (
-        <div className="mh-poster-hero-ticket-overlay">
-          <Link
-            href={overlayInfo.href}
-            className="block cursor-pointer hover:scale-105 transition-transform duration-300"
-            onClick={(e) => e.stopPropagation()}
-            title={overlayInfo.alt}
-            aria-label={overlayInfo.alt}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- CTA asset sized per hero_section_image_rotation.mdc */}
-            <img
-              src={overlayInfo.image}
-              alt={overlayInfo.alt}
-              className="object-contain w-[150px] h-[52px] sm:w-[200px] sm:h-[70px]"
-            />
-          </Link>
-        </div>
-      )}
-
-      {hasMultiple && showControls && (
-        <div className="mh-poster-hero-controls" aria-label="Hero slideshow controls">
-          <button
-            type="button"
-            className="mh-poster-hero-control"
-            title="Previous Image"
-            aria-label="Previous Image"
-            onClick={(e) => {
-              e.preventDefault();
-              goPrev();
-            }}
-          >
-            <ChevronLeft size={22} aria-hidden />
-          </button>
-          <button
-            type="button"
-            className="mh-poster-hero-control"
-            title={isPaused ? 'Play' : 'Pause'}
-            aria-label={isPaused ? 'Play' : 'Pause'}
-            onClick={(e) => {
-              e.preventDefault();
-              setIsPaused((p) => !p);
-            }}
-          >
-            {isPaused ? <Play size={20} aria-hidden /> : <Pause size={20} aria-hidden />}
-          </button>
-          <button
-            type="button"
-            className="mh-poster-hero-control"
-            title="Next Image"
-            aria-label="Next Image"
-            onClick={(e) => {
-              e.preventDefault();
-              goNext();
-            }}
-          >
-            <ChevronRight size={22} aria-hidden />
-          </button>
-        </div>
-      )}
     </section>
   );
 }

@@ -700,6 +700,7 @@ function SponsorForm({ formData, setFormData, onSubmit, loading, submitText, onL
   };
 
   const sponsorTypes = [
+    'Title Sponsor',
     'Platinum',
     'Gold',
     'Silver',

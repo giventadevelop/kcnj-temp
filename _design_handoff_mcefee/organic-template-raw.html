@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="d5aaf00c-85ee-4c2c-a99c-c334b5e92665"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>/* Organic — design-system tokens and component classes. This file is the source of truth for the system's look; retune it here and see readme.md. */
+/* latin-ext */
+@font-face {
+  font-family: 'Caprasimo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("26393cf7-367c-479d-a985-08efd9624e04") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Caprasimo';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("15bc5b77-7ef1-4d3b-9682-17a2ba38b09c") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("8499ad19-eba2-4746-bdb7-9efc5e6db2dd") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("2ab986f9-5d91-4b18-bc53-669ae4fd115f") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("8499ad19-eba2-4746-bdb7-9efc5e6db2dd") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("2ab986f9-5d91-4b18-bc53-669ae4fd115f") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("8499ad19-eba2-4746-bdb7-9efc5e6db2dd") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("2ab986f9-5d91-4b18-bc53-669ae4fd115f") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+
+:root {
+  --color-bg: #f5ead8;
+  --color-surface: #ebddc5;
+  --color-text: #201e1d;
+  --color-accent: #c67139;
+  --color-accent-2: #7a8a5e;
+  --color-divider: color-mix(in srgb, #201e1d 16%, transparent);
+
+  /* Tonal ramps — generated in OKLCH on one shared lightness scale, so the
+     same step of any role matches the others in visual value. */
+  --color-neutral-100: #f9f4ed;
+  --color-neutral-200: #eee7db;
+  --color-neutral-300: #dcd3c4;
+  --color-neutral-400: #c0b6a5;
+  --color-neutral-500: #a19786;
+  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;
+  --color-neutral-800: #474238;
+  --color-neutral-900: #2e2b25;
+
+  --color-accent-100: #fff2eb;
+  --color-accent-200: #ffe1d0;
+  --color-accent-300: #ffc6a5;
+  --color-accent-400: #f6a06b;
+  --color-accent-500: #d67f48;
+  --color-accent-600: #b2622d;
+  --color-accent-700: #8c491a;
+  --color-accent-800: #643312;
+  --color-accent-900: #402310;
+
+  --color-accent-2-100: #f0fae1;
+  --color-accent-2-200: #e1eecc;
+  --color-accent-2-300: #ccdbb2;
+  --color-accent-2-400: #aebf92;
+  --color-accent-2-500: #8fa073;
+  --color-accent-2-600: #728157;
+  --color-accent-2-700: #56633f;
+  --color-accent-2-800: #3d472b;
+  --color-accent-2-900: #272e1b;
+
+  --font-heading: "Caprasimo", system-ui, sans-serif;
+  --font-heading-weight: 400;
+  --font-body: "Figtree", system-ui, sans-serif;
+
+  --space-1: 4.4px;
+  --space-2: 8.8px;
+  --space-3: 13.2px;
+  --space-4: 17.6px;
+  --space-6: 26.4px;
+  --space-8: 35.2px;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+
+  /* Elevation — derived from the ground: soft ink-tinted shadows on a
+     light theme, a hairline edge + ambient darkness on a dark one. */
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: var(--font-heading-weight); }
+
+.washed{filter:saturate(0.6) contrast(0.85) brightness(1.1) opacity(0.94)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Components — built with the tokens above. Plain CSS
+   on plain HTML: no JavaScript, no build step. Each class is documented in
+   readme.md and demonstrated in foundations/ and components/.
+   ══════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-size: 15px; line-height: 1.55; font-weight: 400; }
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 var(--space-2);
+}
+h1 { font-size: 42px; }
+h2 { font-size: 32px; }
+h3 { font-size: 25px; }
+h4 { font-size: 20px; }
+h5 { font-size: 16px; }
+h6 { font-size: 13px; }
+h6 { letter-spacing: 0.08em; text-transform: uppercase; }
+p { margin: 0 0 var(--space-3); }
+a { color: var(--color-accent); text-underline-offset: 3px; }
+img { display: block; max-width: 100%; }
+figure { margin: 0; }
+figcaption {
+  font-size: 11px; margin-top: var(--space-1);
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+.text-muted { color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+::selection { background: color-mix(in srgb, var(--color-accent) 30%, transparent); }
+
+/* — rules — */
+.hr {
+  height: 1px; border: 0; margin: var(--space-4) 0;
+  background: var(--color-divider);
+}
+
+/* — buttons — */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; text-decoration: none;
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 14px; line-height: 1.2; color: var(--color-text); /* matches the .input's 14px —
+     the pair sits side by side in sign-up rows */
+  background: transparent; border: 1px solid transparent;
+  padding: var(--space-2) calc(var(--space-3) * 1.2);
+  border-radius: var(--radius-md);
+}
+.btn svg { display: block; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { background: var(--color-accent); color: var(--color-bg); }
+.btn-primary:hover { background: var(--color-accent-600); }
+.btn-primary:active { background: var(--color-accent-700); }
+.btn-secondary { border-color: var(--color-divider); }
+.btn-secondary:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+.btn-secondary:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
+.btn-ghost { color: var(--color-accent); padding-inline: var(--space-1); }
+.btn-ghost:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.btn-ghost:active { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
+.btn-icon { width: 36px; height: 36px; padding: 0; }
+.btn-block { width: 100%; margin-top: var(--space-2); }
+
+/* — forms — */
+.field > label {
+  display: block; font-size: 12px; margin-bottom: 5px;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+}
+.input {
+  width: 100%; min-height: 36px; padding: 6px 10px; font: inherit;
+  font-size: 14px; color: var(--color-text); caret-color: var(--color-accent);
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+}
+.input:hover { border-color: color-mix(in srgb, var(--color-text) 45%, transparent); }
+.input:focus-visible { border-color: var(--color-accent); outline-offset: 0; }
+textarea.input { min-height: 90px; resize: vertical; }
+.radio { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+.radio input, .seg-opt input {
+  position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+}
+.radio .dot {
+  width: 16px; height: 16px; flex: none; border-radius: 50%;
+  border: 1.5px solid var(--color-divider);
+}
+.radio:hover .dot { border-color: var(--color-accent); }
+.radio input:checked + .dot {
+  border-color: var(--color-accent); background: var(--color-accent);
+  box-shadow: inset 0 0 0 4px var(--color-bg);
+}
+.radio input:focus-visible + .dot { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.seg {
+  display: inline-flex; overflow: hidden;
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+}
+.seg-opt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; font-size: 13px; cursor: pointer;
+}
+.seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
+.seg-opt:has(input:checked) { background: var(--color-accent); color: var(--color-bg); }
+.seg-opt:not(:has(input:checked)):hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+.seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+
+/* — cards — */
+.card {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-surface);
+}
+.card-kicker { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent); }
+.card-title {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 17px; line-height: 1.2;
+}
+.card-body { margin: 0; font-size: 13px; opacity: 0.8; flex: 1; }
+.card-meta {
+  display: flex; align-items: center; gap: 6px; font-size: 11px;
+  color: color-mix(in srgb, var(--color-text) 50%, transparent);
+}
+.elev-sm { box-shadow: var(--shadow-sm); }
+.elev-md { box-shadow: var(--shadow-md); }
+.elev-lg { box-shadow: var(--shadow-lg); }
+
+/* — tags — */
+.tag {
+  display: inline-flex; align-items: center; font-size: 11px;
+  letter-spacing: 0.02em; padding: 3px 10px;
+  border-radius: calc(var(--radius-md) * 0.75);
+}
+.tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
+.tag-accent-2 { background: var(--color-accent-2-100); color: var(--color-accent-2-800); }
+.tag-neutral { background: var(--color-neutral-100); color: var(--color-neutral-800); }
+.tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent); }
+
+/* — navigation — */
+.nav {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: none;
+}
+.nav-brand {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 18px; margin-right: auto;
+}
+.nav a { color: inherit; text-decoration: none; font-size: 14px; }
+.nav a:hover, .nav a[aria-current='page'] { color: var(--color-accent); }
+
+/* — tables — */
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+  padding: var(--space-2); border-bottom: 1px solid var(--color-divider);
+}
+.table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-text) 8%, transparent);
+}
+.table tbody tr:hover { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
+
+/* — dialog — */
+.dialog-backdrop {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+}
+.dialog {
+  width: min(440px, 100%); display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--space-4); border-radius: var(--radius-lg);
+  background: var(--color-surface); box-shadow: var(--shadow-lg);
+}
+.dialog-title {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 20px;
+}
+.dialog-body { font-size: 14px; opacity: 0.85; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+
+/* — rounded frame: everything softens, small controls go pill — */
+.card, .dialog { border-radius: calc(var(--radius-lg) * 1.15); }
+.btn, .tag, .seg, .input { border-radius: 999px; }
+.input { padding-inline: 14px; }
+
+</style>
+<script src="4ee2089e-2b73-4a87-b60c-f5b63c1bfcbb"></script>
+<style>
+  body { margin: 0; background: #f5ead8; text-wrap: pretty; -webkit-font-smoothing: antialiased; }
+  a { color: var(--color-accent-700); text-decoration: none; }
+  a:hover { color: var(--color-accent-600); }
+  @keyframes orgKenBurns { from { transform: scale(1); } to { transform: scale(1.09); } }
+</style>
+</helmet>
+
+<div style="position:relative;width:100%;overflow-x:hidden;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);font-size:16px;line-height:1.6">
+
+  <header data-screen-label="Header" ref="{{ headerRef }}" style="{{ headerStyle }}">
+    <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px)">
+      <div style="display:flex;flex-wrap:nowrap;align-items:center;gap:clamp(10px,2vw,24px);min-height:84px;padding:12px 0">
+
+        <a href="#top" aria-label="MCEFEE home" style="display:flex;align-items:center;flex:0 0 auto">
+          <img src="e3e89ca2-058e-49b0-a9a4-8263b4edac9c" alt="MCEFEE" style="height:52px;width:auto;object-fit:contain">
+        </a>
+
+        <nav aria-label="Main navigation" style="display:flex;flex-wrap:wrap;align-items:center;gap:2px;flex:1 1 auto;min-width:0;margin-right:auto">
+          <a href="#top" aria-current="page" style="padding:8px 14px;border-radius:999px;font-size:15px;font-weight:600;color:var(--color-accent-800);background:var(--color-accent-200);white-space:nowrap">Home</a>
+          <a href="#about-us" style="padding:8px 14px;border-radius:999px;font-size:15px;font-weight:600;color:var(--color-text);white-space:nowrap" style-hover="background:var(--color-neutral-200)">About</a>
+          <a href="#upcoming" style="padding:8px 14px;border-radius:999px;font-size:15px;font-weight:600;color:var(--color-text);white-space:nowrap" style-hover="background:var(--color-neutral-200)">Events</a>
+
+          <div style="position:relative" sc-camel-on-mouse-enter="{{ openFeatures }}" sc-camel-on-mouse-leave="{{ closeFeatures }}">
+            <button type="button" sc-camel-on-click="{{ toggleFeatures }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:0;border-radius:999px;background:transparent;font-family:var(--font-body);font-size:15px;font-weight:600;color:var(--color-text);cursor:pointer;white-space:nowrap" style-hover="background:var(--color-neutral-200)">
+              <span>Features</span>
+              <svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+            </button>
+            <div style="{{ featuresMenuStyle }}">
+              <sc-for list="{{ featureItems }}" as="fi" hint-placeholder-count="7">
+                <a href="#top" style="display:block;padding:9px 16px;border-radius:999px;font-size:14px;font-weight:600;color:var(--color-text)" style-hover="background:var(--color-accent-200);color:var(--color-accent-800)">{{ fi.name }}</a>
+              </sc-for>
+            </div>
+          </div>
+
+          <a href="#top" style="padding:8px 14px;border-radius:999px;font-size:15px;font-weight:600;color:var(--color-text);white-space:nowrap" style-hover="background:var(--color-neutral-200)">Calendar</a>
+          <a href="#top" style="padding:8px 14px;border-radius:999px;font-size:15px;font-weight:600;color:var(--color-text);white-space:nowrap" style-hover="background:var(--color-neutral-200)">Gallery</a>
+          <a href="#contact" style="padding:8px 14px;border-radius:999px;font-size:15px;font-weight:600;color:var(--color-text);white-space:nowrap" style-hover="background:var(--color-neutral-200)">Contact</a>
+        </nav>
+
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:0 0 auto;margin-left:auto">
+          <a href="#top" style="padding:8px 14px;border-radius:999px;font-size:15px;font-weight:600;color:var(--color-text);white-space:nowrap" style-hover="background:var(--color-neutral-200)">Sign In</a>
+          <a href="#top" class="btn btn-primary" style="padding:10px 20px;font-size:15px;white-space:nowrap">Sign up</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top" ref="{{ mainRef }}" style="width:100%;padding-top:84px">
+
+    <section data-screen-label="Hero" aria-label="Homepage hero" style="position:relative;overflow:hidden;padding:clamp(32px,5vw,64px) 0 clamp(40px,6vw,72px)">
+      <div aria-hidden="true" style="position:absolute;top:-180px;right:-160px;width:520px;height:520px;border-radius:999px;background:var(--color-accent-200);opacity:0.55;pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;bottom:-220px;left:-180px;width:460px;height:460px;border-radius:999px;background:var(--color-accent-2-200);opacity:0.5;pointer-events:none"></div>
+
+      <div style="position:relative;max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px);display:flex;flex-direction:column;gap:clamp(20px,3vw,32px)">
+
+        <div style="display:flex;flex-wrap:wrap;gap:clamp(16px,2.5vw,28px);align-items:stretch">
+
+          <div style="position:relative;flex:1 1 260px;min-height:clamp(280px,38vw,460px);border-radius:var(--radius-lg);overflow:hidden;background:var(--color-surface);box-shadow:var(--shadow-md)">
+            <img class="washed" src="936b7509-dd28-4cb2-bcc6-96a391a777e5" alt="MCEFEE" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;transition:transform 0.8s ease-out" style-hover="transform:scale(1.03)">
+          </div>
+
+          <div style="flex:2 1 420px;min-width:260px;min-height:clamp(280px,38vw,460px);position:relative;border-radius:var(--radius-lg);overflow:hidden;background:var(--color-neutral-300);box-shadow:var(--shadow-lg)" sc-camel-on-mouse-enter="{{ heroHoverOn }}" sc-camel-on-mouse-leave="{{ heroHoverOff }}">
+            <div style="{{ slideAStyle }}"><img class="washed" src="{{ slideASrc }}" alt="Featured Event" style="{{ slideAImgStyle }}"></div>
+            <div style="{{ slideBStyle }}"><img class="washed" src="{{ slideBSrc }}" alt="Featured Event" style="{{ slideBImgStyle }}"></div>
+
+            <div style="{{ heroControlsStyle }}">
+              <button type="button" sc-camel-on-click="{{ goPrev }}" title="Previous Image" aria-label="Previous Image" style="pointer-events:auto;width:48px;height:48px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--color-bg);color:var(--color-accent-700);border:0;box-shadow:var(--shadow-md);cursor:pointer;transition:transform 0.25s ease" style-hover="transform:scale(1.08);background:var(--color-accent-200)">
+                <svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+              </button>
+              <div style="display:flex;gap:12px;pointer-events:auto">
+                <button type="button" sc-camel-on-click="{{ togglePlay }}" title="{{ playTitle }}" aria-label="{{ playTitle }}" style="width:48px;height:48px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--color-bg);color:var(--color-accent-700);border:0;box-shadow:var(--shadow-md);cursor:pointer;transition:transform 0.25s ease" style-hover="transform:scale(1.08);background:var(--color-accent-200)">
+                  <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="{{ playIconPath }}"></path></svg>
+                </button>
+              </div>
+              <button type="button" sc-camel-on-click="{{ goNext }}" title="Next Image" aria-label="Next Image" style="pointer-events:auto;width:48px;height:48px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--color-bg);color:var(--color-accent-700);border:0;box-shadow:var(--shadow-md);cursor:pointer;transition:transform 0.25s ease" style-hover="transform:scale(1.08);background:var(--color-accent-200)">
+                <svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:clamp(16px,3vw,32px);padding:14px clamp(16px,2vw,24px);border-radius:999px;background:var(--color-surface);box-shadow:var(--shadow-sm)">
+          <a href="#about-us" title="About our mission" aria-label="Our mission — about us" style="display:flex;align-items:center;gap:16px;color:var(--color-text)">
+            <span style="display:block;height:56px;width:240px;max-width:52vw;flex-shrink:0;border-radius:999px;overflow:hidden;background:#fff;box-shadow:var(--shadow-sm)">
+              <img src="f182e324-12ff-4505-81e1-93506c7db4d8" alt="Unite India" style="width:100%;height:100%;object-fit:contain;transition:transform 0.6s ease-out" style-hover="transform:scale(1.03)">
+            </span>
+            <span style="font-family:var(--font-heading);font-size:20px;white-space:nowrap">Our Mission</span>
+          </a>
+          <button type="button" class="btn btn-primary" style="padding:12px 24px;font-size:16px">
+            <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+            <span>Donate Now</span>
+          </button>
+        </div>
+
+        <div>
+          <a href="#upcoming" class="btn btn-secondary" style="padding:12px 22px;font-size:15px;background:var(--color-bg)">
+            <span>Browse all upcoming events</span>
+            <svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"></path></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <sc-if value="{{ showLive }}" hint-placeholder-val="{{ true }}">
+      <section data-screen-label="Live events" style="padding:clamp(16px,3vw,32px) 0">
+        <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px);display:flex;flex-direction:column;gap:24px">
+          <sc-for list="{{ liveEvents }}" as="ev" hint-placeholder-count="1">
+            <div style="display:flex;flex-wrap:wrap;border-radius:calc(var(--radius-lg) * 1.15);overflow:hidden;background:var(--color-surface);box-shadow:var(--shadow-md)">
+              <div style="position:relative;flex:2 1 340px;min-height:260px">
+                <img class="washed" src="{{ ev.image }}" alt="{{ ev.title }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+                <span class="tag" style="position:absolute;top:18px;left:18px;gap:7px;padding:6px 14px;background:var(--color-accent);color:var(--color-bg);font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">
+                  <span aria-hidden="true" style="width:8px;height:8px;border-radius:999px;background:var(--color-bg)"></span>Live now
+                </span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:16px;padding:clamp(20px,3vw,32px);flex:1 1 300px;min-width:0">
+                <h3 style="margin:0;font-size:24px;line-height:1.15">{{ ev.title }}</h3>
+                <div style="display:flex;flex-direction:column;gap:10px;font-size:15px">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="4"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                    <span>{{ ev.date }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-2-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                    <span>{{ ev.time }}</span>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;gap:10px;min-width:0">
+                    <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-neutral-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span>{{ ev.location }}</span>
+                  </div>
+                </div>
+                <a href="#top" class="btn btn-secondary" style="margin-top:auto;align-self:flex-start;padding:11px 22px;font-size:15px">View event</a>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-if>
+
+    <section data-screen-label="Featured events" style="padding:clamp(40px,6vw,80px) 0">
+      <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px);display:flex;flex-direction:column;gap:clamp(28px,4vw,44px)">
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:44ch">
+          <span class="tag {{ toneClass }}" style="align-self:flex-start;padding:5px 14px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">Featured</span>
+          <h2 style="margin:0;font-size:clamp(32px,4.4vw,52px);line-height:1.06">Featured Events</h2>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:clamp(20px,3vw,32px)">
+          <sc-for list="{{ featuredEvents }}" as="ev" hint-placeholder-count="2">
+            <div style="display:flex;flex-wrap:wrap;border-radius:calc(var(--radius-lg) * 1.15);overflow:hidden;background:var(--color-surface);box-shadow:var(--shadow-sm);transition:box-shadow 0.35s ease,transform 0.35s ease" style-hover="box-shadow:var(--shadow-lg);transform:translateY(-4px)">
+              <div style="position:relative;flex:2 1 340px;min-height:280px">
+                <img class="washed" src="{{ ev.image }}" alt="{{ ev.title }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+                <span class="tag" style="position:absolute;top:18px;left:18px;gap:7px;padding:6px 14px;background:var(--color-bg);color:var(--color-accent-800);font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">
+                  <svg width="13" height="13" sc-camel-view-box="0 0 24 24" fill="var(--color-accent)" aria-hidden="true"><path d="m12 2 2.9 6.3 6.9.8-5 4.8 1.3 6.8L12 17.5 5.9 20.7l1.3-6.8-5-4.8 6.9-.8z"></path></svg>
+                  Featured event
+                </span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:16px;padding:clamp(20px,3vw,32px);flex:1 1 300px;min-width:0">
+                <h3 style="margin:0;font-size:24px;line-height:1.15">{{ ev.title }}</h3>
+                <div style="display:flex;flex-direction:column;gap:10px;font-size:15px">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="4"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                    <span>{{ ev.date }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-2-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                    <span>{{ ev.time }}</span>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;gap:10px;min-width:0">
+                    <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-neutral-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span>{{ ev.location }}</span>
+                  </div>
+                </div>
+                <div style="margin-top:auto;display:flex;flex-wrap:wrap;gap:10px">
+                  <a href="#top" class="btn btn-primary" style="padding:11px 22px;font-size:15px">View details</a>
+                  <a href="#top" class="btn btn-secondary" style="padding:11px 22px;font-size:15px">
+                    <svg width="16" height="16" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="4"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                    Add to calendar
+                  </a>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section data-screen-label="What we do" style="padding:clamp(40px,6vw,80px) 0;background:var(--color-neutral-100)">
+      <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px);display:flex;flex-direction:column;gap:clamp(28px,4vw,48px)">
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:22ch">
+          <span class="tag {{ toneClass }}" style="align-self:flex-start;padding:5px 14px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">What we do</span>
+          <h2 style="margin:0;font-size:clamp(32px,4.4vw,52px);line-height:1.06">Cultural Workshops and Educational Events</h2>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(18px,2.5vw,28px)">
+          <sc-for list="{{ services }}" as="s" hint-placeholder-count="4">
+            <div style="display:flex;align-items:flex-start;gap:20px;padding:clamp(20px,2.5vw,28px);border-radius:calc(var(--radius-lg) * 1.15);background:var(--color-bg);box-shadow:var(--shadow-sm);transition:box-shadow 0.35s ease,transform 0.35s ease" style-hover="box-shadow:var(--shadow-md);transform:translateY(-3px)">
+              <span style="display:flex;width:60px;height:60px;flex-shrink:0;align-items:center;justify-content:center;border-radius:999px;background:{{ s.iconBg }}">
+                <svg width="26" height="26" sc-camel-view-box="0 0 24 24" fill="none" stroke="{{ s.iconColor }}" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ s.iconPath }}"></path></svg>
+              </span>
+              <div style="min-width:0">
+                <h3 style="margin:0 0 8px;font-size:21px;line-height:1.2">{{ s.title }}</h3>
+                <p style="margin:0;font-size:15px;line-height:1.6;color:var(--color-neutral-800)">{{ s.description }}</p>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div>
+          <span class="tag tag-accent-2" style="gap:10px;padding:12px 22px;font-size:15px">
+            <svg width="19" height="19" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
+            <span>Join our cultural community and preserve Kerala's rich heritage</span>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <section id="about-us" data-screen-label="About" style="padding:clamp(48px,7vw,96px) 0">
+      <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px);display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(28px,5vw,64px);align-items:start">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <span class="tag {{ toneClass }}" style="align-self:flex-start;padding:5px 14px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">About foundation</span>
+          <h2 style="margin:0;font-size:clamp(34px,5vw,64px);line-height:1.04">Preserve and promote the rich cultural heritage of Kerala</h2>
+        </div>
+        <p style="margin:0;font-size:17px;line-height:1.75;color:var(--color-neutral-800);max-width:60ch">The Unite India Corporation Foundation for Education and Events is a vibrant, community-driven organization based in New Jersey, USA, dedicated to reviving real Malayali culture, empowering the next generation through education, and offering a nostalgic sense of home to our community. Our mission is to preserve and promote the rich cultural heritage of Kerala while fostering a deeper connection among Malayalis in the USA, creating a sense of belonging and unity.</p>
+      </div>
+    </section>
+
+    <section id="upcoming" data-screen-label="Upcoming events" style="padding:clamp(40px,6vw,80px) 0;background:var(--color-neutral-100)">
+      <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px);display:flex;flex-direction:column;gap:clamp(28px,4vw,44px)">
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:52ch">
+          <span class="tag {{ toneClass }}" style="align-self:flex-start;padding:5px 14px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">Events</span>
+          <h2 style="margin:0;font-size:clamp(32px,4.4vw,52px);line-height:1.06">Upcoming Events</h2>
+          <p style="margin:0;font-size:17px;line-height:1.7;color:var(--color-neutral-800)">Join us for our upcoming cultural celebrations and community events (showing up to 6 events)</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(18px,2.5vw,28px);align-items:stretch">
+          <sc-for list="{{ upcomingEvents }}" as="ev" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;height:100%;border-radius:calc(var(--radius-lg) * 1.15);overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-sm);transition:box-shadow 0.35s ease,transform 0.35s ease" style-hover="box-shadow:var(--shadow-lg);transform:translateY(-4px)">
+              <div style="position:relative;width:100%;height:200px;overflow:hidden;flex-shrink:0">
+                <img class="washed" src="{{ ev.image }}" alt="{{ ev.title }}" style="width:100%;height:100%;object-fit:cover;transition:transform 0.5s ease" style-hover="transform:scale(1.05)">
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px;padding:clamp(18px,2.5vw,26px);flex:1 1 auto">
+                <div>
+                  <h3 style="margin:0 0 4px;font-size:22px;line-height:1.18">{{ ev.title }}</h3>
+                  <p style="margin:0;font-size:14px;color:var(--color-neutral-700)">{{ ev.caption }}</p>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:9px;font-size:15px">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="4"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg>
+                    <span>{{ ev.date }}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-2-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                    <span>{{ ev.time }}</span>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;gap:10px;min-width:0">
+                    <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-neutral-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:3px" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                    <span>{{ ev.location }}</span>
+                  </div>
+                </div>
+                <div style="margin-top:auto;display:flex;gap:10px;align-items:center">
+                  <a href="#top" class="btn btn-primary" style="flex:1 1 auto;padding:12px 20px;font-size:15px">{{ ev.cta }}</a>
+                  <a href="#top" class="btn btn-secondary btn-icon" aria-label="Add to calendar" style="width:46px;height:46px;flex:0 0 auto">
+                    <svg width="19" height="19" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="4"></rect><path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4"></path></svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div>
+          <a href="#top" title="View All Events" class="btn btn-secondary" style="padding:12px 22px;font-size:15px;background:var(--color-bg)">
+            <span>View All Events</span>
+            <svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="team-section" data-screen-label="Team" style="padding:clamp(48px,7vw,96px) 0">
+      <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px);display:flex;flex-direction:column;gap:clamp(28px,4vw,48px)">
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:46ch">
+          <span class="tag {{ toneClass }}" style="align-self:flex-start;padding:5px 14px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">Our team</span>
+          <h2 style="margin:0;font-size:clamp(34px,5vw,60px);line-height:1.04">Meet our amazing team</h2>
+          <p style="margin:0;font-size:17px;line-height:1.7;color:var(--color-neutral-800)">Dedicated professionals working together to make a positive impact in our communities.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(20px,3vw,32px)">
+          <sc-for list="{{ teamMembers }}" as="m" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;border-radius:calc(var(--radius-lg) * 1.15);overflow:hidden;background:var(--color-surface);box-shadow:var(--shadow-sm);transition:transform 0.45s ease,box-shadow 0.45s ease" style-hover="transform:translateY(-10px);box-shadow:var(--shadow-lg)">
+              <div style="height:8px;background:{{ m.bar }}"></div>
+              <div style="padding:18px 18px 0">
+                <div style="position:relative;height:340px;border-radius:var(--radius-lg);overflow:hidden;background:var(--color-neutral-300)">
+                  <img class="washed" src="{{ m.image }}" alt="{{ m.name }}" style="width:100%;height:100%;object-fit:cover;object-position:center top;transition:transform 0.7s ease-out" style-hover="transform:scale(1.05)">
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:20px 24px 24px;flex:1 1 auto">
+                <h3 style="margin:0;font-size:24px;line-height:1.15">{{ m.name }}</h3>
+                <span class="tag tag-accent" style="align-self:flex-start;padding:5px 14px;font-size:13px;font-weight:600">{{ m.title }}</span>
+                <p style="margin:0;font-size:14px;color:var(--color-neutral-700)">{{ m.designation }}</p>
+                <p style="margin:0;font-size:15px;line-height:1.55;color:var(--color-neutral-800)">{{ m.bio }}</p>
+                <p style="margin:0;font-size:13px;line-height:1.5;color:var(--color-neutral-700)"><span style="font-weight:700;letter-spacing:0.08em;text-transform:uppercase">Expertise:</span> {{ m.expertise }}</p>
+                <div style="margin-top:auto;padding-top:14px;border-top:1px solid var(--color-divider)">
+                  <a href="mailto:Contactus@mcefee.org" style="display:flex;align-items:center;gap:9px;font-size:14px;color:var(--color-neutral-700)" style-hover="color:var(--color-accent-700)">
+                    <svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="4"></rect><path d="m22 7-10 6L2 7"></path></svg>
+                    <span>{{ m.email }}</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section data-screen-label="Sponsors" style="padding:clamp(40px,6vw,80px) 0;background:var(--color-neutral-100)">
+      <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px);display:flex;flex-direction:column;gap:clamp(28px,4vw,44px)">
+        <div style="display:flex;flex-direction:column;gap:14px;max-width:54ch">
+          <span class="tag {{ toneClass }}" style="align-self:flex-start;padding:5px 14px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">Sponsors</span>
+          <h2 style="margin:0;font-size:clamp(32px,4.4vw,52px);line-height:1.06">Our Sponsors</h2>
+          <p style="margin:0;font-size:17px;line-height:1.7;color:var(--color-neutral-800)">Grateful for the support of our amazing sponsors who make our events and community initiatives possible</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(18px,2.5vw,28px);align-items:stretch">
+          <sc-for list="{{ sponsors }}" as="sp" hint-placeholder-count="2">
+            <div style="display:flex;flex-direction:column;height:100%;border-radius:calc(var(--radius-lg) * 1.15);overflow:hidden;background:var(--color-bg);box-shadow:var(--shadow-sm);cursor:pointer;transition:box-shadow 0.35s ease,transform 0.35s ease" style-hover="box-shadow:var(--shadow-lg);transform:translateY(-4px)">
+              <div style="height:160px;width:100%;overflow:hidden;background:#fff;flex-shrink:0">
+                <img class="washed" src="{{ sp.image }}" alt="{{ sp.name }}" style="width:100%;height:100%;object-fit:cover">
+              </div>
+              <div style="display:flex;gap:18px;padding:clamp(18px,2.5vw,26px);flex:1 1 auto">
+                <div style="flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px">
+                  <h3 style="margin:0;font-size:21px;line-height:1.2">{{ sp.name }}</h3>
+                  <span class="tag tag-accent-2" style="align-self:flex-start;padding:4px 12px;font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">{{ sp.tier }}</span>
+                  <p style="margin:0;font-size:15px;line-height:1.6;color:var(--color-neutral-800)">{{ sp.description }}</p>
+                </div>
+                <span class="btn btn-secondary" style="align-self:flex-start;flex-shrink:0;padding:9px 16px;font-size:14px">
+                  Visit
+                  <svg width="15" height="15" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M17 7H8M17 7v9"></path></svg>
+                </span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div>
+          <a href="#top" title="See All Sponsors" class="btn btn-secondary" style="padding:12px 22px;font-size:15px;background:var(--color-bg)">
+            <span>See All Sponsors</span>
+            <svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" data-screen-label="Contact" style="padding:clamp(48px,7vw,96px) 0">
+      <div style="max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,56px);display:flex;flex-direction:column;gap:clamp(28px,4vw,48px)">
+        <div style="display:flex;flex-direction:column;gap:16px;max-width:66ch">
+          <span class="tag {{ toneClass }}" style="align-self:flex-start;padding:5px 14px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700">Contact</span>
+          <h2 style="margin:0;font-size:clamp(34px,5vw,60px);line-height:1.04">Get in Touch</h2>
+          <p style="margin:0;font-size:17px;line-height:1.75;color:var(--color-neutral-800)">Connect with us to learn more about our community initiatives and how you can get involved in preserving and promoting Malayali culture across the United States. Join us in fostering cultural exchange and building stronger connections within our diverse communities.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(18px,2.5vw,28px)">
+          <div style="display:flex;align-items:flex-start;gap:20px;padding:clamp(20px,2.5vw,28px);border-radius:calc(var(--radius-lg) * 1.15);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+            <span style="display:flex;width:56px;height:56px;flex-shrink:0;align-items:center;justify-content:center;border-radius:999px;background:var(--color-accent-200)">
+              <svg width="24" height="24" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            </span>
+            <div>
+              <h3 style="margin:0 0 8px;font-size:21px">Location</h3>
+              <p style="margin:0;font-size:16px;line-height:1.6;color:var(--color-neutral-800)">MCEFEE<br>New Jersey, USA</p>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:20px;padding:clamp(20px,2.5vw,28px);border-radius:calc(var(--radius-lg) * 1.15);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+            <span style="display:flex;width:56px;height:56px;flex-shrink:0;align-items:center;justify-content:center;border-radius:999px;background:var(--color-accent-2-200)">
+              <svg width="24" height="24" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-2-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.9.36 1.78.7 2.61a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.47-1.27a2 2 0 0 1 2.11-.45c.83.34 1.71.57 2.61.7A2 2 0 0 1 22 16.92Z"></path></svg>
+            </span>
+            <div>
+              <h3 style="margin:0 0 8px;font-size:21px">Phone</h3>
+              <p style="margin:0;font-size:16px;line-height:1.6"><a href="tel:+19085168781" style="text-decoration:underline">(908) 516-8781</a></p>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:20px;padding:clamp(20px,2.5vw,28px);border-radius:calc(var(--radius-lg) * 1.15);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+            <span style="display:flex;width:56px;height:56px;flex-shrink:0;align-items:center;justify-content:center;border-radius:999px;background:var(--color-accent-200)">
+              <svg width="24" height="24" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="4"></rect><path d="m22 7-10 6L2 7"></path></svg>
+            </span>
+            <div style="min-width:0">
+              <h3 style="margin:0 0 8px;font-size:21px">Email</h3>
+              <p style="margin:0;font-size:16px;line-height:1.6;word-break:break-word"><a href="mailto:Contactus@mcefee.org" style="text-decoration:underline">Contactus@mcefee.org</a></p>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:flex-start;gap:20px;padding:clamp(20px,2.5vw,28px);border-radius:calc(var(--radius-lg) * 1.15);background:var(--color-surface);box-shadow:var(--shadow-sm)">
+            <span style="display:flex;width:56px;height:56px;flex-shrink:0;align-items:center;justify-content:center;border-radius:999px;background:var(--color-accent-2-200)">
+              <svg width="24" height="24" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-2-700)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"></path></svg>
+            </span>
+            <div style="min-width:0">
+              <h3 style="margin:0 0 12px;font-size:21px">Social Media</h3>
+              <div style="display:flex;flex-wrap:wrap;gap:10px">
+                <a href="#top" title="Follow us on Facebook" aria-label="Follow us on Facebook" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;background:var(--color-bg);color:var(--color-accent-700);transition:transform 0.25s ease" style-hover="transform:scale(1.1);background:var(--color-accent-200)">
+                  <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                </a>
+                <a href="#top" title="Follow us on Instagram" aria-label="Follow us on Instagram" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;background:var(--color-bg);color:var(--color-accent-700);transition:transform 0.25s ease" style-hover="transform:scale(1.1);background:var(--color-accent-200)">
+                  <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><path d="M17.5 6.5h.01"></path></svg>
+                </a>
+                <a href="#top" title="Follow us on X (Twitter)" aria-label="Follow us on X (Twitter)" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;background:var(--color-bg);color:var(--color-accent-700);transition:transform 0.25s ease" style-hover="transform:scale(1.1);background:var(--color-accent-200)">
+                  <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg>
+                </a>
+                <a href="#top" title="Subscribe to our YouTube channel" aria-label="Subscribe to our YouTube channel" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;background:var(--color-bg);color:var(--color-accent-700);transition:transform 0.25s ease" style-hover="transform:scale(1.1);background:var(--color-accent-200)">
+                  <svg width="20" height="20" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33Z"></path><path d="m9.75 15.02 5.75-3.27-5.75-3.27v6.54Z"></path></svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="tag tag-accent" style="gap:10px;padding:12px 22px;font-size:15px">
+            <svg width="19" height="19" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"></path></svg>
+            <span>Ready to connect? Reach out and join our vibrant community</span>
+          </span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer data-screen-label="Footer" role="contentinfo" style="background:var(--color-neutral-900);color:var(--color-neutral-300)">
+    <div style="max-width:1280px;margin:0 auto;padding:clamp(40px,6vw,72px) clamp(16px,4vw,56px) clamp(28px,4vw,48px);display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:clamp(28px,4vw,48px)">
+
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <a href="#top" style="display:inline-block">
+          <img src="e3e89ca2-058e-49b0-a9a4-8263b4edac9c" alt="MCEFEE" style="height:52px;width:auto">
+        </a>
+        <p style="margin:0;font-size:15px;line-height:1.65;color:var(--color-neutral-400)">Making a difference in communities worldwide through compassionate action and sustainable impact.</p>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <p style="margin:0;font-size:15px;font-weight:600;color:var(--color-neutral-100)">Follow our journey</p>
+          <ul style="display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0">
+            <li><a href="#top" aria-label="Follow us on Facebook" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;background:var(--color-neutral-800);color:var(--color-neutral-300);transition:all 0.25s ease" style-hover="background:var(--color-accent);color:var(--color-neutral-900);transform:scale(1.1)"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a></li>
+            <li><a href="#top" aria-label="Follow us on Instagram" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;background:var(--color-neutral-800);color:var(--color-neutral-300);transition:all 0.25s ease" style-hover="background:var(--color-accent);color:var(--color-neutral-900);transform:scale(1.1)"><svg width="19" height="19" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><path d="M17.5 6.5h.01"></path></svg></a></li>
+            <li><a href="#top" aria-label="Follow us on X (Twitter)" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;background:var(--color-neutral-800);color:var(--color-neutral-300);transition:all 0.25s ease" style-hover="background:var(--color-accent);color:var(--color-neutral-900);transform:scale(1.1)"><svg width="17" height="17" sc-camel-view-box="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg></a></li>
+            <li><a href="#top" aria-label="Connect with us on LinkedIn" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;background:var(--color-neutral-800);color:var(--color-neutral-300);transition:all 0.25s ease" style-hover="background:var(--color-accent);color:var(--color-neutral-900);transform:scale(1.1)"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a></li>
+            <li><a href="#top" aria-label="Subscribe to our YouTube channel" style="display:flex;width:44px;height:44px;align-items:center;justify-content:center;border-radius:999px;background:var(--color-neutral-800);color:var(--color-neutral-300);transition:all 0.25s ease" style-hover="background:var(--color-accent);color:var(--color-neutral-900);transform:scale(1.1)"><svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.42 8.6.42 8.6.42s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33Z"></path><path d="m9.75 15.02 5.75-3.27-5.75-3.27v6.54Z"></path></svg></a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <h6 style="margin:0;font-family:var(--font-heading);font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-neutral-100)">Get in Touch</h6>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-400)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="margin-top:4px;flex-shrink:0" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <p style="margin:0;font-size:15px;line-height:1.65;color:var(--color-neutral-400);white-space:pre-wrap">MCEFEE
+Malayali Cultural Exchange Foundation for Education and Events
+New Jersey, USA</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-400)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.9.36 1.78.7 2.61a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.47-1.27a2 2 0 0 1 2.11-.45c.83.34 1.71.57 2.61.7A2 2 0 0 1 22 16.92Z"></path></svg>
+            <a href="tel:+19085168781" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-neutral-100)">(908) 516-8781</a>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;min-width:0">
+            <svg width="18" height="18" sc-camel-view-box="0 0 24 24" fill="none" stroke="var(--color-accent-400)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="4"></rect><path d="m22 7-10 6L2 7"></path></svg>
+            <a href="mailto:Contactus@mcefee.org" style="font-size:15px;color:var(--color-accent-400);word-break:break-word" style-hover="color:var(--color-accent-300)">Contactus@mcefee.org</a>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <h6 style="margin:0;font-family:var(--font-heading);font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-neutral-100)">Quick Links</h6>
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+          <li><a href="#top" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-neutral-100)">Home</a></li>
+          <li><a href="#about-us" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-neutral-100)">About Us</a></li>
+          <li><a href="#top" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-neutral-100)">Our Causes</a></li>
+          <li><a href="#upcoming" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-neutral-100)">Events</a></li>
+          <li><a href="#contact" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-neutral-100)">Contact</a></li>
+        </ul>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <h6 style="margin:0;font-family:var(--font-heading);font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-neutral-100)">Ways to Help</h6>
+        <ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
+          <li><a href="#top" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-accent-400)">Make a Donation</a></li>
+          <li><a href="#top" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-accent-400)">Become a Volunteer</a></li>
+          <li><a href="#top" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-accent-400)">Start a Fundraiser</a></li>
+          <li><a href="#top" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-accent-400)">Corporate Sponsorship</a></li>
+          <li><a href="#top" style="font-size:15px;color:var(--color-neutral-300)" style-hover="color:var(--color-accent-400)">Newsletter Signup</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--color-neutral-800)">
+      <div style="max-width:1280px;margin:0 auto;padding:24px clamp(16px,4vw,56px);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px">
+        <p style="margin:0;font-size:14px;color:var(--color-neutral-400)">© 2024 <a href="#top" style="color:var(--color-neutral-100)" style-hover="color:var(--color-accent-400)">Malayalees US Charity Organization</a>. All rights reserved. Making hope happen.</p>
+        <nav style="display:flex;flex-wrap:wrap;align-items:center;gap:24px">
+          <a href="#top" style="font-size:14px;color:var(--color-neutral-400)" style-hover="color:var(--color-neutral-100)">Privacy Policy</a>
+          <a href="#top" style="font-size:14px;color:var(--color-neutral-400)" style-hover="color:var(--color-neutral-100)">Terms of Service</a>
+          <a href="#top" style="font-size:14px;color:var(--color-neutral-400)" style-hover="color:var(--color-neutral-100)">Accessibility</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <button type="button" sc-camel-on-click="{{ scrollTop }}" aria-label="Back to top" style="{{ backToTopStyle }}">
+    <svg width="22" height="22" sc-camel-view-box="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"></path></svg>
+  </button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440},&quot;showLiveEvent&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Content&quot;},&quot;sectionTagTone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Sage&quot;,&quot;Terracotta&quot;],&quot;default&quot;:&quot;Sage&quot;,&quot;tsType&quot;:&quot;'Sage' | 'Terracotta'&quot;,&quot;section&quot;:&quot;Content&quot;},&quot;heroRotateSeconds&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:8,&quot;min&quot;:3,&quot;max&quot;:20,&quot;step&quot;:1,&quot;unit&quot;:&quot;s&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Hero&quot;}}">
+const RES = (typeof window !== 'undefined' && window.__resources) || {};
+const ASSET = {
+  spark: RES.spark || "assets/web/spark_kerala_2026_wide.jpg",
+  veena: RES.veena || "assets/web/veena_concert_2026_wide.jpg",
+  cloud1: RES.cloud1 || "assets/mcefee/hero_cloud_1.webp",
+  cloud2: RES.cloud2 || "assets/mcefee/hero_cloud_2.webp",
+  cloud3: RES.cloud3 || "assets/mcefee/hero_cloud_3.webp",
+  cause1: RES.cause1 || "assets/mcefee/cause_1.jpg",
+  cause2: RES.cause2 || "assets/mcefee/cause_2.jpg",
+  cause3: RES.cause3 || "assets/mcefee/cause_3.jpg",
+  team1: RES.team1 || "assets/mcefee/team_1.jpg",
+  team2: RES.team2 || "assets/mcefee/team_2.jpg",
+  team3: RES.team3 || "assets/mcefee/team_3.jpg",
+  team4: RES.team4 || "assets/mcefee/team_4.jpg"
+};
+const CROSSFADE_MS = 420;
+const HERO_IMAGES = [
+  ASSET.spark,
+  ASSET.veena,
+  ASSET.cloud1,
+  ASSET.cloud2,
+  ASSET.cloud3
+];
+
+class Component extends DCLogic {
+  state = {
+    scrolled: false,
+    featuresOpen: false,
+    slideA: 0, slideB: 1, showA: true,
+    paused: false,
+    heroHover: false,
+    showBackToTop: false
+  };
+
+  headerRef = React.createRef();
+  mainRef = React.createRef();
+
+  syncHeaderOffset = () => {
+    if (this.offsetRaf) return;
+    this.offsetRaf = requestAnimationFrame(() => {
+      this.offsetRaf = 0;
+      const h = this.headerRef.current;
+      const m = this.mainRef.current;
+      if (!h || !m) return;
+      const next = Math.ceil(h.getBoundingClientRect().height);
+      if (next !== this.lastOffset) {
+        this.lastOffset = next;
+        m.style.paddingTop = next + 'px';
+      }
+    });
+  };
+
+  componentDidMount() {
+    this.syncHeaderOffset();
+    if (typeof ResizeObserver !== 'undefined' && this.headerRef.current) {
+      this.headerObserver = new ResizeObserver(this.syncHeaderOffset);
+      this.headerObserver.observe(this.headerRef.current);
+    }
+    window.addEventListener('resize', this.syncHeaderOffset);
+    this.scheduleRotate();
+    this.onScroll = () => {
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      this.setState({ scrolled: y > 24, showBackToTop: y > 300 });
+    };
+    window.addEventListener('scroll', this.onScroll, { passive: true });
+  }
+
+  componentWillUnmount() {
+    if (this.headerObserver) this.headerObserver.disconnect();
+    if (this.offsetRaf) cancelAnimationFrame(this.offsetRaf);
+    window.removeEventListener('resize', this.syncHeaderOffset);
+    window.removeEventListener('scroll', this.onScroll);
+    clearTimeout(this.rotateTimer);
+  }
+
+  rotateMs() {
+    const s = Number(this.props.heroRotateSeconds);
+    return (isFinite(s) && s > 0 ? s : 8) * 1000;
+  }
+
+  scheduleRotate() {
+    clearTimeout(this.rotateTimer);
+    this.rotateTimer = setTimeout(() => {
+      if (!this.state.paused) this.crossfadeTo(this.currentIndex() + 1);
+      this.scheduleRotate();
+    }, this.rotateMs());
+  }
+
+  currentIndex() {
+    return this.state.showA ? this.state.slideA : this.state.slideB;
+  }
+
+  crossfadeTo(next) {
+    const n = HERO_IMAGES.length;
+    const idx = ((next % n) + n) % n;
+    if (this.state.showA) this.setState({ slideB: idx, showA: false });
+    else this.setState({ slideA: idx, showA: true });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const p = this.props;
+    const ms = this.rotateMs();
+    const layer = (visible) => 'position:absolute;inset:0;opacity:' + (visible ? 1 : 0) + ';transition:opacity ' + CROSSFADE_MS + 'ms ease-in-out;overflow:hidden';
+    const img = (active) => 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform-origin:center center;' + (active ? 'animation:orgKenBurns ' + ms + 'ms linear forwards;' : '');
+
+    return {
+      headerRef: this.headerRef,
+      mainRef: this.mainRef,
+      showLive: p.showLiveEvent !== false,
+      toneClass: (p.sectionTagTone === 'Terracotta' ? 'tag-accent' : 'tag-accent-2'),
+
+      headerStyle: 'position:fixed;top:0;left:0;right:0;z-index:50;transition:background 0.35s ease,box-shadow 0.35s ease;'
+        + (s.scrolled
+          ? 'background:color-mix(in srgb, var(--color-bg) 92%, transparent);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);box-shadow:var(--shadow-sm);'
+          : 'background:var(--color-bg);box-shadow:none;'),
+
+      featureItems: [
+        { name: 'Polls' }, { name: 'Focus Groups' }, { name: 'Profile' }, { name: 'Members' },
+        { name: 'Membership' }, { name: 'MOSC' }, { name: 'MOSC_Redesign' }
+      ],
+      featuresMenuStyle: 'position:absolute;top:100%;left:0;margin-top:8px;width:232px;padding:8px;border-radius:var(--radius-lg);background:var(--color-surface);box-shadow:var(--shadow-lg);z-index:60;transition:opacity 0.2s ease,transform 0.2s ease;'
+        + (s.featuresOpen ? 'opacity:1;visibility:visible;transform:translateY(0)' : 'opacity:0;visibility:hidden;transform:translateY(-6px)'),
+      openFeatures: () => this.setState({ featuresOpen: true }),
+      closeFeatures: () => this.setState({ featuresOpen: false }),
+      toggleFeatures: () => this.setState((st) => ({ featuresOpen: !st.featuresOpen })),
+
+      slideASrc: HERO_IMAGES[s.slideA],
+      slideBSrc: HERO_IMAGES[s.slideB],
+      slideAStyle: layer(s.showA),
+      slideBStyle: layer(!s.showA),
+      slideAImgStyle: img(s.showA),
+      slideBImgStyle: img(!s.showA),
+      heroHoverOn: () => this.setState({ heroHover: true }),
+      heroHoverOff: () => this.setState({ heroHover: false }),
+      heroControlsStyle: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(12px,2vw,24px);z-index:20;pointer-events:none;transition:opacity 0.3s ease;opacity:' + (s.heroHover ? 1 : 0),
+      goPrev: () => { this.crossfadeTo(this.currentIndex() - 1); this.scheduleRotate(); },
+      goNext: () => { this.crossfadeTo(this.currentIndex() + 1); this.scheduleRotate(); },
+      togglePlay: () => this.setState((st) => ({ paused: !st.paused })),
+      playTitle: s.paused ? 'Play' : 'Pause',
+      playIconPath: s.paused ? 'M8 5v14l11-7z' : 'M6 5h4v14H6zM14 5h4v14h-4z',
+
+      liveEvents: [
+        { title: 'MCEFEE Spark of Kerala', image: ASSET.spark, date: 'Sun, Aug 24, 2026', time: '05:00 PM', location: 'IKCC Knanaya Community Center, Stony Point, NY' }
+      ],
+
+      featuredEvents: [
+        { title: 'Onam Celebration 2026', image: ASSET.veena, date: 'Mon, Aug 24, 2026', time: '10:00 AM', location: 'New York' },
+        { title: 'MCEFEE Spark of Kerala', image: ASSET.spark, date: 'Fri, Aug 14, 2026', time: '06:30 PM', location: 'Jo Ann Arts Center, East Brunswick, NJ' }
+      ],
+
+      services: [
+        {
+          title: 'Traditional Dance & Music',
+          description: 'Experience the rich heritage of Kerala through dance and music workshops.',
+          iconBg: 'var(--color-accent-2-200)', iconColor: 'var(--color-accent-2-700)',
+          iconPath: 'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'
+        },
+        {
+          title: 'Art & Craft Workshops',
+          description: 'Learn traditional Kerala art forms and crafts through hands-on workshops.',
+          iconBg: 'var(--color-accent-200)', iconColor: 'var(--color-accent-700)',
+          iconPath: 'M7 21a4 4 0 0 1-4-4V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v12a4 4 0 0 1-4 4ZM21 5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v12a4 4 0 0 0 4 4h4a2 2 0 0 0 2-2Z'
+        },
+        {
+          title: 'Kerala Folklore and Tribal Traditions',
+          description: 'Introduce lesser-known folk dances like Theyyam, Padayani, and Poothan Thira.',
+          iconBg: 'var(--color-accent-200)', iconColor: 'var(--color-accent-700)',
+          iconPath: 'M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z'
+        },
+        {
+          title: 'Kerala Cuisine Classes',
+          description: 'Master the art of traditional Kerala cooking with expert chefs.',
+          iconBg: 'var(--color-accent-2-200)', iconColor: 'var(--color-accent-2-700)',
+          iconPath: 'M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7'
+        }
+      ],
+
+      upcomingEvents: [
+        { title: 'Onam Celebration 2026', caption: 'Celebrate this onam with us', image: ASSET.cause1, date: 'Mon, Aug 24, 2026', time: '10:00 AM – 01:00 PM', location: 'New York', cta: 'Register' },
+        { title: 'Cochin Carnival', caption: 'Cochin Carnival is hosted by GCDA', image: ASSET.cause2, date: 'Tue, Jun 9, 2026', time: '10:00 AM – 09:00 PM', location: 'Kochi', cta: 'Donate' },
+        { title: 'Malayalee Association', caption: 'Charity event · Givebutter', image: ASSET.cause3, date: 'Mon, May 4, 2026', time: '02:02 PM – 05:00 PM', location: 'Chicago, IL', cta: 'Donate' },
+        { title: 'Fundraiser Registration Required', caption: 'Fundraiser Registration Required', image: ASSET.veena, date: 'Thu, Mar 26, 2026', time: '12:38 PM – 04:38 PM', location: 'Sydney, AU', cta: 'Register' }
+      ],
+
+      teamMembers: [
+        { name: 'Executive Committee Member', title: 'President', designation: 'MCEFEE Executive Committee', bio: 'Leads MCEFEE\u2019s cultural and educational programming across the North-East US chapters.', expertise: 'Community leadership, Event programming', email: 'Contactus@mcefee.org', image: ASSET.team1, bar: 'var(--color-accent)' },
+        { name: 'Executive Committee Member', title: 'Secretary', designation: 'MCEFEE Executive Committee', bio: 'Coordinates membership, communications and the annual general body meeting.', expertise: 'Operations, Member relations', email: 'Contactus@mcefee.org', image: ASSET.team2, bar: 'var(--color-accent-2)' },
+        { name: 'Executive Committee Member', title: 'Treasurer', designation: 'MCEFEE Executive Committee', bio: 'Oversees fundraising, sponsorships and financial reporting for all chapter events.', expertise: 'Finance, Sponsorship', email: 'Contactus@mcefee.org', image: ASSET.team3, bar: 'var(--color-neutral-500)' }
+      ],
+
+      sponsors: [
+        { name: 'Community Sponsor', tier: 'Platinum sponsor', description: 'Supporting MCEFEE cultural programming across New Jersey and New York.', image: ASSET.team4 },
+        { name: 'Event Partner', tier: 'Gold sponsor', description: 'Partnering on Onam, Spark of Kerala and the annual stage show series.', image: ASSET.cause2 }
+      ],
+
+      backToTopStyle: 'position:fixed;bottom:24px;right:24px;z-index:60;width:56px;height:56px;border:0;border-radius:999px;background:var(--color-accent);color:var(--color-bg);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-lg);cursor:pointer;transition:all 0.3s ease;'
+        + (s.showBackToTop ? 'transform:translateY(0);opacity:1;visibility:visible' : 'transform:translateY(16px);opacity:0;visibility:hidden'),
+      scrollTop: () => window.scrollTo({ top: 0, behavior: 'smooth' })
+    };
+  }
+}
+</script>
+
+
+</body></html>

@@ -10,12 +10,10 @@ import {
   type FeaturedEventWithMedia,
 } from '@/lib/homepage/featuredEvents';
 import { normalizeEventMediasList } from '@/lib/homepage/homepageApiNormalize';
-import { getTenantId } from '@/lib/env';
 import { parseExecutiveCommitteeTeamMembersResponse } from '@/lib/parseExecutiveCommitteeTeamMembersResponse';
 import GivebutterDonateButton from '@/components/GivebutterDonateButton';
 import UpcomingEventsSection from '@/components/UpcomingEventsSection';
 import ModernistPosterHero from '@/components/modernist/ModernistPosterHero';
-import { useTenantSettings } from '@/components/TenantSettingsProvider';
 import { useFilteredEvents } from '@/hooks/useFilteredEvents';
 import { useDeferredFetch } from '@/hooks/usePageReady';
 import '@/styles/modernist-homepage.css';
@@ -344,12 +342,6 @@ export default function ModernistHomePage({
 }: {
   initialFeaturedEvents: FeaturedEventWithMedia[];
 }) {
-  const {
-    showEventsSection,
-    showExecutiveCommitteeSection,
-    showSponsorsSection,
-  } = useTenantSettings();
-
   const [team, setTeam] = useState<ExecutiveCommitteeTeamMemberDTO[]>([]);
   const [sponsors, setSponsors] = useState<EventSponsorsDTO[]>([]);
 
@@ -371,9 +363,9 @@ export default function ModernistHomePage({
     featuredEvent ||
     null;
 
+  // Always load executive team for homepage (shown for now; tenant flags may lag in cache).
   useEffect(() => {
     let cancelled = false;
-    if (showExecutiveCommitteeSection === false) return;
 
     async function loadTeam() {
       try {
@@ -395,17 +387,16 @@ export default function ModernistHomePage({
     return () => {
       cancelled = true;
     };
-  }, [showExecutiveCommitteeSection]);
+  }, []);
 
+  // Always load sponsors for homepage (section is shown at bottom for now).
+  // Proxy injects tenantId — do not add tenantId.equals here.
   useEffect(() => {
     let cancelled = false;
-    if (showSponsorsSection === false) return;
 
     async function loadSponsors() {
       try {
-        const tenantId = getTenantId();
         const params = new URLSearchParams({
-          'tenantId.equals': tenantId,
           'isActive.equals': 'true',
           sort: 'priorityRanking,asc',
           size: '12',
@@ -427,7 +418,7 @@ export default function ModernistHomePage({
     return () => {
       cancelled = true;
     };
-  }, [showSponsorsSection]);
+  }, []);
 
   return (
     <main className="modernist-home">
@@ -462,14 +453,14 @@ export default function ModernistHomePage({
       {/* Featured events — event.isFeaturedEvent checkbox from admin edit */}
       <FeaturedEventsModernist items={featuredItems} />
 
-      {/* Upcoming / recent events — modernist card system (homepage_upcoming_events_section.mdc) */}
-      {showEventsSection !== false && <UpcomingEventsSection variant="modernist" />}
+      {/* Upcoming / recent events — modernist card system (same layout as mcefee) */}
+      <UpcomingEventsSection variant="modernist" />
 
       {/* 1a — What we do (interactive cards) */}
       <WhatWeDoSection />
 
       {/* 1a — About */}
-      <section className="mh-about" aria-label="About the foundation">
+      <section id="about-us" className="mh-about" aria-label="About the foundation">
         <div>
           <span className="mh-eyebrow" style={{ marginBottom: 14 }}>
             About the foundation
@@ -504,9 +495,8 @@ export default function ModernistHomePage({
         </div>
       </section>
 
-      {/* Team — executive committee volunteers (charity-site roster) */}
-      {showExecutiveCommitteeSection !== false && (
-        <section
+      {/* Team — executive committee volunteers (same layout as mcefee; always shown for now) */}
+      <section
           id="team-section"
           className="mh-section"
           aria-label="Team"
@@ -565,116 +555,6 @@ export default function ModernistHomePage({
             </div>
           )}
         </section>
-      )}
-
-      {/* Sponsors — same card layout as upcoming events */}
-      {showSponsorsSection !== false && (
-        <section
-          className="mh-section mh-home-sponsors mh-section-tight-top"
-          aria-label="Sponsors"
-          style={{ paddingBottom: 84 }}
-        >
-          <div
-            className="mh-section-head"
-            style={{
-              paddingTop: 42,
-              borderTop: '2px solid var(--mh-divider)',
-              marginBottom: 12,
-            }}
-          >
-            <span className="mh-eyebrow">Sponsors</span>
-            <Link href="/sponsors" className="mh-link">
-              See all sponsors →
-            </Link>
-          </div>
-          <h2 className="mh-h2 mh-home-events-heading">Our Sponsors</h2>
-          <p className="mh-home-events-lede">
-            Partners who help keep Malayali culture visible — thank you for supporting the calendar.
-          </p>
-
-          {sponsors.length === 0 ? (
-            <p className="mh-empty">Sponsors will appear here when available.</p>
-          ) : (
-            <div className="mh-home-events-grid mh-home-sponsors-grid">
-              {sponsors.map((sp) => {
-                const title = sp.companyName || sp.name;
-                const websiteHref = sponsorWebsiteHref(sp.websiteUrl);
-                const imageSrc =
-                  sp.bannerImageUrl ||
-                  sp.heroImageUrl ||
-                  sp.logoUrl ||
-                  '/images/default event image.png';
-
-                return (
-                  <article key={sp.id ?? sp.name} className="mh-event-card">
-                    <figure className="mh-event-card-media mh-sponsor-card-media">
-                      {/* eslint-disable-next-line @next/next/no-img-element -- sponsor S3/presign URLs */}
-                      <img
-                        src={imageSrc}
-                        alt={title || 'Sponsor'}
-                        className="mh-event-card-media-img"
-                      />
-                      {sp.type ? (
-                        <span className="mh-event-card-badge">{sp.type}</span>
-                      ) : null}
-                    </figure>
-
-                    <div className="mh-event-card-body">
-                      <div className="mh-event-card-meta">
-                        <span className="mh-event-card-date">{sp.type || 'Sponsor'}</span>
-                        {sp.name && sp.companyName ? (
-                          <span className="mh-event-card-admission mh-event-card-admission--default">
-                            {sp.name}
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <h3>{title}</h3>
-
-                      {sp.tagline ? (
-                        <p className="mh-event-card-caption">{sp.tagline}</p>
-                      ) : null}
-
-                      {sp.description ? (
-                        <p className="mh-event-card-desc mh-event-card-desc--clamp">
-                          {sp.description.replace(/<[^>]+>/g, '').trim()}
-                        </p>
-                      ) : null}
-
-                      <div className="mh-event-card-actions">
-                        {typeof sp.id !== 'undefined' && (
-                          <Link
-                            href={`/sponsors/${sp.id}`}
-                            className="mh-btn mh-btn-details"
-                            title={`See details for ${title}`}
-                            aria-label={`See details for ${title}`}
-                          >
-                            <IconSponsorDetails />
-                            See Sponsor Details
-                          </Link>
-                        )}
-                        {websiteHref && (
-                          <a
-                            href={websiteHref}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mh-btn mh-btn-tickets"
-                            title={`Visit ${title}`}
-                            aria-label={`Visit ${title} website`}
-                          >
-                            <IconSponsorVisit />
-                            Visit website
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
 
       {/* 1a — Red CTA close */}
       <section className="mh-close" aria-label="Call to action">
@@ -706,6 +586,113 @@ export default function ModernistHomePage({
             Donate
           </GivebutterDonateButton>
         </div>
+      </section>
+
+      {/* Our Sponsors — same layout as mcefee ModernistHomePage; Organic tokens; bottom of page for now */}
+      <section
+        className="mh-section mh-home-sponsors mh-section-tight-top"
+        aria-label="Sponsors"
+        style={{ paddingBottom: 84 }}
+      >
+        <div
+          className="mh-section-head"
+          style={{
+            paddingTop: 42,
+            borderTop: '2px solid var(--mh-divider)',
+            marginBottom: 12,
+          }}
+        >
+          <span className="mh-eyebrow">Sponsors</span>
+          <Link href="/sponsors" className="mh-link">
+            See all sponsors →
+          </Link>
+        </div>
+        <h2 className="mh-h2 mh-home-events-heading">Our Sponsors</h2>
+        <p className="mh-home-events-lede">
+          Partners who help keep Malayali culture visible — thank you for supporting the calendar.
+        </p>
+
+        {sponsors.length === 0 ? (
+          <p className="mh-empty">Sponsors will appear here when available.</p>
+        ) : (
+          <div className="mh-home-events-grid mh-home-sponsors-grid">
+            {sponsors.map((sp) => {
+              const title = sp.companyName || sp.name;
+              const websiteHref = sponsorWebsiteHref(sp.websiteUrl);
+              const imageSrc =
+                sp.bannerImageUrl ||
+                sp.heroImageUrl ||
+                sp.logoUrl ||
+                '/images/default event image.png';
+
+              return (
+                <article key={sp.id ?? sp.name} className="mh-event-card">
+                  <figure className="mh-event-card-media mh-sponsor-card-media">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- sponsor S3/presign URLs */}
+                    <img
+                      src={imageSrc}
+                      alt={title || 'Sponsor'}
+                      className="mh-event-card-media-img"
+                    />
+                    {sp.type ? (
+                      <span className="mh-event-card-badge">{sp.type}</span>
+                    ) : null}
+                  </figure>
+
+                  <div className="mh-event-card-body">
+                    <div className="mh-event-card-meta">
+                      <span className="mh-event-card-date">{sp.type || 'Sponsor'}</span>
+                      {sp.name && sp.companyName ? (
+                        <span className="mh-event-card-admission mh-event-card-admission--default">
+                          {sp.name}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <h3>{title}</h3>
+
+                    {sp.tagline ? (
+                      <p className="mh-event-card-caption">{sp.tagline}</p>
+                    ) : null}
+
+                    {sp.description ? (
+                      <p className="mh-event-card-desc mh-event-card-desc--clamp">
+                        {sp.description.replace(/<[^>]+>/g, '').trim()}
+                      </p>
+                    ) : null}
+
+                    <div className="mh-event-card-actions">
+                      {typeof sp.id !== 'undefined' && (
+                        <Link
+                          href={`/sponsors/${sp.id}`}
+                          className="mh-btn mh-btn-details"
+                          title={`See details for ${title}`}
+                          aria-label={`See details for ${title}`}
+                        >
+                          <IconSponsorDetails />
+                          See Sponsor Details
+                        </Link>
+                      )}
+                      {websiteHref && (
+                        <a
+                          href={websiteHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mh-btn mh-btn-tickets"
+                          title={`Visit ${title}`}
+                          aria-label={`Visit ${title} website`}
+                        >
+                          <IconSponsorVisit />
+                          Visit website
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
     </main>
   );

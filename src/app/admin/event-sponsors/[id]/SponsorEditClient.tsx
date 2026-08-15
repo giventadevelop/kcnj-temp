@@ -103,6 +103,7 @@ export default function SponsorEditClient({
   };
 
   const sponsorTypes = [
+    'Title Sponsor',
     'Platinum',
     'Gold',
     'Silver',

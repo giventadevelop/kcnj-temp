@@ -1,0 +1,5 @@
+
+  body { margin: 0; background: #f5ead8; text-wrap: pretty; -webkit-font-smoothing: antialiased; }
+  a { color: var(--color-accent-700); text-decoration: none; }
+  a:hover { color: var(--color-accent-600); }
+  @keyframes orgKenBurns { from { transform: scale(1); } to { transform: scale(1.09); } }
