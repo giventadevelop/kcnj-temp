@@ -328,12 +328,34 @@ const Footer = () => {
       {/* Copyright Section */}
       <div className="footer-bottom bg-gray-900 border-t border-gray-800 w-full">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-6 md:py-8">
-          <div className="flex justify-center items-center">
+          <div className="flex flex-col justify-center items-center gap-1">
             <p className="text-gray-400 font-inter text-xs md:text-sm text-center leading-relaxed max-w-[28ch] md:max-w-none">
               © 2026 KCNJ
               <span className="block md:inline md:before:content-['·'] md:before:mx-1.5">
                 Kerala Center of New Jersey
               </span>
+            </p>
+            <p className="text-gray-500 font-inter text-[11px] md:text-xs text-center">
+              Powered by{' '}
+              <a
+                href="https://www.giventa.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-gray-200 underline-offset-2 hover:underline"
+              >
+                Giventa Inc., USA
+              </a>
+              .
+            </p>
+            <p className="text-gray-500 font-inter text-[11px] md:text-xs text-center">
+              <a
+                href="https://www.giventa.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-gray-200 underline-offset-2 hover:underline"
+              >
+                www.giventa.com
+              </a>
             </p>
           </div>
         </div>

@@ -13,7 +13,7 @@ import cardGridStyles from './CenteredCardGrid.module.css';
 import { SponsorCard } from '@/components/sponsors/SponsorCard';
 import { SocialIconLink } from '@/components/social/SocialIconLink';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
-import { isTicketedEventCube } from '@/lib/eventcube/utils';
+import { resolveBuyTicketsTarget } from '@/lib/eventcube/utils';
 import { DEFAULT_HEADER_RIBBON_IMAGE } from '@/lib/headerRibbon';
 import '@/styles/modernist-homepage.css';
 
@@ -563,25 +563,17 @@ export default function EventDetailsPage() {
 
                 // Determine which buttons to show
                 const showRegisterButton = event.isRegistrationRequired === true && isUpcomingLocal;
-                // Event Cube ticketed: link to eventcube-checkout (priority over Givebutter)
-                const isTicketedEventCubeEvent = isTicketedEventCube(event) && isUpcomingLocal;
-                // Check if event is ticketed fundraiser/charity (shows special fundraiser image)
-                const isTicketedFundraiser = isTicketedFundraiserEvent(event) && isUpcomingLocal;
-                // Only show Buy Tickets button for TICKETED events (case-insensitive check)
-                // BUT NOT if Event Cube or ticketed fundraiser (use their dedicated links instead)
-                const showBuyTicketsButton = event.admissionType?.toUpperCase() === 'TICKETED' && isUpcomingLocal && !isTicketedFundraiser && !isTicketedEventCubeEvent;
+                const buyTicketsTarget = isUpcomingLocal ? resolveBuyTicketsTarget(event, { internalPath: 'tickets' }) : null;
                 // Show Make a Donation button for donation-based events
                 // BUT NOT if it's a ticketed fundraiser (use fundraiser image instead)
-                const showDonationButton = isDonationBasedEvent(event) && isUpcomingLocal && !isTicketedFundraiser;
+                const showDonationButton = isDonationBasedEvent(event) && isUpcomingLocal && !isTicketedFundraiserEvent(event);
                 const showCompetitionLinks = event.isCompetitionEvent === true;
 
                 // Don't render if no buttons should be shown
                 if (
                   !showRegisterButton &&
-                  !showBuyTicketsButton &&
+                  !buyTicketsTarget &&
                   !showDonationButton &&
-                  !isTicketedFundraiser &&
-                  !isTicketedEventCubeEvent &&
                   !showCompetitionLinks
                 )
                   return null;
@@ -602,40 +594,15 @@ export default function EventDetailsPage() {
                       </Link>
                     )}
 
-                    {isTicketedEventCubeEvent && (
+                    {buyTicketsTarget && (
                       <Link
-                        href={`/events/${event.id}/eventcube-checkout`}
+                        href={buyTicketsTarget.href}
                         className={`mh-btn mh-btn-tickets mh-event-detail-cta ${isPast ? 'opacity-50 pointer-events-none' : ''}`}
                         title="Buy Tickets"
                         aria-label="Buy Tickets"
-                      >
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                        </svg>
-                        Buy Tickets
-                      </Link>
-                    )}
-
-                    {isTicketedFundraiser && (
-                      <Link
-                        href={`/events/${event.id}/givebutter-checkout`}
-                        className={`mh-btn mh-btn-tickets mh-event-detail-cta ${isPast ? 'opacity-50 pointer-events-none' : ''}`}
-                        title="Buy Tickets"
-                        aria-label="Buy Tickets"
-                      >
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                        </svg>
-                        Buy Tickets
-                      </Link>
-                    )}
-
-                    {showBuyTicketsButton && (
-                      <Link
-                        href={`/events/${event.id}/tickets`}
-                        className={`mh-btn mh-btn-tickets mh-event-detail-cta ${isPast ? 'opacity-50 pointer-events-none' : ''}`}
-                        title="Buy Tickets"
-                        aria-label="Buy Tickets"
+                        {...(buyTicketsTarget.kind === 'external'
+                          ? { target: '_blank', rel: 'noopener noreferrer' }
+                          : {})}
                       >
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
@@ -1125,47 +1092,24 @@ export default function EventDetailsPage() {
                   if (!eventDateStr) return null;
 
                   const isUpcomingLocal = eventDateStr === todayStr || eventDateStr > todayStr;
-                  const isTicketedEventCubeEvent = isTicketedEventCube(event) && isUpcomingLocal;
-                  const isTicketedFundraiser = isTicketedFundraiserEvent(event) && isUpcomingLocal;
-                  const showBuyTicketsButton = event.admissionType?.toUpperCase() === 'TICKETED' && isUpcomingLocal && !isTicketedFundraiser && !isTicketedEventCubeEvent;
-                  const showDonationButton = isDonationBasedEvent(event) && isUpcomingLocal && !isTicketedFundraiser;
+                  const buyTicketsTarget = isUpcomingLocal
+                    ? resolveBuyTicketsTarget(event, { internalPath: 'tickets' })
+                    : null;
+                  const showDonationButton = isDonationBasedEvent(event) && isUpcomingLocal && !isTicketedFundraiserEvent(event);
 
-                  if (!showBuyTicketsButton && !showDonationButton && !isTicketedFundraiser && !isTicketedEventCubeEvent) return null;
+                  if (!buyTicketsTarget && !showDonationButton) return null;
 
                   return (
                     <>
-                      {isTicketedEventCubeEvent && (
+                      {buyTicketsTarget && (
                         <Link
-                          href={`/events/${event.id}/eventcube-checkout`}
+                          href={buyTicketsTarget.href}
                           className="mh-btn mh-btn-tickets mh-event-detail-cta"
                           title="Buy Tickets"
                           aria-label="Buy Tickets"
-                        >
-                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                          </svg>
-                          Buy Tickets
-                        </Link>
-                      )}
-                      {isTicketedFundraiser && (
-                        <Link
-                          href={`/events/${event.id}/givebutter-checkout`}
-                          className="mh-btn mh-btn-tickets mh-event-detail-cta"
-                          title="Buy Tickets"
-                          aria-label="Buy Tickets"
-                        >
-                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                          </svg>
-                          Buy Tickets
-                        </Link>
-                      )}
-                      {showBuyTicketsButton && (
-                        <Link
-                          href={`/events/${event.id}/tickets`}
-                          className="mh-btn mh-btn-tickets mh-event-detail-cta"
-                          title="Buy Tickets"
-                          aria-label="Buy Tickets"
+                          {...(buyTicketsTarget.kind === 'external'
+                            ? { target: '_blank', rel: 'noopener noreferrer' }
+                            : {})}
                         >
                           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />

@@ -6,7 +6,7 @@ import type { EventWithMedia, EventDetailsDTO } from "@/types";
 import { formatInTimeZone } from 'date-fns-tz';
 import { isRecurringEvent, getNextOccurrenceDate } from '@/lib/eventUtils';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
-import { isTicketedEventCube } from '@/lib/eventcube/utils';
+import { resolveBuyTicketsTarget } from '@/lib/eventcube/utils';
 import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import '@/styles/modernist-homepage.css';
 
@@ -553,20 +553,9 @@ export default function EventsPage() {
                 }
 
                 const showRegisterButton = event.isRegistrationRequired === true && isUpcomingLocal;
-                // Event Cube ticketed: link to eventcube-checkout (priority over Givebutter)
-                const isTicketedEventCubeEvent = isTicketedEventCube(event) && isUpcomingLocal;
-                // Ticketed fundraiser/charity events use the Givebutter checkout
-                const isTicketedFundraiser = isTicketedFundraiserEvent(event) && isUpcomingLocal;
-                // Only show Buy Tickets for TICKETED events (not Event Cube or fundraiser, which have dedicated routes)
-                const showBuyTicketsButton = event.admissionType?.toUpperCase() === 'TICKETED' && isUpcomingLocal && !isTicketedFundraiser && !isTicketedEventCubeEvent;
+                const buyTicketsTarget = isUpcomingLocal ? resolveBuyTicketsTarget(event) : null;
                 // Donation-based events (not ticketed fundraiser)
-                const showDonationButton = isDonationBasedEvent(event) && isUpcomingLocal && !isTicketedFundraiser;
-                // Route to manual checkout if manual payment is enabled, otherwise Stripe checkout
-                const checkoutRoute =
-                  event.manualPaymentEnabled === true &&
-                  (event.paymentFlowMode === 'MANUAL_ONLY' || event.paymentFlowMode === 'HYBRID')
-                    ? `/events/${event.id}/manual-checkout`
-                    : `/events/${event.id}/checkout`;
+                const showDonationButton = isDonationBasedEvent(event) && isUpcomingLocal && !isTicketedFundraiserEvent(event);
 
                 const isLongDescription = !!event.description && event.description.length > 200;
 
@@ -747,40 +736,15 @@ export default function EventsPage() {
                         </Link>
                       )}
 
-                      {isTicketedEventCubeEvent && (
+                      {buyTicketsTarget && (
                         <Link
-                          href={`/events/${event.id}/eventcube-checkout`}
+                          href={buyTicketsTarget.href}
                           className="mh-btn mh-btn-tickets"
                           title="Buy Tickets"
                           aria-label="Buy Tickets"
-                        >
-                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                          </svg>
-                          Buy Tickets
-                        </Link>
-                      )}
-
-                      {isTicketedFundraiser && (
-                        <Link
-                          href={`/events/${event.id}/givebutter-checkout`}
-                          className="mh-btn mh-btn-tickets"
-                          title="Buy Tickets"
-                          aria-label="Buy Tickets"
-                        >
-                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                          </svg>
-                          Buy Tickets
-                        </Link>
-                      )}
-
-                      {showBuyTicketsButton && (
-                        <Link
-                          href={checkoutRoute}
-                          className="mh-btn mh-btn-tickets"
-                          title="Buy Tickets"
-                          aria-label="Buy Tickets"
+                          {...(buyTicketsTarget.kind === 'external'
+                            ? { target: '_blank', rel: 'noopener noreferrer' }
+                            : {})}
                         >
                           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />

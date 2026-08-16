@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-07-22T13:00:28.056Z",
+  "generatedAt": "2026-08-16T17:54:38.008Z",
   "root": "src/app",
-  "totalPages": 986,
-  "totalUniqueRoutes": 986,
+  "totalPages": 990,
+  "totalUniqueRoutes": 990,
   "byKind": {
-    "public": 79,
-    "admin": 104,
+    "public": 82,
+    "admin": 105,
     "mosc": 264,
     "mosc-old": 233,
     "mosc-redesign": 306
@@ -121,6 +121,13 @@
         "id"
       ],
       "sourceFile": "src/app/admin/event-sponsors/[id]/page.tsx"
+    },
+    {
+      "path": "/admin/events",
+      "kind": "admin",
+      "dynamic": false,
+      "dynamicParams": [],
+      "sourceFile": "src/app/admin/events/page.tsx"
     },
     {
       "path": "/admin/events-analytics",
@@ -912,6 +919,13 @@
       "sourceFile": "src/app/donate/page.tsx"
     },
     {
+      "path": "/downloads",
+      "kind": "public",
+      "dynamic": false,
+      "dynamicParams": [],
+      "sourceFile": "src/app/downloads/page.tsx"
+    },
+    {
       "path": "/downloads/[id]",
       "kind": "public",
       "dynamic": true,
@@ -1197,6 +1211,13 @@
       "dynamic": false,
       "dynamicParams": [],
       "sourceFile": "src/app/ipartner-test/page.tsx"
+    },
+    {
+      "path": "/links",
+      "kind": "public",
+      "dynamic": false,
+      "dynamicParams": [],
+      "sourceFile": "src/app/links/page.tsx"
     },
     {
       "path": "/member-portal",
@@ -6939,6 +6960,13 @@
       "dynamic": false,
       "dynamicParams": [],
       "sourceFile": "src/app/mosc/training/st-basil-bible-school/page.tsx"
+    },
+    {
+      "path": "/news",
+      "kind": "public",
+      "dynamic": false,
+      "dynamicParams": [],
+      "sourceFile": "src/app/news/page.tsx"
     },
     {
       "path": "/philanthrop",

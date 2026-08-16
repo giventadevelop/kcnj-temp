@@ -131,6 +131,8 @@ export interface EventDetailsDTO {
   donationMetadata?: string;
   /** Event Cube embed URL - iframe src for event page (when admission is TICKETED) */
   eventcubeEmbedUrl?: string;
+  /** External vendor Buy Tickets URL (Zeffy, Eventbrite, etc.); opens in a new tab when set */
+  externalTicketUrl?: string;
   /** Event Cube order/checkout URL - when set, can be loaded in same iframe so checkout stays embedded (workaround when event page opens order in new tab) */
   eventcubeOrderUrl?: string;
   /** Event recurrence metadata - For recurrence configuration (JSON string) */

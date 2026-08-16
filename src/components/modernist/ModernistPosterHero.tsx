@@ -406,6 +406,9 @@ export default function ModernistPosterHero() {
                   onClick={(e) => e.stopPropagation()}
                   title={overlayInfo.alt}
                   aria-label={overlayInfo.alt}
+                  {...(overlayInfo.external
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- CTA asset sized per hero_section_image_rotation.mdc */}
                   <img

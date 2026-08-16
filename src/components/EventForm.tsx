@@ -120,6 +120,10 @@ export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: Ev
   const [eventcubeEmbedUrl, setEventcubeEmbedUrl] = useState<string>('');
   const [eventcubeOrderUrl, setEventcubeOrderUrl] = useState<string>('');
 
+  // External vendor ticket URL (Zeffy, etc.) — mutually exclusive with Event Cube
+  const [useExternalTicketUrl, setUseExternalTicketUrl] = useState(false);
+  const [externalTicketUrl, setExternalTicketUrl] = useState<string>('');
+
   // Recurrence configuration state
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrencePattern, setRecurrencePattern] = useState<RecurrencePattern | ''>('');
@@ -201,6 +205,10 @@ export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: Ev
         }
         if (event.eventcubeOrderUrl?.trim()) {
           setEventcubeOrderUrl(event.eventcubeOrderUrl.trim());
+        }
+        if (event.externalTicketUrl?.trim()) {
+          setUseExternalTicketUrl(true);
+          setExternalTicketUrl(event.externalTicketUrl.trim());
         }
 
         // Fallback: Load from old metadata field (backward compatibility)
@@ -416,6 +424,17 @@ export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: Ev
     if (useEventCube) {
       if (!eventcubeEmbedUrl?.trim()) {
         errs.eventcubeEmbedUrl = 'Event Cube embed URL is required when using Event Cube for ticket sales';
+      }
+    }
+
+    // Validate external ticket URL (mutual exclusion with Event Cube)
+    if (useEventCube && useExternalTicketUrl && externalTicketUrl?.trim()) {
+      errs.externalTicketUrl = 'Cannot use both Event Cube and an external ticket URL. Choose one.';
+    } else if (useExternalTicketUrl) {
+      if (!externalTicketUrl?.trim()) {
+        errs.externalTicketUrl = 'External ticket URL is required when enabled';
+      } else if (!/^https?:\/\//i.test(externalTicketUrl.trim())) {
+        errs.externalTicketUrl = 'Enter a valid URL starting with http:// or https://';
       }
     }
 
@@ -1041,6 +1060,7 @@ export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: Ev
       manualPaymentEnabled: !!form.manualPaymentEnabled,
       eventcubeEmbedUrl: useEventCube ? (eventcubeEmbedUrl?.trim() || undefined) : undefined,
       eventcubeOrderUrl: useEventCube ? (eventcubeOrderUrl?.trim() || undefined) : undefined,
+      externalTicketUrl: useExternalTicketUrl ? (externalTicketUrl?.trim() || undefined) : undefined,
     };
     onSubmit(sanitizedForm);
   }
@@ -1561,6 +1581,8 @@ export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: Ev
                   if (checked) {
                     setIsFundraiserEvent(false);
                     setIsCharityEvent(false);
+                    setUseExternalTicketUrl(false);
+                    setExternalTicketUrl('');
                   }
                 }}
                 onClick={(e) => e.stopPropagation()}
@@ -1619,6 +1641,75 @@ export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: Ev
               />
               <p className="text-xs text-gray-500 mt-1">
                 If Event Cube opens the order page in a new tab when users click &quot;Buy Tickets&quot;, add the order page URL here (with <code className="bg-white px-1 rounded">?embed=true</code> if supported). Users can then click &quot;Load checkout in this page&quot; on the checkout page to show the order step in the same embed.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* External ticket purchase URL (Zeffy, Eventbrite, etc.) */}
+      <div className="border-t border-gray-200 pt-6 mt-6 bg-gradient-to-br from-teal-50 via-cyan-50 to-sky-50 rounded-xl p-6 border border-teal-200/60 shadow-sm">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800">External ticket purchase URL</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Send Buy Tickets to an external vendor (e.g. Zeffy) in a new tab. Set Admission type to &quot;Ticketed&quot;. Do not enable Event Cube at the same time.
+        </p>
+        <div className="space-y-4">
+          <label className="flex items-center gap-3 cursor-pointer" htmlFor="useExternalTicketUrl">
+            <span className="relative flex items-center justify-center flex-shrink-0">
+              <input
+                type="checkbox"
+                id="useExternalTicketUrl"
+                checked={useExternalTicketUrl}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setUseExternalTicketUrl(checked);
+                  if (checked) {
+                    setUseEventCube(false);
+                    setEventcubeEmbedUrl('');
+                    setEventcubeOrderUrl('');
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="custom-checkbox custom-checkbox--yellow"
+              />
+              <span className="custom-checkbox-tick">
+                {useExternalTicketUrl && (
+                  <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" strokeWidth="4" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l5 5L19 7" />
+                  </svg>
+                )}
+              </span>
+            </span>
+            <span className="text-xl font-semibold text-gray-900">Use external ticket purchase URL</span>
+          </label>
+          {useExternalTicketUrl && (
+            <div>
+              <label htmlFor="externalTicketUrl" className="block font-medium mb-1 text-gray-700">
+                External ticket URL *
+              </label>
+              <input
+                ref={(el) => { if (el) fieldRefs.current.externalTicketUrl = el; }}
+                type="url"
+                id="externalTicketUrl"
+                value={externalTicketUrl}
+                onChange={(e) => {
+                  setExternalTicketUrl(e.target.value);
+                  if (errors.externalTicketUrl) {
+                    setErrors(prev => {
+                      const next = { ...prev };
+                      delete next.externalTicketUrl;
+                      return next;
+                    });
+                  }
+                }}
+                placeholder="https://www.zeffy.com/en-US/ticketing/…"
+                className={`w-full border rounded-xl focus:ring-blue-500 px-4 py-3 text-base ${errors.externalTicketUrl ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-400 focus:border-blue-500'}`}
+              />
+              {errors.externalTicketUrl && (
+                <div className="text-red-500 text-sm mt-1">{errors.externalTicketUrl}</div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Full URL to the vendor ticketing page. Buy Tickets opens this link in a new browser tab.
               </p>
             </div>
           )}

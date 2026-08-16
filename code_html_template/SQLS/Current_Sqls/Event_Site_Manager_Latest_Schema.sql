@@ -1464,6 +1464,7 @@ CREATE TABLE public.event_details (
                                       live_event_priority_ranking INT4 NOT NULL DEFAULT 0,
                                       donation_metadata TEXT NULL,
                                       eventcube_embed_url VARCHAR(1024) NULL,
+                                      external_ticket_url VARCHAR(1024) NULL,
                                       event_recurrence_metadata TEXT NULL,
                                       is_recurring bool DEFAULT false NULL,
                                       recurrence_pattern varchar(50) NULL,
