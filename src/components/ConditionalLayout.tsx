@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
+import PublicOrganicDesignBody from '@/components/PublicOrganicDesignBody';
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -13,9 +14,9 @@ export default function ConditionalLayout({ children, header, footer }: Conditio
   const pathname = usePathname();
 
   // Legacy MOSC app at /mosc-old (app/mosc-old)
-  const isMoscOldRoute = pathname?.startsWith("/mosc-old") ?? false;
+  const isMoscOldRoute = pathname?.startsWith('/mosc-old') ?? false;
   // Syro apps: /mosc (app/mosc), /mosc-redesign (app/mosc-redesign — rocket home + (syro) subpages)
-  const isMoscRoute = (pathname?.startsWith("/mosc") && !pathname?.startsWith("/mosc-old")) ?? false;
+  const isMoscRoute = (pathname?.startsWith('/mosc') && !pathname?.startsWith('/mosc-old')) ?? false;
 
   // For /mosc-old and /mosc, render children without main app header/footer
   if (isMoscOldRoute || isMoscRoute) {
@@ -25,6 +26,7 @@ export default function ConditionalLayout({ children, header, footer }: Conditio
   // For all other routes, render the full layout with header and footer
   return (
     <>
+      <PublicOrganicDesignBody />
       {header}
       <div className="flex-1 flex flex-col">
         {children}

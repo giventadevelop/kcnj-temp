@@ -18,7 +18,7 @@ alwaysApply: false
 
 # Desktop Browser Payment Flow Architecture
 
-This document outlines the comprehensive desktop browser payment flow architecture for the MCEFEE event management application, detailing how desktop payments differ from mobile payments and how transactions are persisted.
+This document outlines the comprehensive desktop browser payment flow architecture for the KCNJ event management application, detailing how desktop payments differ from mobile payments and how transactions are persisted.
 
 ## Overview
 
@@ -1905,4 +1905,4 @@ return NextResponse.json({
 
 **Lesson**: Success page must display complete subscription details including plan features, additional plan details, Stripe subscription ID, and styled action buttons for optimal user experience.
 
-This architecture ensures optimal desktop payment experience while maintaining security, reliability, and proper transaction persistence for the MCEFEE event management system. The membership subscription flow now properly creates Stripe Subscriptions for recurring billing, stores all required Stripe IDs in the database, handles plan upgrades correctly, filters out cancelled subscriptions, and displays complete subscription details on the success page.
+This architecture ensures optimal desktop payment experience while maintaining security, reliability, and proper transaction persistence for the KCNJ event management system. The membership subscription flow now properly creates Stripe Subscriptions for recurring billing, stores all required Stripe IDs in the database, handles plan upgrades correctly, filters out cancelled subscriptions, and displays complete subscription details on the success page.

@@ -10,7 +10,7 @@ alwaysApply: false
 
 Homepage **Team** shows active `executive-committee-team-members` for the current tenant, sorted by `priorityOrder` ascending (lower = higher rank). Modernist home: [`ModernistHomePage.tsx`](mdc:src/components/modernist/ModernistHomePage.tsx) `#team-section`. Classic / MOSC pattern: [`TeamSection.tsx`](mdc:src/components/TeamSection.tsx) (mosc-temp reference).
 
-## Data source (MCEFEE)
+## Data source (KCNJ)
 
 Roster + photos for tenant `mcefee_org_nj_7` come from the static charity site:
 

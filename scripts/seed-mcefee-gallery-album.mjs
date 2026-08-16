@@ -51,7 +51,7 @@ const ALBUM_TITLE = 'Mcefee Album';
 const ALBUM_SLUG_MARKER = 'static_slug=mcefee-album';
 const CATEGORY_SLUG = 'special-events';
 const CHARITY_IMAGES =
-  process.env.MCEFEE_EVENTS_IMAGE_DIR ||
+  process.env.KCNJ_EVENTS_IMAGE_DIR ||
   'F:\\project_workspace\\NJ-Malayalees-MCEEFEE-Charity-Site\\images';
 
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg']);
@@ -84,8 +84,8 @@ function collectImageEntries() {
     }
   }
 
-  addDir(join(REPO_ROOT, 'public/images/modernist/mcefee'), 'MCEFEE modernist');
-  addDir(join(REPO_ROOT, 'public/images/logos/Mcefee'), 'MCEFEE logo');
+  addDir(join(REPO_ROOT, 'public/images/modernist/mcefee'), 'KCNJ modernist');
+  addDir(join(REPO_ROOT, 'public/images/logos/Mcefee'), 'KCNJ logo');
   add(join(REPO_ROOT, 'public/images/default event image.png'), 'Default event image');
   add(join(REPO_ROOT, 'public/images/default_placeholder_hero_image.jpeg'), 'Default hero placeholder');
   add(join(REPO_ROOT, 'public/images/hero_section/spark_kerala_event_2026_aug_wide.jpg'), 'Spark of Kerala wide');
@@ -193,7 +193,7 @@ async function createAlbum(token, categoryId, coverHint) {
   const payload = {
     tenantId: TENANT_ID,
     title: ALBUM_TITLE,
-    description: `Homepage, events, and logo imagery for MCEFEE. ${ALBUM_SLUG_MARKER}`,
+    description: `Homepage, events, and logo imagery for KCNJ. ${ALBUM_SLUG_MARKER}`,
     coverImageUrl: coverHint || '',
     isPublic: true,
     displayOrder: 1,

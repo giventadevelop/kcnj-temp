@@ -64,7 +64,7 @@ The frontend uses the `TicketQrClient.tsx` template as the final success page af
 ```json
 {
   "id": 2,
-  "title": "MCEFEE Spark of Kerala",
+  "title": "KCNJ Spark of Kerala",
   "caption": "A Showcase Of Performance Arts & Rhythm.",
   "description": "Event description...",
   "startDate": "2025-12-02",

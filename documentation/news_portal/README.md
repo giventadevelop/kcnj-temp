@@ -1,6 +1,6 @@
 # News Portal PRD Documentation
 
-This folder contains the Product Requirements Documents (PRDs) for the **News Portal** feature, which brings a dynamic, database-driven news section into the MCEFEE platform (replacing the legacy WordPress/static HTML news site).
+This folder contains the Product Requirements Documents (PRDs) for the **News Portal** feature, which brings a dynamic, database-driven news section into the KCNJ platform (replacing the legacy WordPress/static HTML news site).
 
 **Legacy reference screenshot:** [catholicatenews_in_full_screen_shot.png](catholicatenews_in_full_screen_shot.png) (if present) – used to align display sections (Flash News, Main News, Featured News, Most Read, Press Release, Sidebar Promotional/Advertisement block).
 

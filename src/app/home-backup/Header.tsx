@@ -113,7 +113,7 @@ export function Header({ hideMenuItems = false }: HeaderProps) {
               <Link href="/" className="flex items-center">
                 <img
                   src="/images/mcefee_logo_black_border_transparent.png"
-                  alt="MCEFEE Logo"
+                  alt="KCNJ Logo"
                   style={{
                     height: '58px',
                     width: 'auto',

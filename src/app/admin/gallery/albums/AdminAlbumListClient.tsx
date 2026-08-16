@@ -404,10 +404,26 @@ export default function AdminAlbumListClient({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <h3 className="mt-2 text-sm font-medium text-gray-900">No albums found</h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-500 max-w-lg mx-auto">
             {hasActiveFilters
               ? 'Try adjusting your search filters.'
-              : 'Get started by creating a new album.'}
+              : (
+                <>
+                  No gallery albums exist for tenant{' '}
+                  <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
+                    {process.env.NEXT_PUBLIC_TENANT_ID || 'unknown'}
+                  </code>
+                  {' '}yet. The public{' '}
+                  <Link href="/gallery" className="text-blue-600 hover:underline">
+                    Gallery
+                  </Link>{' '}
+                  page can still show <strong>Event based albums</strong> (photos attached to events under{' '}
+                  <Link href="/admin/manage-events" className="text-blue-600 hover:underline">
+                    Manage Events
+                  </Link>
+                  ). Create a dedicated album here when you want a curated collection.
+                </>
+              )}
           </p>
         </div>
       ) : (

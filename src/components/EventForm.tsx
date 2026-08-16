@@ -58,9 +58,51 @@ export const defaultEvent: EventDetailsDTO = {
   updatedAt: '',
 };
 
+/** Convert stored / display times to HH:mm for Date parsing and <input type="time">. */
+function convertTo24Hour(timeStr: string): string {
+  if (!timeStr) return '';
+  const trimmed = timeStr.trim();
+  // Already 24-hour from backend (HH:mm or HH:mm:ss) — no AM/PM suffix
+  if (!/\b(AM|PM)\b/i.test(trimmed)) {
+    const [hours, minutes] = trimmed.split(':');
+    return `${String(hours ?? '00').padStart(2, '0')}:${String(minutes ?? '00').padStart(2, '0')}`;
+  }
+  // 12-hour with AM/PM
+  const [time, ampm] = trimmed.split(/\s+/);
+  let [hour, minute] = time.split(':');
+  let h = parseInt(hour, 10);
+  if (Number.isNaN(h)) return '';
+  if (ampm.toUpperCase() === 'PM' && h !== 12) h += 12;
+  if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+  return `${String(h).padStart(2, '0')}:${String(minute ?? '00').padStart(2, '0')}`;
+}
+
+/** Convert 'HH:mm' / 'HH:mm:ss' (backend or time input) to 'hh:mm AM/PM'. */
+function to12HourFormat(time24: string): string {
+  if (!time24) return '';
+  if (/\b(AM|PM)\b/i.test(time24)) return time24.trim();
+  const [hour, minute] = time24.split(':');
+  let h = parseInt(hour, 10);
+  if (Number.isNaN(h)) return '';
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${String(h).padStart(2, '0')}:${String(minute ?? '00').padStart(2, '0')} ${ampm}`;
+}
+
+function to24HourFormat(time12: string): string {
+  if (!time12) return '';
+  return convertTo24Hour(time12);
+}
+
 export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: EventFormProps) {
   const router = useRouter();
-  const [form, setForm] = useState<EventDetailsDTO>({ ...defaultEvent, ...event });
+  const [form, setForm] = useState<EventDetailsDTO>(() => ({
+    ...defaultEvent,
+    ...event,
+    startTime: event?.startTime ? to12HourFormat(event.startTime) : (event?.startTime ?? ''),
+    endTime: event?.endTime ? to12HourFormat(event.endTime) : (event?.endTime ?? ''),
+  }));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showErrors, setShowErrors] = useState(false);
   const [isEmailListEmpty, setIsEmailListEmpty] = useState(false);
@@ -127,11 +169,14 @@ export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: Ev
         }
 
         // Set form with validated fromEmail; cap corrupt/oversized descriptions so the page stays responsive
+        // Normalize backend HH:mm:ss times to 12h so validation/display stay consistent
         const formData = {
           ...defaultEvent,
           ...event,
           fromEmail: validFromEmail,
           description: sanitizeEventDescriptionForForm(event.description),
+          startTime: event.startTime ? to12HourFormat(event.startTime) : '',
+          endTime: event.endTime ? to12HourFormat(event.endTime) : '',
         };
         setForm(formData);
 
@@ -502,38 +547,6 @@ export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: Ev
     }
 
     return !hasErrors;
-  }
-
-  // Helper to convert '06:00 PM' to '18:00' for Date parsing
-  function convertTo24Hour(time12h: string): string {
-    if (!time12h) return '';
-    const [time, modifier] = time12h.split(' ');
-    let [hours, minutes] = time.split(':');
-    if (hours === '12') hours = '00';
-    if (modifier && modifier.toUpperCase() === 'PM') hours = String(parseInt(hours, 10) + 12);
-    return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-  }
-
-  // Helper to convert 'HH:mm' (from <input type="time">) to 'hh:mm AM/PM'
-  function to12HourFormat(time24: string): string {
-    if (!time24) return '';
-    let [hour, minute] = time24.split(':');
-    let h = parseInt(hour, 10);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12;
-    if (h === 0) h = 12;
-    return `${String(h).padStart(2, '0')}:${minute} ${ampm}`;
-  }
-
-  // Helper to convert 'hh:mm AM/PM' to 'HH:mm' for <input type="time"> value
-  function to24HourFormat(time12: string): string {
-    if (!time12) return '';
-    const [time, ampm] = time12.split(' ');
-    let [hour, minute] = time.split(':');
-    let h = parseInt(hour, 10);
-    if (ampm && ampm.toUpperCase() === 'PM' && h !== 12) h += 12;
-    if (ampm && ampm.toUpperCase() === 'AM' && h === 12) h = 0;
-    return `${String(h).padStart(2, '0')}:${minute}`;
   }
 
   // Helper to convert YYYY-MM-DD to MM/DD/YYYY for display

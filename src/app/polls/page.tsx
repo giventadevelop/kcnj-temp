@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { headers } from 'next/headers';
-import Image from 'next/image';
+import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import { PollList } from '@/components/polls/PollList';
 import { fetchUserProfileServer } from '@/app/profile/ApiServerActions';
 import PollsPageBackground from './PollsPageBackground';
@@ -26,16 +26,7 @@ export default async function PollsPage() {
       <PollsPageBackground />
       <main className="mh-events-page modernist-home mh-polls-page">
         <section className="mh-events-hero" aria-label="Polls">
-          <figure className="mh-events-hero-media mh-grayscale">
-            <Image
-              src="/images/default_placeholder_hero_image.jpeg"
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              style={{ objectFit: 'cover' }}
-            />
-          </figure>
+          <PageHeaderRibbonMedia />
           <div className="mh-events-hero-scrim" aria-hidden="true" />
           <div className="mh-events-hero-content">
             <div className="mh-events-hero-kicker">

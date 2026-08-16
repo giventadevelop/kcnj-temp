@@ -16,6 +16,7 @@ import {
   cancelEventServer,
   deleteCalendarEventForEventServer,
   fetchChildEventsBySeriesIdServer,
+  fetchChildEventsByParentIdServer,
   softDeleteEventWithChildrenServer,
   hardDeleteEventWithChildrenServer,
   activateEventWithChildrenServer,
@@ -227,28 +228,23 @@ export default function ManageEventsPage() {
     // Check if this is a parent event (parentEventId is null/undefined)
     const isParentEvent = event.parentEventId == null || event.parentEventId === undefined;
 
-    if (isParentEvent) {
-      // Parent event: check how many children it has
-      const seriesId = event.recurrenceSeriesId || event.id;
-      if (seriesId) {
-        try {
-          const childEvents = await fetchChildEventsBySeriesIdServer(seriesId);
-          console.log(`[handleDeleteClick] Fetched events for series ${seriesId}:`, childEvents.map(e => ({ id: e.id, parentEventId: e.parentEventId, isActive: e.isActive })));
-          // Exclude the parent event itself from the count
-          // Also filter to only count active child events (children with parentEventId set)
-          const children = childEvents.filter(e =>
-            e.id !== event.id &&
-            e.parentEventId != null &&
-            e.parentEventId === event.id
+    if (isParentEvent && event.id != null) {
+      // Only count real children — never use event.id as a fake recurrenceSeriesId
+      // (backend null-field criteria can return the entire tenant event list)
+      try {
+        let children: EventDetailsDTO[] = [];
+        if (event.recurrenceSeriesId != null) {
+          const seriesEvents = await fetchChildEventsBySeriesIdServer(event.recurrenceSeriesId);
+          children = seriesEvents.filter(
+            (e) => e.id !== event.id && e.parentEventId != null && Number(e.parentEventId) === Number(event.id)
           );
-          console.log(`[handleDeleteClick] Filtered children (excluding parent ${event.id}):`, children.map(e => ({ id: e.id, parentEventId: e.parentEventId })));
-          console.log(`[handleDeleteClick] Child count: ${children.length}`);
-          setChildEventCount(children.length);
-        } catch (err) {
-          console.error('Failed to fetch child events:', err);
-          setChildEventCount(0);
+        } else {
+          children = await fetchChildEventsByParentIdServer(event.id);
         }
-      } else {
+        console.log(`[handleDeleteClick] Child count for event ${event.id}: ${children.length}`);
+        setChildEventCount(children.length);
+      } catch (err) {
+        console.error('Failed to fetch child events:', err);
         setChildEventCount(0);
       }
     } else {
@@ -342,20 +338,18 @@ export default function ManageEventsPage() {
     // Check if this is a parent event (parentEventId is null/undefined)
     const isParentEvent = event.parentEventId == null || event.parentEventId === undefined;
 
-    if (isParentEvent) {
-      // Parent event: check how many children it has
-      const seriesId = event.recurrenceSeriesId || event.id;
-      if (seriesId) {
-        try {
-          const childEvents = await fetchChildEventsBySeriesIdServer(seriesId);
-          // Exclude the parent event itself from the count
-          const children = childEvents.filter(e => e.id !== event.id);
-          setActivateChildEventCount(children.length);
-        } catch (err) {
-          console.error('Failed to fetch child events:', err);
-          setActivateChildEventCount(0);
+    if (isParentEvent && event.id != null) {
+      try {
+        let children: EventDetailsDTO[] = [];
+        if (event.recurrenceSeriesId != null) {
+          const seriesEvents = await fetchChildEventsBySeriesIdServer(event.recurrenceSeriesId);
+          children = seriesEvents.filter((e) => e.id !== event.id);
+        } else {
+          children = await fetchChildEventsByParentIdServer(event.id);
         }
-      } else {
+        setActivateChildEventCount(children.length);
+      } catch (err) {
+        console.error('Failed to fetch child events:', err);
         setActivateChildEventCount(0);
       }
     } else {

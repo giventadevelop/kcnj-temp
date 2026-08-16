@@ -69,7 +69,7 @@ export default function VideoSection() {
               {/* Video Title Overlay */}
               <div className="absolute bottom-2 left-2 right-2">
                 <div className="bg-black bg-opacity-75 text-white p-1.5 rounded-lg">
-                  <h3 className="font-semibold text-xs">MCEFEE Community Events</h3>
+                  <h3 className="font-semibold text-xs">KCNJ Community Events</h3>
                   <p className="text-xs text-gray-300">Celebrating Kerala Culture in the USA</p>
                 </div>
               </div>

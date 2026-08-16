@@ -18,7 +18,7 @@ const AboutSection: React.FC = () => {
           <div className="flex-1">
             <div className="space-y-6">
               <p className="home-section-body-text text-base leading-relaxed text-gray-600">
-                The Unite India Corporation Foundation for Education and Events is a vibrant, community-driven organization based in New Jersey, USA, dedicated to reviving real Malayali culture, empowering the next generation through education, and offering a nostalgic sense of home to our community. Our mission is to preserve and promote the rich cultural heritage of Kerala while fostering a deeper connection among Malayalis in the USA, creating a sense of belonging and unity.
+                Kerala Center of New Jersey (KCNJ) is a vibrant, community-driven organization based in New Jersey, USA, dedicated to reviving real Malayali culture, empowering the next generation through education, and offering a nostalgic sense of home to our community. Our mission is to preserve and promote the rich cultural heritage of Kerala while fostering a deeper connection among Malayalis in the USA, creating a sense of belonging and unity.
               </p>
             </div>
           </div>

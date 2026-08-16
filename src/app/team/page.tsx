@@ -7,6 +7,7 @@ import { parseExecutiveCommitteeTeamMembersResponse } from '@/lib/parseExecutive
 import Modal from '@/components/ui/Modal';
 import { getHomepageCacheKey } from '@/lib/homepageCacheKeys';
 import TeamPageBackground from './TeamPageBackground';
+import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import '@/styles/modernist-homepage.css';
 
 /** Max characters to show in card before "Read more". Longer bios open in popup. */
@@ -123,16 +124,7 @@ export default function TeamPage() {
       <TeamPageBackground />
       <main className="mh-events-page modernist-home mh-team-page">
         <section className="mh-events-hero" aria-label="Team">
-          <figure className="mh-events-hero-media mh-grayscale">
-            <Image
-              src="/images/default_placeholder_hero_image.jpeg"
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              style={{ objectFit: 'cover' }}
-            />
-          </figure>
+          <PageHeaderRibbonMedia />
           <div className="mh-events-hero-scrim" aria-hidden="true" />
           <div className="mh-events-hero-content">
             <div className="mh-events-hero-kicker">

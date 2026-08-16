@@ -24,7 +24,7 @@ The homepage events block shows **up to 6 active events**. Prefer **upcoming** e
 - ❌ `/events` list page — use [events_page_filtering_display_rules.mdc](mdc:.cursor/rules/events_page_filtering_display_rules.mdc) instead
 - ❌ Featured strip / hero banners — separate components and rules
 
-## Wiring (MCEFEE modernist home)
+## Wiring (KCNJ modernist home)
 
 ```tsx
 // ✅ DO: Gate with tenant settings; pass modernist variant so cards use mh-* design system

@@ -26,7 +26,7 @@ const EventDetailsCard = () => {
       {/* Event Description */}
       <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 mb-6">
         <p className="text-gray-700 leading-relaxed text-center">
-          "Spark of Kerala," a showcase of performance arts and rhythm organized by MCEFEE, 
+          "Spark of Kerala," a showcase of performance arts and rhythm organized by KCNJ, 
           taking place in the USA from August to September 2025.
         </p>
       </div>
@@ -45,7 +45,7 @@ const EventDetailsCard = () => {
         <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 text-center">
           <Icon name="Building" size={20} className="text-orange-500 mx-auto mb-2" />
           <p className="text-sm font-medium text-gray-600">Organizer</p>
-          <p className="text-gray-800 font-semibold">MCEFEE</p>
+          <p className="text-gray-800 font-semibold">KCNJ</p>
         </div>
       </div>
       {/* Featured Artists */}

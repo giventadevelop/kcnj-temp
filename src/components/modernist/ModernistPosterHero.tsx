@@ -258,6 +258,13 @@ export default function ModernistPosterHero() {
     };
   }, [heroFetchEnabled, tenantSettingsLoading, tenantSettings, heroDataVersion, applySlides]);
 
+  /**
+   * Natural ratio of the slide on screen. The panel sizes itself to this so a
+   * contained poster fills it edge to edge. Updated on load rather than on slide
+   * change so the panel resizes once, together with the crossfade.
+   */
+  const [slideRatio, setSlideRatio] = useState<number | null>(null);
+
   const goToIndex = useCallback((nextIndex: number) => {
     const list = slidesRef.current;
     if (list.length < 2) return;
@@ -349,20 +356,45 @@ export default function ModernistPosterHero() {
 
           <div
             className="mh-poster-hero-slide-panel"
+            style={
+              slideRatio
+                ? ({ '--mh-hero-slide-ratio': String(slideRatio) } as React.CSSProperties)
+                : undefined
+            }
             onMouseEnter={() => setShowControls(true)}
             onMouseLeave={() => setShowControls(false)}
             onTouchStart={bumpControls}
           >
             <figure className="mh-poster-hero-media">
+              {/*
+                Over-scaled, blurred copy of the same art. It fills the panel so the
+                poster above it can be `object-fit: contain` without leaving bare bars.
+              */}
+              <Image
+                key={`backdrop-${current.url}-${index}`}
+                src={current.url}
+                alt=""
+                aria-hidden
+                fill
+                loading="eager"
+                sizes="480px"
+                className={`mh-poster-hero-img mh-poster-hero-img-backdrop${fadeIn ? ' is-visible' : ''}`}
+              />
               <Image
                 key={current.url + String(index)}
                 src={current.url}
-                alt={current.overlayTitle || 'MCEFEE cultural hero'}
+                alt={current.overlayTitle || 'KCNJ cultural hero'}
                 fill
                 priority
-                sizes="(min-width: 1024px) 60vw, 100vw"
+                sizes="(min-width: 1024px) 74vw, 100vw"
                 className={`mh-poster-hero-img${fadeIn ? ' is-visible' : ''}`}
                 style={{ objectPosition: 'center center' }}
+                onLoad={(event) => {
+                  const { naturalWidth, naturalHeight } = event.currentTarget;
+                  if (naturalWidth > 0 && naturalHeight > 0) {
+                    setSlideRatio(naturalWidth / naturalHeight);
+                  }
+                }}
               />
             </figure>
 

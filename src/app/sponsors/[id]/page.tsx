@@ -9,6 +9,7 @@ import { Camera, Video, Eye } from 'lucide-react';
 import styles from '../../events/[id]/GalleryThumbnails.module.css';
 import { EventMediaSlideshow } from '@/app/gallery/components/EventMediaSlideshow';
 import { SponsorContactSocialIconRow } from '@/components/sponsors/SponsorCard';
+import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import '@/styles/modernist-homepage.css';
 
 const getMediaTypeIcon = (mediaType: string) => {
@@ -48,9 +49,9 @@ export default function SponsorDetailsPage() {
   const [bannerImageError, setBannerImageError] = useState(false);
 
   useLayoutEffect(() => {
-    document.body.classList.add('modernist-home');
+    document.body.classList.add('modernist-home', 'organic-home');
     return () => {
-      document.body.classList.remove('modernist-home');
+      /* PublicOrganicDesignBody owns cleanup on route change */
     };
   }, []);
 
@@ -154,21 +155,12 @@ export default function SponsorDetailsPage() {
     <div className="mh-event-detail mh-sponsor-detail">
       {/* Shared page ribbon under header — same shell as /events and /sponsors */}
       <section className="mh-events-hero" aria-label="Sponsor">
-        <figure className="mh-events-hero-media mh-grayscale">
-          <Image
-            src="/images/default_placeholder_hero_image.jpeg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            style={{ objectFit: 'cover' }}
-          />
-        </figure>
+        <PageHeaderRibbonMedia />
         <div className="mh-events-hero-scrim" aria-hidden="true" />
         <div className="mh-events-hero-content">
           <div className="mh-events-hero-kicker">
             <span className="mh-dot" aria-hidden="true" />
-            <span>MCEFEE partners</span>
+            <span>KCNJ partners</span>
           </div>
           <h1>{sponsor.name}</h1>
           <p className="mh-events-hero-lede">

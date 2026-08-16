@@ -168,7 +168,7 @@ Redirects to primary with redirect_url:
     https://www.event-site-manager.com/sign-in?redirect_url=https://www.mosc-temp.com
     ↓
 Primary domain:
-    ✅ Hides MCEFEE header/footer (ConditionalAuthLayout)
+    ✅ Hides KCNJ header/footer (ConditionalAuthLayout)
     ✅ Extracts satellite config from redirect_url
     ✅ Shows "Unite India" header/footer (satellite branding)
     ↓
@@ -179,7 +179,7 @@ Redirects back to www.mosc-temp.com with session
 
 ### 💡 Why This Matters:
 Without this implementation, users would see **mixed branding** during authentication:
-- ❌ Primary domain header (MCEFEE) at top
+- ❌ Primary domain header (KCNJ) at top
 - ❌ Satellite footer (Unite India) at bottom
 - ❌ Confusing user experience
 

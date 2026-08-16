@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { EventSponsorsDTO } from '@/types';
 import { proxyApiPath } from '@/lib/proxyApiPath';
 import { SponsorContactSocialIconRow } from '@/components/sponsors/SponsorCard';
+import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import '@/styles/modernist-homepage.css';
 
 const PAGE_SIZE = 20;
@@ -22,9 +23,9 @@ export default function SponsorsPage() {
   const [totalPages, setTotalPages] = useState(0);
 
   useLayoutEffect(() => {
-    document.body.classList.add('modernist-home');
+    document.body.classList.add('modernist-home', 'organic-home');
     return () => {
-      document.body.classList.remove('modernist-home');
+      /* PublicOrganicDesignBody owns cleanup on route change */
     };
   }, []);
 
@@ -110,21 +111,12 @@ export default function SponsorsPage() {
   return (
     <main className="mh-events-page modernist-home mh-sponsors-page">
       <section className="mh-events-hero" aria-label="Sponsors">
-        <figure className="mh-events-hero-media mh-grayscale">
-          <Image
-            src="/images/default_placeholder_hero_image.jpeg"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            style={{ objectFit: 'cover' }}
-          />
-        </figure>
+        <PageHeaderRibbonMedia />
         <div className="mh-events-hero-scrim" aria-hidden="true" />
         <div className="mh-events-hero-content">
           <div className="mh-events-hero-kicker">
             <span className="mh-dot" aria-hidden="true" />
-            <span>MCEFEE partners</span>
+            <span>KCNJ partners</span>
           </div>
           <h1>Our Sponsors</h1>
           <p className="mh-events-hero-lede">

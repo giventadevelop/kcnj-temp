@@ -1,7 +1,7 @@
-import Image from 'next/image';
 import { getAppUrl } from '@/lib/env';
 import FocusGroupsGridWithSearch from './FocusGroupsGridWithSearch';
 import SubpageHomeDesignBackground from '@/components/SubpageHomeDesignBackground';
+import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import subpageStyles from '@/components/SubpageHomeDesign.module.css';
 
 async function fetchEventsForGroup(baseUrl: string, groupId: number) {
@@ -44,41 +44,29 @@ export default async function FocusGroupsPage() {
   return (
     <>
       <SubpageHomeDesignBackground bodyClass="focus-groups-page-background" />
+
+      <section className="mh-events-hero" aria-label="Focus Groups">
+        <PageHeaderRibbonMedia />
+        <div className="mh-events-hero-scrim" aria-hidden="true" />
+        <div className="mh-events-hero-content">
+          <div className="mh-events-hero-kicker">
+            <span className="mh-dot" aria-hidden="true" />
+            <span>Community circles</span>
+          </div>
+          <h1>Focus Groups</h1>
+          <p className="mh-events-hero-lede">
+            Explore our specialized groups and their upcoming activities.
+          </p>
+        </div>
+      </section>
+
       <div
         className={`${subpageStyles.subpageRoot} home-page-layout relative z-[1] min-h-screen w-full overflow-x-hidden`}
       >
         <div
           className="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8"
-          style={{ paddingTop: '120px', paddingBottom: '2rem' }}
+          style={{ paddingTop: '2.5rem', paddingBottom: '2rem' }}
         >
-          <div className="mb-4 sm:mb-6 md:mb-8">
-            <h1 className="hidden text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 text-center sm:text-left">
-              Focus Groups
-            </h1>
-            <p className="hidden text-xs sm:text-sm text-gray-600 text-center sm:text-left">
-              Explore our specialized groups and their upcoming activities.
-            </p>
-            <div className="mt-4 sm:mt-6 w-full rounded-lg overflow-hidden relative">
-              <Image
-                src="/images/MalayaleeUS-subpage-HeroImage.png"
-                alt="Focus Groups"
-                width={1200}
-                height={400}
-                className="w-full h-auto object-contain"
-                priority
-                sizes="100vw"
-              />
-              <div className="absolute inset-y-0 left-0 flex flex-col justify-center pl-6 sm:pl-8 lg:pl-12 pr-8 bg-gradient-to-r from-black/60 via-black/30 to-transparent max-w-xs sm:max-w-md">
-                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-white drop-shadow-md">
-                  Focus Group
-                </span>
-                <span className="text-xs sm:text-sm text-white/95 drop-shadow-md mt-1 sm:mt-2">
-                  Explore our specialized groups and their upcoming activities.
-                </span>
-              </div>
-            </div>
-          </div>
-
           <div className="homepage-glass-card services-glass-card-face rounded-2xl p-6 lg:p-8 mb-8 w-full max-w-[75%] mx-auto">
             <FocusGroupsGridWithSearch groups={groupsWithEvents} total={total} />
           </div>

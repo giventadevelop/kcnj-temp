@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import { fetchEventsForMonthServer } from './ApiServerActions';
 import CalendarClient from './CalendarClient';
 import CalendarPageBackground from './CalendarPageBackground';
@@ -36,21 +36,12 @@ export default async function CalendarPage({
       <CalendarPageBackground />
       <main className="mh-events-page modernist-home mh-calendar-page">
         <section className="mh-events-hero" aria-label="Calendar">
-          <figure className="mh-events-hero-media mh-grayscale">
-            <Image
-              src="/images/default_placeholder_hero_image.jpeg"
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              style={{ objectFit: 'cover' }}
-            />
-          </figure>
+          <PageHeaderRibbonMedia />
           <div className="mh-events-hero-scrim" aria-hidden="true" />
           <div className="mh-events-hero-content">
             <div className="mh-events-hero-kicker">
               <span className="mh-dot" aria-hidden="true" />
-              <span>MCEFEE schedule</span>
+              <span>KCNJ schedule</span>
             </div>
             <h1>Event Calendar</h1>
             <p className="mh-events-hero-lede">

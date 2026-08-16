@@ -2,43 +2,66 @@
 
 import { auth } from '@clerk/nextjs/server';
 import { UserProfileDTO } from '@/types';
-import { getTenantId, getAppUrl, getApiBaseUrl } from '@/lib/env';
-import { getCachedApiJwt, generateApiJwt } from '@/lib/api/jwt';
+import { getTenantId, getApiBaseUrl } from '@/lib/env';
 import { fetchWithJwtRetry } from '@/lib/proxyHandler';
+
+function parseProfileResponse(data: unknown): UserProfileDTO | null {
+  if (Array.isArray(data)) {
+    const first = data[0];
+    return first && typeof first === 'object' && (first as UserProfileDTO).id
+      ? (first as UserProfileDTO)
+      : null;
+  }
+  if (data && typeof data === 'object' && (data as UserProfileDTO).id) {
+    return data as UserProfileDTO;
+  }
+  return null;
+}
 
 /**
  * Fetch user profile with optimized performance
  * Accepts optional Clerk user data to avoid multiple Clerk API calls
+ *
+ * IMPORTANT: Calls the backend API directly (getApiBaseUrl + fetchWithJwtRetry).
+ * Do NOT loop through getAppUrl()/api/proxy — NEXT_PUBLIC_APP_URL often points at a
+ * stale port (e.g. 3003 while the app runs on 3002), which hangs /profile forever.
  */
 export async function fetchUserProfileServer(
   userId: string,
   clerkUserData?: { email?: string; firstName?: string; lastName?: string }
 ): Promise<UserProfileDTO | null> {
-  const baseUrl = getAppUrl();
+  const apiBaseUrl = getApiBaseUrl();
+  const tenantId = getTenantId();
+
+  if (!apiBaseUrl) {
+    console.error('[Profile Server] NEXT_PUBLIC_API_BASE_URL is not configured');
+    return null;
+  }
 
   try {
     console.log('[Profile Server] Starting profile fetch for userId:', userId);
 
-    // Step 1: Try to fetch the profile by userId (most common case - should be fast)
-    const url = `${baseUrl}/api/proxy/user-profiles/by-user/${userId}`;
-    let response = await fetch(url, {
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store'
+    // Step 1: Lookup by userId + tenant (list criteria — avoids hanging /by-user/{id} paths)
+    const byUserParams = new URLSearchParams({
+      'userId.equals': userId,
+      'tenantId.equals': tenantId,
+      size: '1',
     });
+    const response = await fetchWithJwtRetry(
+      `${apiBaseUrl}/api/user-profiles?${byUserParams.toString()}`,
+      { method: 'GET', cache: 'no-store' },
+      '[Profile Server] by-userId'
+    );
 
     if (response.ok) {
-      const data = await response.json();
-      console.log('[Profile Server] ✅ Profile found by userId');
-      // Handle empty array case - return null if no profile found
-      if (Array.isArray(data)) {
-        return data.length > 0 ? data[0] : null;
+      const profile = parseProfileResponse(await response.json());
+      if (profile) {
+        console.log('[Profile Server] ✅ Profile found by userId');
+        return profile;
       }
-      // Handle single object case
-      return data && data.id ? data : null;
     }
 
     // Step 2: Fallback to email lookup (only if userId lookup fails)
-    // Use provided Clerk data or fetch once if needed
     let email = clerkUserData?.email;
     if (!email) {
       try {
@@ -48,13 +71,13 @@ export async function fetchUserProfileServer(
           if (clerkApiKey) {
             const clerkRes = await fetch(`https://api.clerk.dev/v1/users/${authUserId}`, {
               headers: {
-                'Authorization': `Bearer ${clerkApiKey}`,
-                'Content-Type': 'application/json'
-              }
+                Authorization: `Bearer ${clerkApiKey}`,
+                'Content-Type': 'application/json',
+              },
             });
             if (clerkRes.ok) {
               const clerkUser = await clerkRes.json();
-              email = clerkUser.email_addresses?.[0]?.email_address || "";
+              email = clerkUser.email_addresses?.[0]?.email_address || '';
             }
           }
         }
@@ -64,38 +87,31 @@ export async function fetchUserProfileServer(
     }
 
     if (email) {
-      const emailUrl = `${baseUrl}/api/proxy/user-profiles?email.equals=${encodeURIComponent(email)}`;
-      const emailRes = await fetch(emailUrl, {
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store'
+      const emailParams = new URLSearchParams({
+        'email.equals': email,
+        'tenantId.equals': tenantId,
+        size: '5',
       });
+      const emailRes = await fetchWithJwtRetry(
+        `${apiBaseUrl}/api/user-profiles?${emailParams.toString()}`,
+        { method: 'GET', cache: 'no-store' },
+        '[Profile Server] by-email'
+      );
 
       if (emailRes.ok) {
-        const emailData = await emailRes.json();
-        // Handle empty array case - return null if no profile found
-        let profile = null;
-        if (Array.isArray(emailData)) {
-          profile = emailData.length > 0 ? emailData[0] : null;
-        } else {
-          profile = emailData && emailData.id ? emailData : null;
-        }
-
-        if (profile && profile.id) {
+        const profile = parseProfileResponse(await emailRes.json());
+        if (profile?.id) {
           console.log('[Profile Server] ✅ Profile found by email');
 
           // Check if profile needs userId update (async - don't block return)
           if (profile.userId !== userId) {
             console.log('[Profile Server] 🔄 Profile needs userId reconciliation');
-            // Fire and forget - don't wait for reconciliation
-            fetch(`${baseUrl}/api/proxy/user-profiles/${profile.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/merge-patch+json' },
-              body: JSON.stringify({
-                id: profile.id,
-                userId: userId,
-                updatedAt: new Date().toISOString()
-              }),
-            }).catch(err => console.error('[Profile Server] ⚠️ Profile reconciliation failed:', err));
+            updateUserProfileServer(profile.id, {
+              userId,
+              updatedAt: new Date().toISOString(),
+            }).catch((err) =>
+              console.error('[Profile Server] ⚠️ Profile reconciliation failed:', err)
+            );
           }
 
           return profile;
@@ -104,10 +120,8 @@ export async function fetchUserProfileServer(
     }
 
     // Step 3: Profile not found - return null (let caller handle creation if needed)
-    // This avoids duplicate creation logic and reduces latency
     console.log('[Profile Server] ❌ No profile found for userId:', userId);
     return null;
-
   } catch (error) {
     console.error('[Profile Server] ❌ Critical error in profile fetching:', error);
     return null;
@@ -161,19 +175,27 @@ export async function updateUserProfileServer(profileId: number, payload: Partia
 }
 
 export async function createUserProfileServer(payload: Omit<UserProfileDTO, 'id' | 'createdAt' | 'updatedAt'>): Promise<UserProfileDTO | null> {
-  const baseUrl = getAppUrl();
+  const apiBaseUrl = getApiBaseUrl();
+  if (!apiBaseUrl) {
+    console.error('[Profile Server] NEXT_PUBLIC_API_BASE_URL is not configured');
+    return null;
+  }
 
   try {
-    const response = await fetch(`${baseUrl}/api/proxy/user-profiles`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...payload,
-        tenantId: getTenantId(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }),
-    });
+    const response = await fetchWithJwtRetry(
+      `${apiBaseUrl}/api/user-profiles`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          tenantId: getTenantId(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }),
+      },
+      '[Profile Server] create-profile'
+    );
 
     if (response.ok) {
       return await response.json();
@@ -186,10 +208,20 @@ export async function createUserProfileServer(payload: Omit<UserProfileDTO, 'id'
 }
 
 export async function resubscribeEmailServer(email: string, token: string): Promise<boolean> {
-  const baseUrl = getAppUrl();
+  const apiBaseUrl = getApiBaseUrl();
+  if (!apiBaseUrl) return false;
 
   try {
-    const response = await fetch(`${baseUrl}/api/proxy/user-profiles/resubscribe-email?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`);
+    const params = new URLSearchParams({
+      email,
+      token,
+      'tenantId.equals': getTenantId(),
+    });
+    const response = await fetchWithJwtRetry(
+      `${apiBaseUrl}/api/user-profiles/resubscribe-email?${params.toString()}`,
+      { method: 'GET' },
+      '[Profile Server] resubscribe-email'
+    );
     return response.ok;
   } catch (error) {
     console.error('Error resubscribing email:', error);
@@ -198,18 +230,27 @@ export async function resubscribeEmailServer(email: string, token: string): Prom
 }
 
 export async function checkEmailSubscriptionServer(email: string): Promise<{ isSubscribed: boolean; token?: string }> {
-  const baseUrl = getAppUrl();
+  const apiBaseUrl = getApiBaseUrl();
+  if (!apiBaseUrl) return { isSubscribed: false };
 
   try {
-    const url = `${baseUrl}/api/proxy/user-profiles?email.equals=${encodeURIComponent(email)}`;
-    const response = await fetch(url, { method: 'GET' });
+    const params = new URLSearchParams({
+      'email.equals': email,
+      'tenantId.equals': getTenantId(),
+      size: '1',
+    });
+    const response = await fetchWithJwtRetry(
+      `${apiBaseUrl}/api/user-profiles?${params.toString()}`,
+      { method: 'GET', cache: 'no-store' },
+      '[Profile Server] check-email-subscription'
+    );
 
     if (response.ok) {
       const data = await response.json();
       const profile = Array.isArray(data) ? data[0] : data;
       return {
         isSubscribed: !profile?.emailUnsubscribed,
-        token: profile?.emailSubscriptionToken
+        token: profile?.emailSubscriptionToken,
       };
     }
     return { isSubscribed: false };
@@ -221,32 +262,33 @@ export async function checkEmailSubscriptionServer(email: string): Promise<{ isS
 
 /**
  * Fetch user profile by email address
- * Note: The proxy handler automatically injects tenantId.equals for security
  */
 export async function fetchUserProfileByEmailServer(email: string): Promise<UserProfileDTO | null> {
-  const baseUrl = getAppUrl();
+  const apiBaseUrl = getApiBaseUrl();
+  if (!apiBaseUrl) return null;
 
   try {
-    // The proxy handler automatically adds tenantId.equals for security
-    // This ensures we only get profiles for the current tenant
-    const url = `${baseUrl}/api/proxy/user-profiles?email.equals=${encodeURIComponent(email)}`;
+    const params = new URLSearchParams({
+      'email.equals': email,
+      'tenantId.equals': getTenantId(),
+      size: '1',
+    });
     console.log('[fetchUserProfileByEmailServer] Fetching profile by email:', email);
 
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      cache: 'no-store'
-    });
+    const response = await fetchWithJwtRetry(
+      `${apiBaseUrl}/api/user-profiles?${params.toString()}`,
+      { method: 'GET', cache: 'no-store' },
+      '[fetchUserProfileByEmailServer]'
+    );
 
     if (response.ok) {
-      const data = await response.json();
-      const profile = Array.isArray(data) ? data[0] : data;
+      const profile = parseProfileResponse(await response.json());
       console.log('[fetchUserProfileByEmailServer] Profile found:', {
         id: profile?.id,
         email: profile?.email,
-        tenantId: profile?.tenantId
+        tenantId: profile?.tenantId,
       });
-      return profile || null;
+      return profile;
     }
 
     console.error('Error fetching profile by email:', response.status);

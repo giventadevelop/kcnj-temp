@@ -1,6 +1,6 @@
 # Backend Refactoring Guide: Domain-Agnostic Payment System
 
-**Project:** MCEFEE Payment System Refactoring
+**Project:** KCNJ Payment System Refactoring
 **Backend Location:** `C:\Users\gain\git\malayalees-us-site-boot`
 **Document Version:** 1.0
 **Date:** October 20, 2025

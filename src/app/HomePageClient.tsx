@@ -5,41 +5,33 @@ import { useAuth, useUser } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import { bootstrapUserProfile } from '@/components/ProfileBootstrapperApiServerActions';
 import type { FeaturedEventWithMedia } from '@/lib/homepage/featuredEvents';
+import { scheduleHomepageHashScroll } from '@/lib/homepageHashScroll';
 import ModernistHomePage from '@/components/modernist/ModernistHomePage';
 
 function HomePageContent({ initialFeaturedEvents }: { initialFeaturedEvents: FeaturedEventWithMedia[] }) {
-  // Hash navigation for #team-section and other anchors
+  // Hash navigation for #contact / #about-us (including "Open in new tab")
   useEffect(() => {
-    const handleHashNavigation = () => {
+    const run = () => {
       const hash = window.location.hash;
-      if (!hash) return;
+      if (!hash) return () => {};
       const targetId = hash.substring(1);
-      const maxWaitTime = 15000;
-      const pollInterval = 100;
-      const startTime = Date.now();
-      const headerHeight = 128;
-
-      const waitForElementAndScroll = () => {
-        const element = document.getElementById(targetId);
-        if (element) {
-          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-          window.scrollTo({
-            top: elementPosition - headerHeight,
-            behavior: 'smooth',
-          });
-          return;
-        }
-        if (Date.now() - startTime < maxWaitTime) {
-          setTimeout(waitForElementAndScroll, pollInterval);
-        }
-      };
-
-      waitForElementAndScroll();
+      return scheduleHomepageHashScroll(targetId, { behavior: 'auto' });
     };
 
-    handleHashNavigation();
-    window.addEventListener('hashchange', handleHashNavigation);
-    return () => window.removeEventListener('hashchange', handleHashNavigation);
+    let cancel = run();
+    const onHashChange = () => {
+      cancel();
+      cancel = scheduleHomepageHashScroll(window.location.hash.substring(1), {
+        behavior: 'smooth',
+        settleDelaysMs: [150, 400],
+      });
+    };
+
+    window.addEventListener('hashchange', onHashChange);
+    return () => {
+      cancel();
+      window.removeEventListener('hashchange', onHashChange);
+    };
   }, []);
 
   return <ModernistHomePage initialFeaturedEvents={initialFeaturedEvents} />;
@@ -58,7 +50,7 @@ export default function HomePageClient({
   useEffect(() => {
     document.body.classList.add('modernist-home', 'organic-home');
     return () => {
-      document.body.classList.remove('modernist-home', 'organic-home');
+      /* PublicOrganicDesignBody owns cleanup on route change */
     };
   }, []);
 

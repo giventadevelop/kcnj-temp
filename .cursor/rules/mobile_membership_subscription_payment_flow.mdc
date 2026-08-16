@@ -15,7 +15,7 @@ alwaysApply: false
 
 # Mobile Browser Membership Subscription Payment Flow Architecture
 
-This document outlines the comprehensive mobile browser payment flow architecture for membership subscriptions in the MCEFEE event management application, detailing how mobile payments differ from desktop payments and how subscriptions are persisted.
+This document outlines the comprehensive mobile browser payment flow architecture for membership subscriptions in the KCNJ event management application, detailing how mobile payments differ from desktop payments and how subscriptions are persisted.
 
 ## Overview
 
@@ -784,4 +784,4 @@ import { PlanFeaturesList } from '@/components/membership/PlanFeaturesList';
 - **CRITICAL**: Show Stripe subscription ID for reference
 - **CRITICAL**: Use styled action buttons matching admin action button pattern
 
-This architecture ensures optimal mobile payment experience while maintaining security, reliability, and proper subscription persistence for the MCEFEE event management system. The mobile membership subscription flow now properly creates Stripe Subscriptions for recurring billing, stores all required Stripe IDs in the database, handles plan upgrades correctly, filters out cancelled subscriptions, checks Stripe API for existing subscriptions, and displays complete subscription details on the success page matching the desktop flow.
+This architecture ensures optimal mobile payment experience while maintaining security, reliability, and proper subscription persistence for the KCNJ event management system. The mobile membership subscription flow now properly creates Stripe Subscriptions for recurring billing, stores all required Stripe IDs in the database, handles plan upgrades correctly, filters out cancelled subscriptions, checks Stripe API for existing subscriptions, and displays complete subscription details on the success page matching the desktop flow.

@@ -14,6 +14,7 @@ import { SponsorCard } from '@/components/sponsors/SponsorCard';
 import { SocialIconLink } from '@/components/social/SocialIconLink';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
 import { isTicketedEventCube } from '@/lib/eventcube/utils';
+import { DEFAULT_HEADER_RIBBON_IMAGE } from '@/lib/headerRibbon';
 import '@/styles/modernist-homepage.css';
 
 // Helper function to get initials from a name
@@ -138,11 +139,11 @@ export default function EventDetailsPage() {
   const [eventFocusGroupOptions, setEventFocusGroupOptions] = useState<{ id: number; name: string }[]>([]);
   const [focusGroupNameByAssociationId, setFocusGroupNameByAssociationId] = useState<Record<number, string>>({});
 
-  // Match homepage /events list modernist design system
+  // Match homepage organic design system (also set globally by PublicOrganicDesignBody).
   useLayoutEffect(() => {
-    document.body.classList.add('modernist-home');
+    document.body.classList.add('modernist-home', 'organic-home');
     return () => {
-      document.body.classList.remove('modernist-home');
+      /* PublicOrganicDesignBody owns cleanup on route change */
     };
   }, []);
 
@@ -421,7 +422,7 @@ export default function EventDetailsPage() {
                     media.find((m) => m.eventFlyer && m.fileUrl) ||
                     media.find((m) => m.fileUrl);
   // Use default hero image if no hero image found (same as events page)
-  const heroImageUrl = heroImage?.fileUrl || "/images/default_placeholder_hero_image.jpeg";
+  const heroImageUrl = heroImage?.fileUrl || DEFAULT_HEADER_RIBBON_IMAGE;
   const gallery = media.filter((m) => m.fileUrl && (!heroImage || m.id !== heroImage.id));
 
   // Get preview images (first 12 media items for grid display)

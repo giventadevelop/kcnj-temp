@@ -1,6 +1,6 @@
 # Fundraiser Event with Stripe Payment - Product Requirements Document (PRD)
 
-**Project:** MCEFEE Multi-Tenant Event Management Platform
+**Project:** KCNJ Multi-Tenant Event Management Platform
 **Document Version:** 1.0
 **Date:** January 2025
 **Status:** Ready for Implementation
@@ -43,7 +43,7 @@ This PRD outlines the implementation of **fundraiser events** that use **Stripe*
 
 ### Current System Capabilities
 
-The MCEFEE platform already supports:
+The KCNJ platform already supports:
 
 - **Domain-Agnostic Payment System**: Backend payment orchestration layer with provider abstraction
 - **Stripe Integration**: Fully functional Stripe payment adapter

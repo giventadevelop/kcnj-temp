@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js 15+ event management application (MCEFEE - Malayalee Cultural Events Federation for Education & Empowerment) built with TypeScript, using the App Router pattern. The application provides ticketing, event management, and user management functionality with multi-tenant architecture.
+This is a Next.js 15+ event management application (KCNJ - Malayalee Cultural Events Federation for Education & Empowerment) built with TypeScript, using the App Router pattern. The application provides ticketing, event management, and user management functionality with multi-tenant architecture.
 
 ## Technology Stack
 

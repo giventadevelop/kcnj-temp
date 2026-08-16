@@ -16,7 +16,7 @@ alwaysApply: false
 
 # Desktop Browser Payment Flow Architecture
 
-This document outlines the comprehensive desktop browser payment flow architecture for the MCEFEE event management application, detailing how desktop payments differ from mobile payments and how transactions are persisted.
+This document outlines the comprehensive desktop browser payment flow architecture for the KCNJ event management application, detailing how desktop payments differ from mobile payments and how transactions are persisted.
 
 ## Overview
 
@@ -1199,4 +1199,4 @@ if (!transaction && !isMobile && pi) {
 
 **Lesson**: Always verify transaction items are created after transaction creation. Use logging to track item creation process.
 
-This architecture ensures optimal desktop payment experience while maintaining security, reliability, and proper transaction persistence for the MCEFEE event management system.
+This architecture ensures optimal desktop payment experience while maintaining security, reliability, and proper transaction persistence for the KCNJ event management system.

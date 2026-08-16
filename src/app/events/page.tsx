@@ -7,6 +7,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { isRecurringEvent, getNextOccurrenceDate } from '@/lib/eventUtils';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
 import { isTicketedEventCube } from '@/lib/eventcube/utils';
+import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import '@/styles/modernist-homepage.css';
 
 const EVENTS_PAGE_SIZE = 20; // Minimum events to display per page
@@ -48,7 +49,6 @@ export default function EventsPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [displayedCount, setDisplayedCount] = useState(0); // Actual count after filtering recurring events
   const [hasMoreEvents, setHasMoreEvents] = useState(false); // Track if there are more events available
-  const [heroImageUrl, setHeroImageUrl] = useState<string>("/images/default_placeholder_hero_image.jpeg");
   const [fetchError, setFetchError] = useState(false);
   const [showPastEvents, setShowPastEvents] = useState(false);
   const [searchTitle, setSearchTitle] = useState("");
@@ -62,11 +62,11 @@ export default function EventsPage() {
   const [isAutoSwitching, setIsAutoSwitching] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<number, boolean>>({});
 
-  // Apply the Modernist design system to this page (see src/styles/modernist-homepage.css).
+  // Apply the homepage organic design system (also set globally by PublicOrganicDesignBody).
   useLayoutEffect(() => {
-    document.body.classList.add('modernist-home');
+    document.body.classList.add('modernist-home', 'organic-home');
     return () => {
-      document.body.classList.remove('modernist-home');
+      /* PublicOrganicDesignBody owns cleanup on route change */
     };
   }, []);
 
@@ -282,27 +282,9 @@ export default function EventsPage() {
           })
         );
         setEvents(eventsWithMedia);
-
-        // Hero image logic: earliest upcoming event within 3 months
-        const currentDate = new Date();
-        const threeMonthsFromNow = new Date();
-        threeMonthsFromNow.setMonth(currentDate.getMonth() + 3);
-        const upcoming = eventsWithMedia
-          .filter(e => e.startDate && new Date(e.startDate) >= currentDate && e.thumbnailUrl)
-          .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-        if (upcoming.length > 0) {
-          const nextEvent = upcoming[0];
-          const eventDate = nextEvent.startDate ? new Date(nextEvent.startDate) : null;
-          if (eventDate && eventDate <= threeMonthsFromNow && nextEvent.thumbnailUrl) {
-            setHeroImageUrl(nextEvent.thumbnailUrl);
-            return;
-          }
-        }
-        setHeroImageUrl("/images/default_placeholder_hero_image.jpeg");
       } catch (err) {
         setFetchError(true);
         setEvents([]);
-        setHeroImageUrl("/images/default_placeholder_hero_image.jpeg");
       } finally {
         setLoading(false);
       }
@@ -368,14 +350,12 @@ export default function EventsPage() {
   return (
     <main className="mh-events-page modernist-home">
       <section className="mh-events-hero" aria-label="Events">
-        <figure className="mh-events-hero-media mh-grayscale">
-          <Image src={heroImageUrl} alt="" fill priority sizes="100vw" style={{ objectFit: 'cover' }} />
-        </figure>
+        <PageHeaderRibbonMedia />
         <div className="mh-events-hero-scrim" aria-hidden="true" />
         <div className="mh-events-hero-content">
           <div className="mh-events-hero-kicker">
             <span className="mh-dot" aria-hidden="true" />
-            <span>MCEFEE calendar</span>
+            <span>KCNJ calendar</span>
           </div>
           <h1>All Events</h1>
           <p className="mh-events-hero-lede">

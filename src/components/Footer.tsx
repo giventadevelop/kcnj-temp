@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUp, Mail, Phone, MapPin } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useTenantSettings } from "@/components/TenantSettingsProvider";
 import GoogleAdSenseRegion from "@/components/ads/GoogleAdSenseRegion";
 import { SocialIconLink } from "@/components/social/SocialIconLink";
+import { scrollToHomepageHash } from "@/lib/homepageHashScroll";
 
 // Back-to-top button component with comprehensive styling
 const BackToTopButton = () => {
@@ -64,13 +66,24 @@ const BackToTopButton = () => {
 };
 
 const Footer = () => {
+  const pathname = usePathname();
   const { settings, organizationIdentity } = useTenantSettings();
   const hasAnySocial = settings?.facebookUrl?.trim() || settings?.instagramUrl?.trim() || settings?.twitterUrl?.trim() || settings?.linkedinUrl?.trim() || settings?.youtubeUrl?.trim() || settings?.tiktokUrl?.trim();
   const contactEmail = settings?.email?.trim() || '';
   const contactPhone = settings?.phoneNumber?.trim() || '';
-  const footerDescription =
-    organizationIdentity.description?.trim() ||
-    'Making a difference in communities worldwide through compassionate action and sustainable impact.';
+  const footerDescription = organizationIdentity.description?.trim() || '';
+
+  const handleHomeHashClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: '/#about-us' | '/#contact'
+  ) => {
+    if (pathname !== '/' && pathname !== '/charity-theme') return;
+    e.preventDefault();
+    const targetId = href.slice(2);
+    window.history.pushState(null, '', href.slice(1));
+    scrollToHomepageHash(targetId, 'smooth');
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+  };
 
   return (
     <footer
@@ -85,20 +98,22 @@ const Footer = () => {
 
             {/* Column 1: Logo and Social Media */}
             <div className="footer-brand flex flex-col items-center text-center md:items-start md:text-left">
-              <Link href="/" className="inline-block mb-4 md:mb-6">
+              <Link href="/" className="inline-block mb-4 md:mb-6" title="KCNJ Home" aria-label="KCNJ Home">
                 <Image
-                  src="/images/logos/Mcefee/mcefee_logo_black_border_transparent.png"
-                  alt="MCEFEE"
-                  width={150}
-                  height={150}
+                  src="/images/KCNJ/logo_latest-transparent.png"
+                  alt="KCNJ — Kerala Center of New Jersey"
+                  width={320}
+                  height={320}
                   priority
-                  className="h-14 w-auto md:h-12"
+                  className="h-32 w-auto sm:h-36 md:h-40 lg:h-44"
                 />
               </Link>
 
-              <p className="footer-brand-desc text-gray-400 mb-5 md:mb-6 font-inter text-sm leading-relaxed max-w-[34ch] md:max-w-none">
-                {footerDescription}
-              </p>
+              {footerDescription ? (
+                <p className="footer-brand-desc text-gray-400 mb-5 md:mb-6 font-inter text-sm leading-relaxed max-w-[34ch] md:max-w-none">
+                  {footerDescription}
+                </p>
+              ) : null}
 
               {hasAnySocial && (
                 <div className="mb-2 md:mb-0 w-full">
@@ -175,9 +190,9 @@ const Footer = () => {
                 <div className="flex items-start gap-3">
                   <MapPin size={18} className="footer-contact-icon text-blue-400 mt-0.5 flex-shrink-0" strokeWidth={2} />
                   <p className="footer-address text-gray-400 font-inter text-sm leading-relaxed text-left">
-                    <span className="block font-medium text-gray-300">MCEFEE</span>
+                    <span className="block font-medium text-gray-300">KCNJ</span>
                     <span className="block">
-                      Malayali Cultural Exchange Foundation for Education and Events
+                      Kerala Center of New Jersey
                     </span>
                     <span className="block mt-1">New Jersey, USA</span>
                   </p>
@@ -227,7 +242,8 @@ const Footer = () => {
                     </li>
                     <li>
                       <Link
-                        href="/about"
+                        href="/#about-us"
+                        onClick={(e) => handleHomeHashClick(e, '/#about-us')}
                         className="footer-link text-gray-300 hover:text-white font-inter text-sm transition-colors duration-300 focus:outline-none focus:text-white block py-0.5"
                       >
                         About Us
@@ -251,7 +267,8 @@ const Footer = () => {
                     </li>
                     <li>
                       <Link
-                        href="/contact"
+                        href="/#contact"
+                        onClick={(e) => handleHomeHashClick(e, '/#contact')}
                         className="footer-link text-gray-300 hover:text-white font-inter text-sm transition-colors duration-300 focus:outline-none focus:text-white block py-0.5"
                       >
                         Contact
@@ -269,22 +286,6 @@ const Footer = () => {
                   <ul className="space-y-2.5 md:space-y-3">
                     <li>
                       <Link
-                        href="/donate"
-                        className="footer-link text-gray-300 hover:text-blue-400 font-inter text-sm transition-colors duration-300 focus:outline-none focus:text-blue-400 block py-0.5"
-                      >
-                        Make a Donation
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/contact"
-                        className="footer-link text-gray-300 hover:text-blue-400 font-inter text-sm transition-colors duration-300 focus:outline-none focus:text-blue-400 block py-0.5"
-                      >
-                        Become a Volunteer
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
                         href="/sponsors"
                         className="footer-link text-gray-300 hover:text-blue-400 font-inter text-sm transition-colors duration-300 focus:outline-none focus:text-blue-400 block py-0.5"
                       >
@@ -293,7 +294,7 @@ const Footer = () => {
                     </li>
                     <li>
                       <Link
-                        href="/membership"
+                        href="/sign-up"
                         className="footer-link text-gray-300 hover:text-blue-400 font-inter text-sm transition-colors duration-300 focus:outline-none focus:text-blue-400 block py-0.5"
                       >
                         Membership
@@ -301,7 +302,8 @@ const Footer = () => {
                     </li>
                     <li>
                       <Link
-                        href="/contact"
+                        href="/#contact"
+                        onClick={(e) => handleHomeHashClick(e, '/#contact')}
                         className="footer-link text-gray-300 hover:text-blue-400 font-inter text-sm transition-colors duration-300 focus:outline-none focus:text-blue-400 block py-0.5"
                       >
                         Newsletter Signup
@@ -328,9 +330,9 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-6 md:py-8">
           <div className="flex justify-center items-center">
             <p className="text-gray-400 font-inter text-xs md:text-sm text-center leading-relaxed max-w-[28ch] md:max-w-none">
-              © 2026 MCEFEE
+              © 2026 KCNJ
               <span className="block md:inline md:before:content-['·'] md:before:mx-1.5">
-                Malayali Cultural Exchange Foundation for Education and Events
+                Kerala Center of New Jersey
               </span>
             </p>
           </div>

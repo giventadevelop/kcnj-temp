@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Replace event_details (+ hero media) for the current tenant with MCEFEE charity-site
+ * Replace event_details (+ hero media) for the current tenant with KCNJ charity-site
  * events scraped from events.html + flyer image transcription.
  *
  * Source: F:\project_workspace\NJ-Malayalees-MCEEFEE-Charity-Site\events.html
@@ -30,10 +30,10 @@ const {
 } = await import('./mosc-in-migration/migration-api-lib.mjs');
 
 const IMAGE_DIR =
-  process.env.MCEFEE_EVENTS_IMAGE_DIR ||
+  process.env.KCNJ_EVENTS_IMAGE_DIR ||
   'F:\\project_workspace\\NJ-Malayalees-MCEEFEE-Charity-Site\\images';
 
-const EVENT_TYPE_ID = Number(process.env.MCEFEE_EVENT_TYPE_ID || 13); // Cultural Festival
+const EVENT_TYPE_ID = Number(process.env.KCNJ_EVENT_TYPE_ID || 13); // Cultural Festival
 
 /** Last Sat (start) / Sun (end) of a calendar month (1–12). */
 function lastWeekendOfMonth(year, month, which) {
@@ -56,7 +56,7 @@ const EVENTS = [
     title: 'Spark of Kerala Season 2',
     caption: 'Celebrating the Vibrant Spirit of Onam · USA Tour',
     description: [
-      'MCEFEE presents Spark of Kerala Season 2 — a showcase of performance arts and rhythm celebrating the vibrant spirit of Onam.',
+      'KCNJ presents Spark of Kerala Season 2 — a showcase of performance arts and rhythm celebrating the vibrant spirit of Onam.',
       'Featuring Biju Narayanan with Suhaid Kukku, Sudheesh, Keerthana S K, Anna Prasad, Shiju, Yasir, Vipin, Suneesh and live orchestra.',
       'Show direction: Vipin Manohar. Powered by Spectrum Auto; show partners Daily Delight and EventGram.',
       'Booking: Sujith +1 (551) 283-2437 · Arun +1 (551) 221-1972 · contactus@mcefee.org',
@@ -80,7 +80,7 @@ const EVENTS = [
     title: 'Nadha Varnika Veena Concert',
     caption: 'USA Fall Tour 2026',
     description: [
-      'MCEFEE presents Nādha Varnika — a classical Veena concert on the USA Fall Tour 2026.',
+      'KCNJ presents Nādha Varnika — a classical Veena concert on the USA Fall Tour 2026.',
       'Featuring Sangita Kala Acharya Dr. R.S. Jayalakshmi, Kumari Charulatha Chandrasekar, and Kannan Tripunithura.',
       'Booking: Krish (210) 549-7622 · Arun (551) 221-1972 · www.mcefee.org',
     ].join('\n\n'),

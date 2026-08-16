@@ -1,6 +1,6 @@
 # Product Requirements Document: Domain-Agnostic Payment System
 
-**Project:** MCEFEE Multi-Tenant Event Management Platform
+**Project:** KCNJ Multi-Tenant Event Management Platform
 **Document Version:** 1.0
 **Date:** October 20, 2025
 **Status:** Draft
@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This PRD outlines the transformation of the MCEFEE event management platform from a single-domain, Stripe-centric payment implementation to a **domain-agnostic, multi-tenant payment architecture** that supports multiple payment providers (Stripe, PayPal, and future providers) while maintaining a consistent, user-friendly checkout experience across all client domains.
+This PRD outlines the transformation of the KCNJ event management platform from a single-domain, Stripe-centric payment implementation to a **domain-agnostic, multi-tenant payment architecture** that supports multiple payment providers (Stripe, PayPal, and future providers) while maintaining a consistent, user-friendly checkout experience across all client domains.
 
 ### Current Pain Points
 - Each domain requires separate Stripe account configuration
@@ -46,7 +46,7 @@ Backend-centric payment orchestration layer that abstracts payment provider logi
 
 ### Current Architecture
 
-The MCEFEE platform uses a multi-tenant architecture where:
+The KCNJ platform uses a multi-tenant architecture where:
 - **Frontend:** Next.js 15+ application (this repository at `C:\Users\gain\git\malayalees-us-site`)
 - **Backend:** Spring Boot application (located at `C:\Users\gain\git\malayalees-us-site-boot`)
 - **Authentication:** JWT-based API authentication with tenant ID injection
@@ -274,7 +274,7 @@ CREATE TABLE event_ticket_transaction (
 - Minimal integration (as little as one line of code for Stripe merchants)
 - Merchant maintains customer relationship and control
 
-**Use Cases for MCEFEE:**
+**Use Cases for KCNJ:**
 - Voice/chat-based ticket purchases via ChatGPT
 - AI-assisted donation flows
 - Automated event registration via AI agents
@@ -302,7 +302,7 @@ CREATE TABLE event_ticket_transaction (
 - **Authenticity:** Merchant verifies agent request reflects user intent
 - **Accountability:** Clear fraud/error responsibility
 
-**Use Cases for MCEFEE:**
+**Use Cases for KCNJ:**
 - Future-proofing for AI-driven commerce
 - Crypto payment support for international events
 - Budget-based event booking ("Book me tickets under $200")

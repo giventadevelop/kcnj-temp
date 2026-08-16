@@ -4,13 +4,13 @@ import { useLayoutEffect } from 'react';
 import '@/styles/modernist-homepage.css';
 
 /**
- * Applies the Modernist design system (same as home / events) to the Gallery page.
+ * Applies the Modernist organic design system (same as home) to the Gallery page.
  */
 export default function GalleryPageBackground() {
   useLayoutEffect(() => {
-    document.body.classList.add('modernist-home');
+    document.body.classList.add('modernist-home', 'organic-home');
     return () => {
-      document.body.classList.remove('modernist-home');
+      /* PublicOrganicDesignBody owns cleanup on route change */
     };
   }, []);
 

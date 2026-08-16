@@ -38,8 +38,20 @@
   --homepage-section-bg: #f0fdf4;
   --homepage-section-bg-glass: rgba(240, 253, 244, 0.94);
 
-  /* Main site header bar (fixed) */
-  --header-bar-height: 8rem; /* 128px */
+  /* Main site header bar (fixed) — keep in sync with Header.tsx .header-inner-grid heights */
+  --header-bar-height: 6.5rem; /* mobile; sm≈7rem, lg≈7.5rem via media queries below */
+}
+
+@media (min-width: 640px) {
+  :root {
+    --header-bar-height: 7rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --header-bar-height: 7.5rem;
+  }
 }
 
 /* Yellow accent bar before eyebrow labels (homepage section eyebrows) */
@@ -77,15 +89,16 @@ body.home-page-background .home-section-eyebrow-mark {
   border-bottom: none;
 }
 
-/* Header logo image — breathing room above bottom border */
+/* Header logo image — contained inside the bar; no spill into page body */
 .header-logo-image-wrap {
   box-sizing: border-box;
-  padding-bottom: 0.75rem;
+  padding: 0.125rem;
+  overflow: hidden;
 }
 
 @media (min-width: 1024px) {
   .header-logo-image-wrap {
-    padding-bottom: 1rem;
+    padding: 0.15rem;
   }
 }
 
@@ -481,25 +494,17 @@ body.home-page-background:not(.modernist-home)
   border-color: var(--header-accent-primary);
 }
 
+/* Standard hamburger: three equal bars, evenly spaced */
 .header-hamburger-line {
-  width: 1.125rem;
+  width: 1.25rem;
   height: 2px;
   background: var(--header-text-secondary);
   border-radius: 1px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.header-hamburger-line:nth-child(1) {
-  width: 0.75rem;
-  margin-bottom: 4px;
-}
-
-.header-hamburger-line:nth-child(2) {
-  margin-bottom: 4px;
-}
-
-.header-hamburger-line:nth-child(3) {
-  width: 0.5rem;
+.header-hamburger-line + .header-hamburger-line {
+  margin-top: 4px;
 }
 
 .header-hamburger:hover .header-hamburger-line {
@@ -2360,7 +2365,8 @@ body.home-page-background .home-section-eyebrow-stack {
 
 body.home-page-background .home-section-title,
 body.home-page-background .featured-events-section .featured-events-title {
-  color: #0f172a !important;
+  /* KCNJ logo forest green */
+  color: #004820 !important;
 }
 
 /* Dark title words only — slightly stronger white halo */
@@ -2370,11 +2376,11 @@ body.home-page-background .home-section-title-lead {
     0 0 12px rgba(255, 255, 255, 0.5);
 }
 
-/* Last word highlight — matches “Meet our amazing team” */
+/* Last word highlight — KCNJ logo greens */
 body.home-page-background .home-section-title-accent {
   font-weight: 500;
   text-shadow: none;
-  background: linear-gradient(90deg, #2563eb 0%, #9333ea 100%);
+  background: linear-gradient(90deg, #004820 0%, #206000 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -2398,7 +2404,7 @@ body.home-page-background .home-projects-section .home-section-title-accent {
 
 /* Homepage section body copy & accent headings — readable on photo background */
 body.home-page-background .home-section-heading-accent {
-  color: #1e40af !important;
+  color: #004820 !important;
   text-shadow:
     0 1px 3px rgba(255, 255, 255, 0.7),
     0 0 10px rgba(255, 255, 255, 0.42);
@@ -2772,6 +2778,33 @@ body.member-portal-page-background .home-page-layout .homepage-glass-card p.text
 body.membership-page-background .home-page-layout .text-center > p.text-gray-600,
 body.membership-page-background .home-page-layout .homepage-glass-card p.text-gray-600 {
   color: #475569 !important;
+}
+
+/* Organic theme: replace indigo glass-card text with brand text tokens */
+body.modernist-home.organic-home.profile-page-background .home-page-layout .services-glass-card-face .text-gray-700,
+body.modernist-home.organic-home.profile-page-background .home-page-layout .services-glass-card-face .text-gray-400,
+body.modernist-home.organic-home.profile-page-background .home-page-layout .homepage-glass-card .text-gray-700,
+body.modernist-home.organic-home.profile-page-background .home-page-layout .homepage-glass-card .text-gray-400,
+body.modernist-home.organic-home.calendar-page-background .home-page-layout .services-glass-card-face .text-gray-700,
+body.modernist-home.organic-home.calendar-page-background .home-page-layout .services-glass-card-face .text-gray-400,
+body.modernist-home.organic-home.calendar-page-background .home-page-layout .homepage-glass-card .text-gray-700,
+body.modernist-home.organic-home.calendar-page-background .home-page-layout .homepage-glass-card .text-gray-400,
+body.modernist-home.organic-home.focus-groups-page-background .home-page-layout .services-glass-card-face .text-gray-700,
+body.modernist-home.organic-home.focus-groups-page-background .home-page-layout .homepage-glass-card .text-gray-700,
+body.modernist-home.organic-home.member-portal-page-background .home-page-layout .services-glass-card-face .text-gray-700,
+body.modernist-home.organic-home.member-portal-page-background .home-page-layout .homepage-glass-card .text-gray-700,
+body.modernist-home.organic-home.membership-page-background .home-page-layout .services-glass-card-face .text-gray-700,
+body.modernist-home.organic-home.membership-page-background .home-page-layout .homepage-glass-card .text-gray-700 {
+  color: var(--mh-text) !important;
+}
+
+body.modernist-home.organic-home.profile-page-background .home-page-layout .text-center > p.text-gray-600,
+body.modernist-home.organic-home.profile-page-background .home-page-layout .homepage-glass-card p.text-gray-600,
+body.modernist-home.organic-home.calendar-page-background .home-page-layout .text-center > p.text-gray-600,
+body.modernist-home.organic-home.focus-groups-page-background .home-page-layout .text-center > p.text-gray-600,
+body.modernist-home.organic-home.member-portal-page-background .home-page-layout .text-center > p.text-gray-600,
+body.modernist-home.organic-home.membership-page-background .home-page-layout .text-center > p.text-gray-600 {
+  color: color-mix(in srgb, var(--mh-text) 72%, transparent) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3441,9 +3474,11 @@ body {
 
 /* Anchor scroll offset for fixed header on home sections */
 #about-us,
+#about-us-label,
 #team-section,
-#contact {
-  scroll-margin-top: 100px;
+#contact,
+#contact-label {
+  scroll-margin-top: 12rem;
 }
 
 /* Responsive tweaks */

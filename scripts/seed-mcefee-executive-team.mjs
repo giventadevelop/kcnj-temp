@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Replace executive committee team members for the current tenant with the
- * MCEFEE charity-site volunteer roster (images + titles from NJ-Malayalees static HTML).
+ * KCNJ charity-site volunteer roster (images + titles from NJ-Malayalees static HTML).
  *
  * Usage (from repo root):
  *   node scripts/seed-mcefee-executive-team.mjs
@@ -27,7 +27,7 @@ const {
 } = await import('./mosc-in-migration/migration-api-lib.mjs');
 
 const IMAGE_DIR =
-  process.env.MCEFEE_TEAM_IMAGE_DIR ||
+  process.env.KCNJ_TEAM_IMAGE_DIR ||
   'F:\\project_workspace\\NJ-Malayalees-MCEEFEE-Charity-Site\\images\\team_members';
 
 /** Roster from NJ-Malayalees-MCEEFEE-Charity-Site/index.html#team-section */
@@ -171,7 +171,7 @@ async function uploadProfileImage(memberId, imagePath, token) {
     isPublic: 'true',
     isTeamMemberProfileImage: 'true',
     title: `Team Member Profile Image - ${memberId}`,
-    description: 'Profile image from MCEFEE charity site seed',
+    description: 'Profile image from KCNJ charity site seed',
     tenantId: TENANT_ID,
   });
 

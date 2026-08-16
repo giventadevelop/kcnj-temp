@@ -49,7 +49,7 @@ const TESSERACT =
     : 'tesseract');
 
 const TEAM_IMAGE_DIR =
-  process.env.MCEFEE_TEAM_IMAGE_DIR ||
+  process.env.KCNJ_TEAM_IMAGE_DIR ||
   'F:\\project_workspace\\NJ-Malayalees-MCEEFEE-Charity-Site\\images\\team_members';
 
 const TEAM_FILES = [
@@ -61,15 +61,15 @@ const TEAM_FILES = [
 ];
 
 const CHARITY_IMAGES =
-  process.env.MCEFEE_EVENTS_IMAGE_DIR ||
+  process.env.KCNJ_EVENTS_IMAGE_DIR ||
   'F:\\project_workspace\\NJ-Malayalees-MCEEFEE-Charity-Site\\images';
 
-const MCEFEE_RE = /mcefee/i;
+const KCNJ_RE = /mcefee/i;
 
 /** OCR often splits logos as "M CE FE E" — also match collapsed text. */
 function textHasMcefee(text) {
   if (!text) return false;
-  if (MCEFEE_RE.test(text)) return true;
+  if (KCNJ_RE.test(text)) return true;
   const collapsed = text.replace(/[\s._-]+/g, '');
   return /mcefee/i.test(collapsed);
 }
@@ -126,7 +126,7 @@ async function listTeamMembers(token) {
 }
 
 function filenameHasMcefee(media) {
-  // Do NOT use description — seed wrote "MCEFEE modernist: …" on every file.
+  // Do NOT use description — seed wrote "KCNJ modernist: …" on every file.
   const title = media.title || '';
   const urlBase = media.fileUrl ? basename(media.fileUrl.split('?')[0]) : '';
   return textHasMcefee(title) || textHasMcefee(urlBase);

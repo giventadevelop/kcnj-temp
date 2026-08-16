@@ -2,6 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&family=Caprasimo&family=Figtree:wght@400;600;700&display=swap');
 
 body.modernist-home {
+  /* KCNJ logo greens — section titles / brand headings */
+  --mh-brand-green: #004820;
+  --mh-brand-green-mid: #085018;
+  --mh-brand-green-bright: #206000;
   --mh-bg: #f3f2f2;
   --mh-surface: #eae9e9;
   --mh-text: #201e1d;
@@ -47,8 +51,14 @@ body.modernist-home {
 
 /* Organic homepage only ? tokens from Malayalees.US Homepage (Organic) */
 body.modernist-home.organic-home {
+  /* Logo-derived greens (KCNJ “KCNJ” wordmark + leaf greens) */
+  --mh-brand-green: #004820;
+  --mh-brand-green-mid: #085018;
+  --mh-brand-green-bright: #206000;
   --mh-bg: #f5ead8;
   --mh-surface: #ebddc5;
+  /* Exact canvas colour of the header ribbon JPGs — must match the artwork */
+  --mh-ribbon-canvas: #f2e7d5;
   --mh-text: #201e1d;
   --mh-accent: #c67139;
   --mh-accent-200: #ffe1d0;
@@ -58,11 +68,12 @@ body.modernist-home.organic-home {
   --mh-accent-700: #8c491a;
   --mh-accent-100: #fff2eb;
   --mh-accent-800: #643312;
-  --mh-accent-2: #7a8a5e;
-  --mh-accent-2-100: #f0fae1;
-  --mh-accent-2-200: #e1eecc;
-  --mh-accent-2-700: #56633f;
-  --mh-accent-2-800: #3d472b;
+  /* Secondary accent aligned to logo forest green (was muted olive) */
+  --mh-accent-2: #085018;
+  --mh-accent-2-100: #e8f5ec;
+  --mh-accent-2-200: #c5e6d0;
+  --mh-accent-2-700: #004820;
+  --mh-accent-2-800: #003318;
   --mh-neutral-100: #f9f4ed;
   --mh-neutral-200: #eee7db;
   --mh-neutral-300: #dcd3c4;
@@ -84,6 +95,27 @@ body.modernist-home.organic-home {
   --mh-shadow-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
   -webkit-font-smoothing: antialiased;
   text-wrap: pretty;
+
+  /* Remap shadcn / Tailwind semantic colors to the organic homepage palette */
+  --background: 36 45% 90%;
+  --foreground: 20 5% 12%;
+  --card: 36 40% 85%;
+  --card-foreground: 20 5% 12%;
+  --popover: 36 45% 92%;
+  --popover-foreground: 20 5% 12%;
+  --primary: 148 100% 14%;
+  --primary-foreground: 40 40% 97%;
+  --secondary: 36 30% 88%;
+  --secondary-foreground: 20 5% 18%;
+  --muted: 36 28% 88%;
+  --muted-foreground: 30 8% 35%;
+  --accent: 24 55% 50%;
+  --accent-foreground: 40 40% 97%;
+  --destructive: 0 55% 42%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 30 14% 72%;
+  --input: 36 40% 96%;
+  --ring: 148 100% 18%;
 }
 
 /* Back-compat: homepage still adds home-page-background alongside modernist-home */
@@ -479,11 +511,18 @@ body.modernist-home .mh-poster-hero-media {
   margin: 0;
 }
 
+/*
+ * Slides are admin-uploaded posters ranging from 16:9 to ~3.2:1, while this
+ * panel's own ratio is viewport-driven (it bleeds to the right edge), so `cover`
+ * cropped a different slice off every poster on every screen. The poster is
+ * `contain` so it is never cut on any side; the blurred backdrop below fills the
+ * panel so containing it does not leave bare bars.
+ */
 body.modernist-home .mh-poster-hero-media img,
 body.modernist-home.organic-home .mh-poster-hero-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center center;
   display: block;
   opacity: 0;
@@ -493,6 +532,22 @@ body.modernist-home.organic-home .mh-poster-hero-img {
 
 body.modernist-home .mh-poster-hero-img.is-visible {
   opacity: 1;
+}
+
+body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop {
+  object-fit: cover;
+  /* Scale must outrun the blur radius or the blur reveals the panel edges */
+  transform: scale(1.25);
+  filter: blur(30px) saturate(1.12);
+  z-index: 0;
+}
+
+body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop.is-visible {
+  opacity: 0.92;
+}
+
+body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img:not(.mh-poster-hero-img-backdrop) {
+  z-index: 1;
 }
 
 body.modernist-home .mh-poster-hero-scrim,
@@ -590,23 +645,42 @@ body.modernist-home .mh-poster-hero-browse {
   align-self: flex-start;
 }
 
-/* Organic hero: equal-height split ? logo left, slider right */
+/* Organic hero: equal-height split ? logo left, slider right (bleeds to viewport edge) */
 body.modernist-home.organic-home .mh-poster-hero {
-  padding: calc(4.75rem + 8px) 0 clamp(32px, 4.5vw, 56px);
+  /* Clear fixed header + breathing room so hero never sits under the bar */
+  padding: calc(var(--header-bar-height, 6.5rem) + 1.75rem) 0 clamp(32px, 4.5vw, 56px);
   background: transparent;
+  overflow: visible;
+}
+
+@media (min-width: 640px) {
+  body.modernist-home.organic-home .mh-poster-hero {
+    padding-top: calc(var(--header-bar-height, 7rem) + 1.85rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  body.modernist-home.organic-home .mh-poster-hero {
+    padding-top: calc(var(--header-bar-height, 7.5rem) + 2rem);
+  }
 }
 
 body.modernist-home.organic-home .mh-poster-hero-inner {
-  max-width: 1280px;
+  max-width: none;
+  width: 100%;
+  padding-left: clamp(16px, 4vw, 56px);
+  padding-right: 0;
   gap: clamp(18px, 2.4vw, 28px);
 }
 
 body.modernist-home.organic-home .mh-poster-hero-panels {
   display: grid;
-  grid-template-columns: minmax(220px, 32%) minmax(0, 1fr);
+  /* Narrower logo column — slideshow takes the rest and bleeds right */
+  grid-template-columns: minmax(200px, 26%) minmax(0, 1fr);
   gap: clamp(16px, 2.2vw, 28px);
   align-items: stretch;
-  min-height: min(58vh, 520px);
+  /* Row height comes from the slide panel's own ratio, not a viewport fraction */
+  min-height: 0;
 }
 
 body.modernist-home.organic-home .mh-poster-hero-logo-panel {
@@ -631,9 +705,26 @@ body.modernist-home.organic-home .mh-poster-hero-slide-panel {
   flex: none;
   min-width: 0;
   min-height: 0;
-  height: 100%;
+  /*
+   * Take the height from the current slide's own ratio (set inline by
+   * ModernistPosterHero once the image loads). Panel ratio == poster ratio is
+   * what lets `contain` fill the panel with no crop and no side bars. The cap
+   * keeps the hero on screen on ultra-wide monitors; past it the blurred
+   * backdrop takes over again.
+   */
+  height: auto;
+  align-self: start;
+  aspect-ratio: var(--mh-hero-slide-ratio, 1.7778);
+  max-height: min(70vh, 640px);
+  /* Full-bleed to the right edge of the viewport */
+  border-radius: var(--mh-radius-lg) 0 0 var(--mh-radius-lg);
   border: 1px solid color-mix(in srgb, #2e2b25 10%, transparent);
+  border-right: 0;
   box-shadow: var(--mh-shadow-lg);
+}
+
+body.modernist-home.organic-home .mh-poster-hero-browse {
+  padding-right: clamp(16px, 4vw, 56px);
 }
 
 body.modernist-home.organic-home .mh-poster-hero-mission {
@@ -769,6 +860,7 @@ body.modernist-home .mh-h2 {
   font-size: clamp(28px, 3.2vw, 40px);
   line-height: 1.1;
   letter-spacing: -0.015em;
+  color: var(--mh-brand-green);
 }
 
 /* ?? Homepage upcoming events (reuses mh-event-card from events page) ?? */
@@ -1560,8 +1652,9 @@ body.modernist-home .mh-close .mh-btn {
   }
 
   body.modernist-home.organic-home .mh-poster-hero {
-    padding: calc(4.75rem + 4px) 0 28px;
+    padding: calc(var(--header-bar-height, 6.5rem) + 1.25rem) 0 28px;
     background: transparent;
+    overflow: hidden;
   }
 
   body.modernist-home .mh-poster-hero-logo-panel,
@@ -1577,9 +1670,16 @@ body.modernist-home .mh-close .mh-btn {
     gap: 14px;
   }
 
+  body.modernist-home.organic-home .mh-poster-hero-inner {
+    padding-left: 16px;
+    padding-right: 0;
+  }
+
   body.modernist-home.organic-home .mh-poster-hero-logo-panel {
     width: min(100%, 280px);
     margin-inline: auto;
+    margin-right: auto;
+    margin-left: auto;
     min-height: 0;
     height: auto;
     aspect-ratio: 1 / 1;
@@ -1589,14 +1689,28 @@ body.modernist-home .mh-close .mh-btn {
   body.modernist-home.organic-home .mh-poster-hero-slide-panel {
     min-height: 0;
     height: auto;
-    aspect-ratio: 16 / 9;
-    max-height: none;
+    aspect-ratio: var(--mh-hero-slide-ratio, 1.7778);
+    max-height: 62vh;
+    /* Bleed slideshow to both side edges on mobile stack */
+    width: calc(100% + 16px);
+    margin-left: -16px;
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  body.modernist-home.organic-home .mh-poster-hero-browse {
+    padding-right: 16px;
   }
 
   body.modernist-home .mh-poster-hero-media img,
   body.modernist-home .mh-poster-hero-img {
-    object-fit: cover !important;
+    object-fit: contain !important;
     object-position: center center !important;
+  }
+
+  body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop {
+    object-fit: cover !important;
   }
 
   body.modernist-home .mh-poster-hero-scrim {
@@ -1981,37 +2095,86 @@ body.modernist-home .header-glass.header-glass--home.header-glass--scrolled::aft
   content: none;
 }
 
-/* Organic homepage header: transparent at top, faded cream frost on scroll */
-body.modernist-home.organic-home .header-glass.header-glass--home {
-  background: transparent !important;
+/* Organic homepage header: always solid (never transparent over hero) */
+body.modernist-home.organic-home .header-glass.header-glass--home,
+body.modernist-home.organic-home .header-glass.header-glass--home.header-glass--scrolled {
+  background: var(--mh-bg) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
-  border-bottom: none !important;
-  box-shadow: none !important;
+  border-bottom: 1px solid color-mix(in srgb, #2e2b25 12%, transparent) !important;
+  box-shadow: 0 2px 14px color-mix(in srgb, #2e2b25 8%, transparent) !important;
   transition:
     background 0.35s cubic-bezier(0.22, 1, 0.36, 1),
-    backdrop-filter 0.35s cubic-bezier(0.22, 1, 0.36, 1),
     box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
     border-color 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+body.modernist-home.organic-home .header-glass.header-glass--home.header-glass--scrolled {
+  box-shadow: 0 8px 24px color-mix(in srgb, #2e2b25 12%, transparent) !important;
+}
+
 body.modernist-home.organic-home .header-glass.header-glass--home .header-inner-grid {
-  height: 4.75rem;
+  height: 6.5rem;
+}
+
+@media (min-width: 640px) {
+  body.modernist-home.organic-home .header-glass.header-glass--home .header-inner-grid {
+    height: 7rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  body.modernist-home.organic-home .header-glass.header-glass--home .header-inner-grid {
+    height: 7.5rem;
+  }
 }
 
 body.modernist-home.organic-home .header-glass.header-glass--home .header-logo-image-wrap {
-  width: 4.25rem !important;
-  min-width: 4.25rem !important;
-  padding-bottom: 0.35rem;
+  width: 5.25rem !important;
+  min-width: 5.25rem !important;
+  height: 4.75rem !important;
+  max-height: 4.75rem !important;
+  padding: 0.125rem;
+  overflow: hidden;
 }
 
-body.modernist-home.organic-home .header-glass.header-glass--home.header-glass--scrolled {
-  background: color-mix(in srgb, var(--mh-bg) 82%, transparent) !important;
-  backdrop-filter: blur(18px) saturate(140%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(140%) !important;
-  border-bottom: 1px solid color-mix(in srgb, #2e2b25 10%, transparent) !important;
-  box-shadow: 0 10px 28px color-mix(in srgb, #2e2b25 10%, transparent) !important;
+@media (min-width: 640px) {
+  body.modernist-home.organic-home .header-glass.header-glass--home .header-logo-image-wrap {
+    width: 5.75rem !important;
+    min-width: 5.75rem !important;
+    height: 5.25rem !important;
+    max-height: 5.25rem !important;
+  }
 }
+
+@media (min-width: 1024px) {
+  body.modernist-home.organic-home .header-glass.header-glass--home .header-logo-image-wrap {
+    width: 6.25rem !important;
+    min-width: 6.25rem !important;
+    height: 5.5rem !important;
+    max-height: 5.5rem !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  body.modernist-home.organic-home .header-glass.header-glass--home .header-logo-image-wrap {
+    width: 6.75rem !important;
+    min-width: 6.75rem !important;
+    height: 5.75rem !important;
+    max-height: 5.75rem !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  body.modernist-home.organic-home .header-glass.header-glass--home .header-logo-image-wrap {
+    width: 6.75rem !important;
+    min-width: 6.75rem !important;
+    height: 5.75rem !important;
+    max-height: 5.75rem !important;
+  }
+}
+
+/* (scrolled solid styles merged above with always-solid organic header) */
 
 body.modernist-home.organic-home .header-glass--home .header-nav-link,
 body.modernist-home.organic-home .header-glass--home.header-glass--scrolled .header-nav-link,
@@ -2217,39 +2380,116 @@ body.modernist-home .mh-events-page {
 }
 
 body.modernist-home .mh-events-hero {
-  /* Sit fully below the fixed solid header (not under / behind it) */
-  --mh-header-clearance: 1.25rem;
+  --mh-header-clearance: 0.65rem;
+  /* Breathing room between the fixed header and the top of the band */
+  --mh-ribbon-header-gap: 0.75rem;
   position: relative;
-  margin-top: var(--header-bar-height, 8rem);
-  min-height: 160px;
+  width: 100%;
+  min-width: 100%;
+  max-width: none;
+  margin-top: calc(var(--header-bar-height, 7.5rem) + var(--mh-ribbon-header-gap));
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+  padding: 0;
+  /*
+   * Compact ribbon, artwork never cropped.
+   *
+   * The ribbon assets are flat #f2e7d5 canvases with the KCNJ motif anchored
+   * to the right edge. So instead of stretching the file across the band
+   * (which crops the palms/houseboat), the band paints that same cream as its
+   * own background and the image is sized by HEIGHT only, pinned right. The
+   * motif therefore always renders at full height with nothing clipped, and
+   * the blank cream to its left is indistinguishable from the band backdrop —
+   * the ribbon still reads as edge-to-edge at any width, including 6K.
+   */
+  aspect-ratio: auto;
+  height: clamp(7rem, 9vw, 11rem);
+  /* Keep the band height when the ribbon is a direct flex child (e.g. /profile) */
+  flex: 0 0 auto;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
-  background: #1a1816;
-  color: var(--mh-bg);
+  background: var(--mh-ribbon-canvas, #f2e7d5);
+  color: var(--mh-text);
+  border-radius: 0;
+  line-height: 0;
+}
+
+@media (max-width: 767px) {
+  body.modernist-home .mh-events-hero {
+    --mh-header-clearance: 0.5rem;
+    /* The mobile logo sits low in the bar, so it needs a wider gap */
+    --mh-ribbon-header-gap: 1.25rem;
+    height: clamp(6rem, 22vw, 8.5rem);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  body.modernist-home .mh-events-hero {
+    height: clamp(6.5rem, 13vw, 10rem);
+  }
 }
 
 body.modernist-home .mh-events-hero-media {
   position: absolute;
   inset: 0;
   margin: 0;
-}
-
-body.modernist-home .mh-events-hero-media img {
-  object-fit: cover;
+  padding: 0;
   width: 100%;
   height: 100%;
+  /* Same cream as the artwork canvas — hides where the image actually ends */
+  background: var(--mh-ribbon-canvas, #f2e7d5);
 }
 
+body.modernist-home .mh-events-hero-picture {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  display: block;
+  width: auto;
+  height: 100%;
+  margin: 0;
+  line-height: 0;
+}
+
+body.modernist-home .mh-events-hero-media img,
+body.modernist-home .mh-events-hero-ribbon-img {
+  /*
+   * Height-anchored: the image is exactly as tall as the band and keeps its
+   * natural ratio, so the motif is never clipped top or bottom. Overflow past
+   * the left edge only ever discards empty cream.
+   */
+  height: 100% !important;
+  width: auto !important;
+  max-width: none !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: right center !important;
+  display: block;
+  margin-left: auto;
+  /*
+   * The canvas colour matches the band exactly (#f2e7d5 sampled from all four
+   * JPGs), but JPEG block noise in that flat area can still read as a faint
+   * vertical seam where the file starts. Fading the empty left third — the
+   * motif never begins before ~62% — makes the join invisible.
+   */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 22%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 22%);
+}
+
+/*
+ * No wash. The band already paints the artwork's own cream and the headings are
+ * dark green, so a scrim adds nothing — and a partial-width gradient made a
+ * visible vertical seam where it faded out, just left of the motif. The element
+ * stays in the markup so the eight ribbon pages need no change.
+ */
 body.modernist-home .mh-events-hero-scrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(26, 24, 22, 0.92) 0%,
-    rgba(26, 24, 22, 0.45) 55%,
-    rgba(26, 24, 22, 0.25) 100%
-  );
+  background: none;
   pointer-events: none;
 }
 
@@ -2259,7 +2499,18 @@ body.modernist-home .mh-events-hero-content {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--mh-header-clearance) 72px 1.5rem;
+  padding: var(--mh-header-clearance) 72px 0.85rem;
+  line-height: normal;
+}
+
+/*
+ * Below the 1200px content column the band edge and the text column meet, so
+ * reserve room for the right-anchored motif (roughly 1.1× the band height).
+ */
+@media (min-width: 768px) and (max-width: 1279px) {
+  body.modernist-home .mh-events-hero-content {
+    padding-right: clamp(8rem, 15vw, 12rem);
+  }
 }
 
 body.modernist-home .mh-events-hero-kicker {
@@ -2270,7 +2521,7 @@ body.modernist-home .mh-events-hero-kicker {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin-bottom: 16px;
-  color: rgba(243, 242, 242, 0.85);
+  color: color-mix(in srgb, var(--mh-text) 68%, transparent);
 }
 
 body.modernist-home .mh-events-hero h1 {
@@ -2280,7 +2531,7 @@ body.modernist-home .mh-events-hero h1 {
   font-size: clamp(28px, 4vw, 42px);
   line-height: 1.05;
   letter-spacing: -0.015em;
-  color: var(--mh-bg);
+  color: var(--mh-brand-green);
 }
 
 body.modernist-home .mh-events-hero-lede {
@@ -2288,7 +2539,7 @@ body.modernist-home .mh-events-hero-lede {
   max-width: 48ch;
   font-size: 15px;
   line-height: 1.5;
-  color: rgba(243, 242, 242, 0.88);
+  color: color-mix(in srgb, var(--mh-text) 78%, transparent);
 }
 
 body.modernist-home .mh-events-body {
@@ -2320,7 +2571,7 @@ body.modernist-home .mh-events-head h2 {
   font-size: clamp(28px, 4vw, 40px);
   line-height: 1.1;
   letter-spacing: -0.015em;
-  color: var(--mh-text);
+  color: var(--mh-brand-green);
 }
 
 /* Events toggle ? gallery-style green (Future) / blue (Past) */
@@ -2850,13 +3101,17 @@ body.modernist-home .mh-events-error {
 
   body.modernist-home .mh-events-hero {
     --mh-header-clearance: 1rem;
-    min-height: 140px;
   }
 
   body.modernist-home .mh-events-hero-content,
   body.modernist-home .mh-events-body {
     padding-left: 20px;
     padding-right: 20px;
+  }
+
+  /* Keep the heading clear of the right-anchored ribbon motif */
+  body.modernist-home .mh-events-hero-content {
+    padding-right: clamp(5.5rem, 26vw, 9rem);
   }
 
   body.modernist-home .mh-events-body {
@@ -4071,6 +4326,18 @@ body.modernist-home.organic-home .mh-home-events-heading {
   font-weight: var(--mh-font-heading-weight);
 }
 
+/* Brand section titles — KCNJ logo forest green */
+body.modernist-home.organic-home .mh-h2,
+body.modernist-home.organic-home .mh-home-events-heading,
+body.modernist-home.organic-home .mh-services-heading,
+body.modernist-home.organic-home .mh-featured-section-title,
+body.modernist-home.organic-home .mh-about h2,
+body.modernist-home.organic-home .mh-onsale-band h2,
+body.modernist-home.organic-home .mh-events-head h2,
+body.modernist-home.organic-home .mh-close h3 {
+  color: var(--mh-brand-green);
+}
+
 body.modernist-home.organic-home .mh-eyebrow,
 body.modernist-home.organic-home .mh-tag,
 body.modernist-home.organic-home .mh-event-card-badge,
@@ -4248,3 +4515,549 @@ body.modernist-home.organic-home header a,
 body.modernist-home.organic-home nav a {
   border-radius: var(--mh-radius-pill);
 }
+
+/* ---------------------------------------------------------------------------
+   Public pages (events, gallery, about, contact, …) — organic homepage system
+   Admin routes never get body.organic-home (see PublicOrganicDesignBody).
+   --------------------------------------------------------------------------- */
+
+body.modernist-home.organic-home .font-heading,
+body.modernist-home.organic-home h1.font-heading,
+body.modernist-home.organic-home h2.font-heading,
+body.modernist-home.organic-home h3.font-heading {
+  font-family: var(--mh-font-heading) !important;
+  font-weight: var(--mh-font-heading-weight) !important;
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home.organic-home .font-body,
+body.modernist-home.organic-home .font-caption,
+body.modernist-home.organic-home .font-inter {
+  font-family: var(--mh-font) !important;
+}
+
+body.modernist-home.organic-home .mh-events-page,
+body.modernist-home.organic-home .mh-gallery-page,
+body.modernist-home.organic-home .mh-team-page,
+body.modernist-home.organic-home .mh-calendar-page,
+body.modernist-home.organic-home .mh-sponsors-page,
+body.modernist-home.organic-home .mh-polls-page {
+  background: var(--mh-bg);
+  color: var(--mh-text);
+  font-family: var(--mh-font);
+}
+
+body.modernist-home.organic-home .mh-events-hero h1,
+body.modernist-home.organic-home .mh-events-head h2,
+body.modernist-home.organic-home .mh-events-page h1,
+body.modernist-home.organic-home .mh-events-page h2 {
+  font-family: var(--mh-font-heading);
+  font-weight: var(--mh-font-heading-weight);
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home.organic-home .mh-events-hero {
+  /* Full-bleed edge-to-edge; no inset card look on ultra-wide */
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/*
+ * Future/Past switch and the pagination page chip predate the organic theme:
+ * the base layer hard-codes `border-radius: 0` plus a saturated emerald/indigo
+ * palette. Everything sitting next to them (buttons, cards, badges) already
+ * reads from the radius and colour tokens, so point these at the same tokens.
+ */
+body.modernist-home.organic-home .mh-events-toggle {
+  padding: 10px 22px;
+  border-radius: var(--mh-radius-pill);
+  background: var(--mh-surface);
+  border: 1px solid color-mix(in srgb, var(--mh-brand-green) 30%, transparent);
+  box-shadow: var(--mh-shadow-sm);
+}
+
+body.modernist-home.organic-home .mh-events-toggle--past {
+  background: var(--mh-surface);
+  border-color: color-mix(in srgb, var(--mh-accent) 38%, transparent);
+  box-shadow: var(--mh-shadow-sm);
+}
+
+body.modernist-home.organic-home .mh-events-toggle-label--future.is-active {
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home.organic-home .mh-events-toggle-label--past.is-active {
+  color: var(--mh-accent-700);
+}
+
+/* Keep the 2px border width: the thumb travel is measured from the content box */
+body.modernist-home.organic-home .mh-events-toggle-btn {
+  border-radius: var(--mh-radius-pill);
+  border-color: var(--mh-accent-2-800);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--mh-brand-green) 78%, #ffffff) 0%,
+    var(--mh-brand-green) 100%
+  );
+  box-shadow: var(--mh-shadow-sm);
+}
+
+body.modernist-home.organic-home .mh-events-toggle-btn:hover:not(:disabled) {
+  box-shadow: var(--mh-shadow-md);
+}
+
+body.modernist-home.organic-home .mh-events-toggle-btn.is-past {
+  border-color: var(--mh-accent-700);
+  background: linear-gradient(180deg, var(--mh-accent-400) 0%, var(--mh-accent) 100%);
+}
+
+body.modernist-home.organic-home .mh-events-toggle-thumb {
+  border-radius: var(--mh-radius-pill);
+  border-color: var(--mh-brand-green);
+  background: var(--mh-bg);
+  box-shadow: var(--mh-shadow-sm);
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home.organic-home .mh-events-toggle-btn.is-past .mh-events-toggle-thumb {
+  border-color: var(--mh-accent-700);
+  background: var(--mh-bg);
+  color: var(--mh-accent-700);
+}
+
+body.modernist-home.organic-home .mh-events-page-info {
+  padding: 12px 22px;
+  border-radius: var(--mh-radius-pill);
+  background: var(--mh-surface);
+  border: 1px solid color-mix(in srgb, var(--mh-brand-green) 26%, transparent);
+  color: var(--mh-brand-green);
+  box-shadow: var(--mh-shadow-sm);
+}
+
+body.modernist-home.organic-home .mh-events-page-info strong {
+  color: var(--mh-brand-green);
+}
+
+/*
+ * Calendar grid + profile form shells still used white (#fff) / indigo from the
+ * pre-organic modernist layer. Remap them to cream surfaces + brand green so
+ * /calendar and /profile match events, gallery, and the rest of the site.
+ */
+body.modernist-home.organic-home .mh-calendar-panel {
+  background: var(--mh-surface);
+  border: 1px solid color-mix(in srgb, var(--mh-brand-green) 18%, transparent);
+  border-radius: var(--mh-radius-xl);
+  box-shadow: var(--mh-shadow-sm);
+  overflow: hidden;
+}
+
+body.modernist-home.organic-home .mh-calendar-grid {
+  background: color-mix(in srgb, var(--mh-brand-green) 14%, transparent);
+}
+
+body.modernist-home.organic-home .mh-calendar-dow {
+  background: color-mix(in srgb, var(--mh-brand-green) 12%, var(--mh-bg));
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home.organic-home .mh-calendar-cell {
+  background: var(--mh-neutral-100);
+}
+
+body.modernist-home.organic-home .mh-calendar-cell.is-empty {
+  background: color-mix(in srgb, var(--mh-text) 5%, var(--mh-surface));
+}
+
+body.modernist-home.organic-home .mh-calendar-cell.is-today {
+  background: color-mix(in srgb, var(--mh-accent) 16%, var(--mh-neutral-100));
+}
+
+body.modernist-home.organic-home .mh-calendar-cell:hover {
+  background: color-mix(in srgb, var(--mh-brand-green) 10%, var(--mh-neutral-100));
+}
+
+body.modernist-home.organic-home .mh-calendar-daynum.is-today {
+  background: var(--mh-brand-green);
+  color: #fff;
+}
+
+body.modernist-home.organic-home .mh-calendar-week-label.is-today {
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home.organic-home .mh-calendar-event {
+  background: color-mix(in srgb, var(--mh-brand-green) 12%, var(--mh-neutral-100));
+  color: var(--mh-brand-green);
+  border-radius: var(--mh-radius-sm, 0.5rem);
+}
+
+body.modernist-home.organic-home .mh-calendar-event:hover {
+  background: color-mix(in srgb, var(--mh-brand-green) 22%, var(--mh-neutral-100));
+}
+
+body.modernist-home.organic-home .mh-calendar-event svg {
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home.organic-home .mh-calendar-more {
+  color: var(--mh-accent-700);
+}
+
+body.modernist-home.organic-home .mh-calendar-day-header {
+  background: color-mix(in srgb, var(--mh-brand-green) 10%, var(--mh-bg));
+  border-bottom: 1px solid color-mix(in srgb, var(--mh-brand-green) 18%, transparent);
+}
+
+body.modernist-home.organic-home .mh-calendar-day-icon {
+  background: color-mix(in srgb, var(--mh-brand-green) 14%, var(--mh-neutral-100));
+  color: var(--mh-brand-green);
+  border-radius: var(--mh-radius-md, 0.75rem);
+}
+
+body.modernist-home.organic-home .mh-calendar-day-event {
+  background: var(--mh-neutral-100);
+  border-color: color-mix(in srgb, var(--mh-brand-green) 16%, transparent);
+  border-radius: var(--mh-radius-md, 0.75rem);
+}
+
+body.modernist-home.organic-home .mh-calendar-day-event:hover {
+  border-color: color-mix(in srgb, var(--mh-brand-green) 36%, transparent);
+  box-shadow: var(--mh-shadow-sm);
+}
+
+body.modernist-home.organic-home .mh-calendar-day-time {
+  border-color: color-mix(in srgb, var(--mh-brand-green) 28%, transparent);
+  background: color-mix(in srgb, var(--mh-brand-green) 12%, var(--mh-bg));
+  color: var(--mh-brand-green);
+  border-radius: var(--mh-radius-sm, 0.5rem);
+}
+
+/* Profile content panel + form fields (was frosted white glass) */
+body.modernist-home.organic-home .mh-profile-panel,
+body.modernist-home.organic-home .homepage-glass-card.services-glass-card-face,
+body.modernist-home.organic-home .home-page-layout .services-glass-card-face {
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--mh-neutral-100) 88%, #fff) 0%,
+    var(--mh-surface) 42%,
+    color-mix(in srgb, var(--mh-surface) 90%, var(--mh-bg)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--mh-brand-green) 16%, transparent);
+  box-shadow: var(--mh-shadow-md);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--mh-text);
+}
+
+body.modernist-home.organic-home .mh-profile-panel .bg-gray-50,
+body.modernist-home.organic-home .homepage-glass-card .bg-gray-50 {
+  background: color-mix(in srgb, var(--mh-brand-green) 6%, var(--mh-bg)) !important;
+  border-color: color-mix(in srgb, var(--mh-brand-green) 16%, transparent) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel .bg-blue-50,
+body.modernist-home.organic-home .homepage-glass-card .bg-blue-50 {
+  background: color-mix(in srgb, var(--mh-brand-green) 8%, var(--mh-surface)) !important;
+  border-color: color-mix(in srgb, var(--mh-brand-green) 18%, transparent) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel .bg-green-50,
+body.modernist-home.organic-home .homepage-glass-card .bg-green-50 {
+  background: color-mix(in srgb, var(--mh-brand-green) 10%, var(--mh-neutral-100)) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel label,
+body.modernist-home.organic-home .mh-profile-panel .text-gray-700,
+body.modernist-home.organic-home .mh-profile-panel .text-gray-900,
+body.modernist-home.organic-home .homepage-glass-card label,
+body.modernist-home.organic-home .homepage-glass-card .text-gray-700,
+body.modernist-home.organic-home .homepage-glass-card .text-gray-900 {
+  color: var(--mh-text) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel .text-gray-600,
+body.modernist-home.organic-home .mh-profile-panel .text-gray-500,
+body.modernist-home.organic-home .homepage-glass-card .text-gray-600,
+body.modernist-home.organic-home .homepage-glass-card .text-gray-500 {
+  color: color-mix(in srgb, var(--mh-text) 72%, transparent) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel input:not([type='checkbox']):not([type='radio']),
+body.modernist-home.organic-home .mh-profile-panel textarea,
+body.modernist-home.organic-home .mh-profile-panel select,
+body.modernist-home.organic-home .homepage-glass-card input:not([type='checkbox']):not([type='radio']),
+body.modernist-home.organic-home .homepage-glass-card textarea,
+body.modernist-home.organic-home .homepage-glass-card select {
+  background: var(--mh-neutral-100);
+  border-color: var(--mh-neutral-300);
+  color: var(--mh-text);
+  border-radius: var(--mh-radius-md, 0.75rem);
+}
+
+body.modernist-home.organic-home .mh-profile-panel input:focus,
+body.modernist-home.organic-home .mh-profile-panel textarea:focus,
+body.modernist-home.organic-home .mh-profile-panel select:focus,
+body.modernist-home.organic-home .homepage-glass-card input:focus,
+body.modernist-home.organic-home .homepage-glass-card textarea:focus,
+body.modernist-home.organic-home .homepage-glass-card select:focus {
+  border-color: var(--mh-brand-green);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--mh-brand-green) 22%, transparent);
+}
+
+body.modernist-home.organic-home .mh-profile-panel button[type='submit'],
+body.modernist-home.organic-home .homepage-glass-card button[type='submit'] {
+  background: var(--mh-brand-green) !important;
+  border-color: var(--mh-brand-green) !important;
+  color: #fff !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel button[type='submit']:hover,
+body.modernist-home.organic-home .homepage-glass-card button[type='submit']:hover {
+  filter: brightness(1.05);
+}
+
+body.modernist-home.organic-home .mh-profile-panel .bg-blue-600,
+body.modernist-home.organic-home .homepage-glass-card .bg-blue-600 {
+  background: var(--mh-brand-green) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel .hover\:bg-blue-700:hover,
+body.modernist-home.organic-home .homepage-glass-card .hover\:bg-blue-700:hover {
+  background: var(--mh-brand-green-mid) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel .text-blue-600,
+body.modernist-home.organic-home .homepage-glass-card .text-blue-600 {
+  color: var(--mh-brand-green) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-page {
+  background: var(--mh-bg);
+  color: var(--mh-text);
+  font-family: var(--mh-font);
+}
+
+/* Clear the organic header on generic public mains */
+body.modernist-home.organic-home main.pt-28 {
+  padding-top: calc(var(--header-bar-height, 7.5rem) + 1.25rem) !important;
+}
+
+body.modernist-home.organic-home main.py-24 {
+  padding-top: calc(var(--header-bar-height, 7.5rem) + 1.5rem) !important;
+}
+
+@media (max-width: 639px) {
+  body.modernist-home.organic-home main.pt-28 {
+    padding-top: calc(var(--header-bar-height, 6.5rem) + 1rem) !important;
+  }
+
+  body.modernist-home.organic-home main.py-24 {
+    padding-top: calc(var(--header-bar-height, 6.5rem) + 1.25rem) !important;
+  }
+}
+
+
+/* ---------------------------------------------------------------------------
+   Homepage contact (Get in Touch) — adapted from mosc-temp HomePageClient
+   --------------------------------------------------------------------------- */
+
+body.modernist-home .mh-contact {
+  padding-bottom: 84px;
+}
+
+body.modernist-home .mh-contact-lede {
+  max-width: 42rem;
+  margin-bottom: 2.5rem;
+}
+
+body.modernist-home .mh-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  body.modernist-home .mh-contact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+  }
+}
+
+body.modernist-home .mh-contact-card {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.75rem 1.5rem;
+  box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.35);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.modernist-home .mh-contact-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px -18px rgba(15, 23, 42, 0.4);
+}
+
+body.modernist-home .mh-contact-card-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+}
+
+body.modernist-home .mh-contact-icon {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+body.modernist-home .mh-contact-card:hover .mh-contact-icon {
+  transform: scale(1.1);
+}
+
+body.modernist-home .mh-contact-icon--location {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+body.modernist-home .mh-contact-icon--phone {
+  background: #dcfce7;
+  color: #22c55e;
+}
+
+body.modernist-home .mh-contact-icon--email {
+  background: #ffedd5;
+  color: #f97316;
+}
+
+body.modernist-home .mh-contact-icon--social {
+  background: #f3e8ff;
+  color: #a855f7;
+}
+
+body.modernist-home .mh-contact-card h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--mh-text, #111827);
+  transition: color 0.3s ease;
+}
+
+body.modernist-home .mh-contact-card:hover h3 {
+  color: #2563eb;
+}
+
+body.modernist-home .mh-contact-card p {
+  margin: 0;
+  color: #4b5563;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+body.modernist-home .mh-contact-card a {
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+body.modernist-home .mh-contact-card a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+body.modernist-home .mh-contact-social-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+body.modernist-home .mh-contact-social-btn {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, background-color 0.2s ease;
+}
+
+body.modernist-home .mh-contact-social-btn:hover {
+  transform: scale(1.1);
+}
+
+body.modernist-home .mh-contact-social-btn--facebook {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+body.modernist-home .mh-contact-social-btn--facebook:hover {
+  background: #bfdbfe;
+}
+
+body.modernist-home .mh-contact-social-btn--instagram {
+  background: #fce7f3;
+  color: #db2777;
+}
+
+body.modernist-home .mh-contact-social-btn--instagram:hover {
+  background: #fbcfe8;
+}
+
+body.modernist-home .mh-contact-social-btn--twitter {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+body.modernist-home .mh-contact-social-btn--twitter:hover {
+  background: #bae6fd;
+}
+
+body.modernist-home .mh-contact-social-btn--linkedin {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+body.modernist-home .mh-contact-social-btn--linkedin:hover {
+  background: #bfdbfe;
+}
+
+body.modernist-home .mh-contact-social-btn--youtube {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+body.modernist-home .mh-contact-social-btn--youtube:hover {
+  background: #fecaca;
+}
+
+body.modernist-home .mh-contact-social-btn--tiktok {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+body.modernist-home .mh-contact-social-btn--tiktok:hover {
+  background: #e5e7eb;
+}
+
+body.modernist-home .mh-contact-cta {
+  margin-top: 3rem;
+  text-align: center;
+}
+
+body.modernist-home .mh-contact-cta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+

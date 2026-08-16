@@ -60,8 +60,8 @@ export function Footer() {
               </h6>
               <div className="space-y-4">
                 <p className="text-white opacity-90 leading-relaxed">
-                  MCEFEE<br />
-                  Malayali Cultural Exchange Foundation<br />
+                  KCNJ<br />
+                  Kerala Center of New Jersey (KCNJ)<br />
                   for Education and Events<br />
                   New Jersey, USA
                 </p>
@@ -86,7 +86,7 @@ export function Footer() {
         <div className="w-full px-4 sm:px-6 lg:px-8" style={{ maxWidth: 'none' }}>
           <div className="text-center">
             <div className="text-gray-300 text-sm opacity-80">
-              © <span id="currentYear">2025</span> MCEFEE. All rights reserved.
+              © <span id="currentYear">2025</span> KCNJ. All rights reserved.
             </div>
           </div>
         </div>

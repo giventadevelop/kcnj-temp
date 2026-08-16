@@ -12,7 +12,7 @@ When building or cleaning a **gallery album** from local/static images (homepage
 
 Use **image scraping / OCR** to decide which uploads belong in the album (e.g. keep only images that visibly contain **“mcefee”**), and keep **executive-committee** headshots that match `/admin/executive-committee`.
 
-## Canonical Scripts (MCEFEE)
+## Canonical Scripts (KCNJ)
 
 | Script | Purpose |
 |--------|---------|
@@ -65,20 +65,20 @@ Content-Type: application/merge-patch+json
 
 - Prefer **local file OCR** when the same filename exists under charity-site / `public/images/**` (S3 download may fail without public access).
 - Use **Tesseract** (installed path often `C:\Program Files\Tesseract-OCR\tesseract.exe`; override with `TESSERACT_PATH`).
-- Match brand text with a regex on OCR stdout **and** on whitespace-collapsed text (logos OCR as `M CE FE E` / `MCEFEE.ORG`).
+- Match brand text with a regex on OCR stdout **and** on whitespace-collapsed text (logos OCR as `M CE FE E` / `KCNJ.ORG`).
 - Match **filename/title only** for text heuristics (e.g. `/mcefee/i` on `title` / URL basename).
 - Optionally use sibling project **`F:\project_workspace\image-edit-ai-tools`** Gemini describe (`/api/nano-banana`, `action: 'describe'`) when `GEMINI_API_KEY` is available — same “read the image” idea as OCR.
 
 ### DON’T
 
-- ❌ Use **description** / seed alt text for “contains mcefee” — seed scripts often write `MCEFEE modernist: …` on every file and will false-keep everything.
+- ❌ Use **description** / seed alt text for “contains mcefee” — seed scripts often write `KCNJ modernist: …` on every file and will false-keep everything.
 - ❌ Treat modernist placeholders `team_1.jpg`…`team_4.jpg` as executive committee — keep only real roster photos (`profileImageUrl` / names like `shaji_varghese.jpeg`).
 - ❌ Trust a single noisy OCR hit without a dry-run; re-check borderline keeps (collapsed OCR can false-positive).
 
 ### Keep rules used for Mcefee Album
 
 1. Filename/title contains `mcefee`, **or**
-2. OCR finds `mcefee` / `MCEFEE` (incl. email/domain), **or**
+2. OCR finds `mcefee` / `KCNJ` (incl. email/domain), **or**
 3. Image is an **executive-committee** member photo (`/api/executive-committee-team-members` → field **`profileImageUrl`**, not `imageUrl`).
 
 Delete non-matches with `DELETE /api/event-medias/{id}`.

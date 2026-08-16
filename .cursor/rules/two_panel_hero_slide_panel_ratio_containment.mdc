@@ -1,0 +1,250 @@
+---
+description: Two-panel homepage hero (static logo card left, rotating slideshow panel right) - how the slide panel derives its aspect ratio from each slide so contained posters fill the panel with zero crop and zero side bars, plus the blurred backdrop fallback
+globs: src/components/modernist/**/*.tsx, src/styles/modernist-homepage.css, **/*.css
+alwaysApply: true
+---
+
+# Two-Panel Hero: Slide-Ratio Containment (August 2026)
+
+## What this rule covers
+
+The homepage hero rendered by
+[`src/components/modernist/ModernistPosterHero.tsx`](mdc:src/components/modernist/ModernistPosterHero.tsx)
+is **not** a full-bleed background hero. It is a two-panel band:
+
+```
+┌───────────────┬────────────────────────────────────────────┐
+│ logo card     │ rotating event poster (bleeds off the right │
+│ (static,      │ edge of the viewport)                       │
+│  contained)   │                                             │
+└───────────────┴────────────────────────────────────────────┘
+                                    ↳ "View event →" below
+```
+
+Because the poster lives **inside a bounded panel** rather than behind the page, the
+usual full-bleed hero advice does not apply. Read this rule before touching
+`.mh-poster-hero-*` styles.
+
+Styles live in [`src/styles/modernist-homepage.css`](mdc:src/styles/modernist-homepage.css)
+under `body.modernist-home` (base) and `body.modernist-home.organic-home` (active theme).
+
+## Before you start: confirm which hero you are editing
+
+This repo contains a second, **unrendered** hero at `src/components/HeroSection.tsx`
+using `.hero-slideshow-*` / `.hero-slide-image` classes in `globals.css`. Nothing
+imports it. Edits there have no effect on the homepage and have already cost one
+wasted debugging cycle.
+
+- The homepage is `src/app/page.tsx` → `HomePageClient` → `ModernistHomePage` → `<ModernistPosterHero />`.
+- **Homepage hero classes are `mh-poster-hero-*`.** If you are editing `.hero-slideshow-*`, you are in the wrong file.
+- The hero is client-rendered, so it does **not** appear in `curl` output of `/`. Verify in the browser, or grep `.next/dev/static/chunks` to confirm CSS compiled.
+
+## The core problem
+
+Three facts collide:
+
+1. **The panel width is viewport-driven.** The organic theme sets
+   `.mh-poster-hero-inner { max-width: none; padding-right: 0 }` so the slide panel
+   spans roughly 74% of the viewport and bleeds off the right edge. On a 6K monitor
+   that is ~1800px wide.
+2. **Slides are admin-uploaded** event posters. Observed ratios run from 16:9 up to
+   ~3.2:1. There is no single ratio you can hard-code.
+3. **A fixed panel height** (the old `min-height: min(64vh, 580px)`) combined with (1)
+   produced a panel around 2:1 to 3.2:1 depending on the monitor.
+
+Consequences of the naive fixes:
+
+| Approach | Result |
+|---|---|
+| `object-fit: cover` | Poster scales to the panel width, then ~200px is sliced off top and bottom. Different crop on every monitor. This is the bug users report as "cut off on all 4 sides". |
+| `object-fit: contain` alone | Nothing is cropped, but the poster shrinks to the fixed height and leaves large bare bars left and right. |
+| Hard-coded `aspect-ratio: 16 / 9` | Correct for 16:9 slides only; every other slide letterboxes. |
+
+## The solution: measure the slide, size the panel
+
+**Panel ratio must equal poster ratio.** When they match, `object-fit: contain`
+touches all four edges — no crop, no bars. Since the ratio varies per slide, measure
+it at runtime.
+
+### 1. Component reads the natural ratio on load
+
+```tsx
+const [slideRatio, setSlideRatio] = useState<number | null>(null);
+
+<div
+  className="mh-poster-hero-slide-panel"
+  style={
+    slideRatio
+      ? ({ '--mh-hero-slide-ratio': String(slideRatio) } as React.CSSProperties)
+      : undefined
+  }
+>
+  <Image
+    /* … fill, priority, sizes … */
+    onLoad={(event) => {
+      const { naturalWidth, naturalHeight } = event.currentTarget;
+      if (naturalWidth > 0 && naturalHeight > 0) {
+        setSlideRatio(naturalWidth / naturalHeight);
+      }
+    }}
+  />
+</div>
+```
+
+- **Update on `onLoad`, not on slide change.** Resetting to `null` when the index
+  changes makes the panel snap to the fallback ratio and then to the real one — two
+  visible resizes. Holding the previous ratio until the next image decodes means the
+  panel resizes exactly once, in step with the crossfade.
+- The value is a **unitless number**, which `aspect-ratio` accepts directly.
+
+### 2. CSS takes the panel height from that ratio
+
+```css
+body.modernist-home.organic-home .mh-poster-hero-slide-panel {
+  height: auto;
+  align-self: start;
+  aspect-ratio: var(--mh-hero-slide-ratio, 1.7778);
+  max-height: min(70vh, 640px);
+  overflow: hidden;
+}
+
+body.modernist-home.organic-home .mh-poster-hero-panels {
+  display: grid;
+  grid-template-columns: minmax(200px, 26%) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 0; /* row height comes from the slide panel, not a viewport fraction */
+}
+```
+
+Four details that are all load-bearing:
+
+- **`height: auto` + no `height: 100%`.** A stretched grid item ignores its own
+  `aspect-ratio`.
+- **`align-self: start`.** Without it the default `stretch` re-expands the panel to the
+  row height and the ratio is lost again.
+- **`min-height: 0` on the panels grid.** Any `min-height` larger than the computed
+  panel height leaves a dead gap below the panel (it is `align-self: start`).
+- **`1.7778` fallback**, not `16 / 9`. Keep the fallback in the same unitless form as
+  the runtime value so the two are interchangeable.
+
+The logo panel keeps `height: 100%` and stretches to whatever row height the slide
+panel produces, so the two panels stay flush.
+
+### 3. Blurred backdrop covers the residual cases
+
+`max-height` exists so the hero cannot swallow the viewport on an ultra-wide monitor.
+When it clamps, the panel becomes wider than the poster and bars would reappear. A
+second copy of the same image sits behind the poster, over-scaled and blurred, so the
+panel always reads as full:
+
+```tsx
+<Image
+  key={`backdrop-${current.url}-${index}`}
+  src={current.url}
+  alt=""
+  aria-hidden
+  fill
+  loading="eager"
+  sizes="480px"
+  className={`mh-poster-hero-img mh-poster-hero-img-backdrop${fadeIn ? ' is-visible' : ''}`}
+/>
+```
+
+```css
+body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop {
+  object-fit: cover;
+  /* Scale must outrun the blur radius or the blur reveals the panel edges */
+  transform: scale(1.25);
+  filter: blur(30px) saturate(1.12);
+  z-index: 0;
+}
+
+body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop.is-visible {
+  opacity: 0.92;
+}
+
+body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img:not(.mh-poster-hero-img-backdrop) {
+  z-index: 1;
+}
+```
+
+- **`scale` must exceed the blur radius as a fraction of panel width.** At `scale(1.25)`
+  the image overhangs by 12.5% per side; on a 380px mobile panel that is ~47px against
+  a 30px blur. Drop the scale and the blur will show transparent panel edges.
+- **`sizes="480px"`** — the backdrop is blurred beyond recognition, so requesting a
+  small source is free quality-wise and saves real bandwidth on a hero image.
+- **`loading="eager"`**, not `priority`. Eager avoids a first-paint flash of bare panel
+  behind the contained poster without adding a second `<link rel=preload>`.
+- **Both layers carry `is-visible`** so the backdrop crossfades with the poster.
+
+### 4. Specificity notes (these have bitten before)
+
+Two existing rules fight the backdrop and must be out-specified, not reordered:
+
+| Competing rule | Specificity | Backdrop selector | Specificity |
+|---|---|---|---|
+| `body.modernist-home.organic-home img { filter: none }` | (0,2,1) | `body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop` | (0,3,2) |
+| `body.modernist-home .mh-poster-hero-media img { object-fit: contain !important }` (mobile block) | (0,2,2) | same selector with `!important` | (0,3,2) |
+
+Always qualify the backdrop with **both** the `.mh-poster-hero-media` ancestor and the
+`img` type, or `filter: none` will silently kill the blur.
+
+## Mobile
+
+The mobile block (`@media (max-width: 767px)`) stacks the panels and bleeds the slide
+panel to both edges. It uses the same custom property:
+
+```css
+body.modernist-home.organic-home .mh-poster-hero-slide-panel {
+  height: auto;
+  aspect-ratio: var(--mh-hero-slide-ratio, 1.7778);
+  max-height: 62vh;
+  width: calc(100% + 16px);
+  margin-left: -16px;
+  border-radius: 0;
+}
+
+body.modernist-home .mh-poster-hero-media img,
+body.modernist-home .mh-poster-hero-img {
+  object-fit: contain !important;
+  object-position: center center !important;
+}
+
+body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop {
+  object-fit: cover !important;
+}
+```
+
+The tighter `62vh` cap matters more on phones: a 3.2:1 banner is naturally short, but a
+near-square poster on a 390px-wide screen would otherwise run past the fold.
+
+## Accepted trade-offs
+
+State these when someone asks why the hero looks taller than the mock:
+
+1. **Filling the width without cropping requires height.** `height = width / ratio` is
+   arithmetic, not a style preference. A wider panel is a taller panel.
+2. **The hero height changes between slides** by design, since each poster gets a frame
+   cut to its own shape. The crossfade absorbs this; do not "fix" it by re-pinning the
+   height.
+3. **The "Buy Tickets" overlay is pinned to the panel corner**, so when `max-height`
+   clamps it floats over the blurred area rather than over the poster. It keeps its
+   drop-shadow and stays legible. Making it track the poster's rendered box would
+   require measuring the contained image rect — only worth it if someone complains.
+
+## Checklist before shipping a change here
+
+- [ ] Editing `mh-poster-hero-*`, not the dead `.hero-slideshow-*`
+- [ ] Slide panel has `height: auto`, `align-self: start`, `aspect-ratio: var(--mh-hero-slide-ratio, 1.7778)`
+- [ ] Panels grid has `min-height: 0`
+- [ ] Foreground image is `object-fit: contain`; backdrop is `object-fit: cover`
+- [ ] Backdrop selector includes `.mh-poster-hero-media` **and** `img` (out-specifies `filter: none`)
+- [ ] Backdrop `transform: scale()` overhang exceeds the blur radius
+- [ ] `onLoad` ratio capture still present on the foreground `<Image>`
+- [ ] Verified in a browser at ~1280px, ~1920px and mobile — not via `curl`, the hero is client-rendered
+
+## Related rules
+
+- [Hero Mobile Image Containment](mdc:.cursor/rules/hero_mobile_image_containment_aspect_ratio.mdc) — aspect-ratio matching for **fixed-ratio, known** images in the mosc-style split hero
+- [Image Containment Prevention](mdc:.cursor/rules/image_containment_prevention_hero_images_cards.mdc) — `contain` vs `cover` decision guide for cards, banners and sponsor art
+- [Public Page Header Ribbon Banner](mdc:.cursor/rules/public_page_header_ribbon_banner.mdc) — the matched-canvas ribbon on non-homepage public pages

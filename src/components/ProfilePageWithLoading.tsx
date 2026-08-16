@@ -17,11 +17,17 @@ import subpageStyles from '@/components/SubpageHomeDesign.module.css';
 interface ProfilePageWithLoadingProps {
   initialUserId: string;
   homepageDesign?: boolean;
+  /**
+   * Set when the page already shows a header ribbon carrying the title and
+   * lede, so this component skips its own heading and the header clearance.
+   */
+  hidePageHeader?: boolean;
 }
 
 export default function ProfilePageWithLoading({
   initialUserId,
   homepageDesign = false,
+  hidePageHeader = false,
 }: ProfilePageWithLoadingProps) {
   const userId = initialUserId;
   const isLoaded = true;
@@ -47,12 +53,15 @@ export default function ProfilePageWithLoading({
 
   useEffect(() => {
     if (isLoaded && userId) {
-      fetchProfile();
+      fetchProfile(0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: fetch once when userId is ready
   }, [isLoaded, userId]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (retryAttempt = 0) => {
     if (!userId) return;
+
+    let willRetry = false;
 
     try {
       setLoading(true);
@@ -79,18 +88,17 @@ export default function ProfilePageWithLoading({
         const errorText = await response.text();
 
         if (response.status === 401) {
-          // For 401 errors, just log the error but don't prevent the page from showing
+          // For 401 errors, retry once — do not loop forever (stuck "Please wait…" spinner)
           console.log('[ProfilePageWithLoading] 🔄 401 error detected, but continuing to show profile form');
-          // Don't set error state for 401s - let the page continue
-
-          // Try to retry once after a shorter delay (reduced from 1000ms to 300ms)
-          console.log('[ProfilePageWithLoading] 🔄 Retrying profile fetch after 401 error...');
-          setTimeout(() => {
-            if (userId) {
-              console.log('[ProfilePageWithLoading] 🔄 Retry attempt for user:', userId);
-              fetchProfile();
-            }
-          }, 300); // Reduced delay - 401s are usually auth timing issues that resolve quickly
+          if (retryAttempt < 1) {
+            console.log('[ProfilePageWithLoading] 🔄 Retrying profile fetch after 401 error...');
+            willRetry = true;
+            setTimeout(() => {
+              if (userId) {
+                fetchProfile(retryAttempt + 1);
+              }
+            }, 300);
+          }
         } else if (response.status === 500) {
           const errorMessage = 'There is some unexpected error happened. Please try back again later.';
           setError(errorMessage);
@@ -109,19 +117,27 @@ export default function ProfilePageWithLoading({
       setErrorDetails(err instanceof Error ? err.message : 'Unknown error');
       setShowErrorDialog(true);
     } finally {
-      setLoading(false);
+      if (!willRetry) {
+        setLoading(false);
+      }
     }
   };
 
   const pageShellClass = homepageDesign
-    ? `${subpageStyles.subpageRoot} home-page-layout relative z-[1] min-h-screen w-full overflow-x-hidden`
+    ? `${subpageStyles.subpageRoot} home-page-layout mh-events-page mh-profile-page relative z-[1] min-h-screen w-full overflow-x-hidden`
     : '';
   const contentWrapClass = homepageDesign
     ? 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'
     : '';
-  const contentWrapStyle = homepageDesign ? { paddingTop: '120px', paddingBottom: '2rem' as const } : undefined;
+  const contentWrapStyle = homepageDesign
+    ? {
+        // The ribbon already clears the fixed header, so only normal spacing is needed
+        paddingTop: hidePageHeader ? '2.5rem' : '120px',
+        paddingBottom: '2rem' as const,
+      }
+    : undefined;
 
-  const profileHeader = (
+  const profileHeader = hidePageHeader ? null : (
     <div className={`mb-8 ${homepageDesign ? 'text-center' : ''}`}>
       {homepageDesign ? (
         <>
@@ -144,7 +160,7 @@ export default function ProfilePageWithLoading({
       <div className={pageShellClass}>
         <div className={contentWrapClass} style={contentWrapStyle}>
           {profileHeader}
-          <div className="homepage-glass-card services-glass-card-face rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto">
+          <div className="mh-profile-panel homepage-glass-card services-glass-card-face rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto">
             {children}
           </div>
         </div>

@@ -14,7 +14,7 @@ alwaysApply: false
 
 # Mobile Payment Flow Architecture
 
-This document outlines the comprehensive mobile payment flow architecture for the MCEFEE event management application, detailing the critical differences between mobile and desktop payment processing.
+This document outlines the comprehensive mobile payment flow architecture for the KCNJ event management application, detailing the critical differences between mobile and desktop payment processing.
 
 ## Overview
 
@@ -1003,4 +1003,4 @@ useEffect(() => {
 - Final attempt coverage ensures transaction creation is attempted even on last poll
 - Better UX: Users get their tickets even if webhook processing fails
 
-This architecture ensures optimal mobile payment experience while maintaining security, reliability, and proper email delivery for the MCEFEE event management system.
+This architecture ensures optimal mobile payment experience while maintaining security, reliability, and proper email delivery for the KCNJ event management system.

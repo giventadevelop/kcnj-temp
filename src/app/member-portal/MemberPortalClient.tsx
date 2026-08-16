@@ -25,7 +25,14 @@ type MemberstackInstance = {
   purchasePlansWithCheckout?: (params: { priceId: string; successUrl?: string; cancelUrl?: string }) => Promise<unknown>;
 };
 
-export default function MemberPortalClient({ homepageDesign = false }: { homepageDesign?: boolean }) {
+export default function MemberPortalClient({
+  homepageDesign = false,
+  hidePageHeader = false,
+}: {
+  homepageDesign?: boolean;
+  /** Set when the page already shows a header ribbon carrying the title. */
+  hidePageHeader?: boolean;
+}) {
   const [memberstackReady, setMemberstackReady] = useState(false);
   const [currentMember, setCurrentMember] = useState<MemberstackMember | null | undefined>(undefined);
   const [initError, setInitError] = useState<string | null>(null);
@@ -98,7 +105,7 @@ export default function MemberPortalClient({ homepageDesign = false }: { homepag
     ms.openModal('PROFILE').then(() => refreshMember(ms));
   };
 
-  const pageTitle = homepageDesign ? (
+  const pageTitle = hidePageHeader ? null : homepageDesign ? (
     <div className="text-center mb-6">
       <HomeSectionTitle className="mb-4">Members</HomeSectionTitle>
     </div>

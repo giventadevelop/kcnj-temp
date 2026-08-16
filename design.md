@@ -4,7 +4,7 @@
 > **Source of truth:** `src/app/page.tsx` → `src/app/HomePageClient.tsx`
 > **Audience:** Frontend developers, UI designers, onboarding engineers, future maintainers
 
-This document is a section-by-section UI/UX design specification for the public homepage of the **Malayalees.US** (MCEFEE) platform. It captures layout, component composition, styling tokens, responsive behavior, interactions, and the engineering decisions behind them so the page can be rebuilt, extended, or audited with confidence.
+This document is a section-by-section UI/UX design specification for the public homepage of the **Malayalees.US** (KCNJ) platform. It captures layout, component composition, styling tokens, responsive behavior, interactions, and the engineering decisions behind them so the page can be rebuilt, extended, or audited with confidence.
 
 ---
 

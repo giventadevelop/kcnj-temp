@@ -7,6 +7,7 @@ import { Search, ChevronDown, X, LogOut, User } from 'lucide-react';
 import { useAuth, useClerk, useUser } from '@clerk/nextjs';
 import { useTenantSettings } from '@/components/TenantSettingsProvider';
 import { isPrimaryHostname, isSatelliteHostname } from '@/lib/clerkSatellite';
+import { scrollToHomepageHash, scheduleHomepageHashScroll } from '@/lib/homepageHashScroll';
 import Image from 'next/image';
 
 const navItemCatalog = [
@@ -39,9 +40,7 @@ const navItemCatalog = [
       { name: 'Focus Groups', href: '/focus-groups' },
       { name: 'Profile', href: '/profile', requiresAuth: true },
       { name: 'Members', href: '/member-portal', requiresAuth: true },
-      { name: 'Membership', href: '/membership' },
-      { name: 'MOSC', href: '/mosc' },
-      { name: 'MOSC_Redesign', href: '/mosc-redesign' },
+      { name: 'Membership', href: '/sign-up' },
     ],
   },
   {
@@ -162,60 +161,10 @@ const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string
   // Update the URL hash
   window.history.pushState(null, '', hashPart);
 
-  // Wait for element to exist before scrolling (especially important for dynamically loaded sections)
-  const headerHeight = 128;
-  const maxWaitTime = 10000; // 10 seconds max wait
-  const pollInterval = 100; // Check every 100ms
-  const startTime = Date.now();
-
-  const waitForElementAndScroll = () => {
-    const targetElement = document.getElementById(targetId);
-
-    if (targetElement) {
-      // CRITICAL: For team-section, ensure it's fully rendered and visible
-      // Check if element has content (not just the container)
-      if (targetId === 'team-section') {
-        const hasContent = targetElement.querySelector('.max-w-7xl') || targetElement.children.length > 0;
-        if (!hasContent) {
-          // Element exists but content not loaded yet, keep waiting
-          const elapsed = Date.now() - startTime;
-          if (elapsed < maxWaitTime) {
-            setTimeout(waitForElementAndScroll, pollInterval);
-            return false;
-          }
-        }
-      }
-
-      // Element exists and is ready, scroll to it with proper offset
-      // Use larger offset for team-section to ensure it's fully visible above the fold
-      const scrollOffset = targetId === 'team-section' ? headerHeight + 40 : headerHeight + 20;
-      const targetPosition = targetElement.offsetTop - scrollOffset;
-
-      // Ensure we scroll to the correct element by verifying the ID matches
-      if (targetElement.id === targetId) {
-        window.scrollTo({ top: Math.max(0, targetPosition), behavior: 'smooth' });
-        hideNavigationLoading();
-        console.log('[Header] Successfully scrolled to:', targetId, 'at position:', targetPosition);
-        return true;
-      }
-    }
-
-    // Element doesn't exist yet
-    const elapsed = Date.now() - startTime;
-    if (elapsed < maxWaitTime) {
-      // Keep waiting
-      setTimeout(waitForElementAndScroll, pollInterval);
-      return false;
-    } else {
-      // Timeout reached
-      console.warn('[Header] Timeout waiting for element:', targetId);
-      hideNavigationLoading();
-      return false;
-    }
-  };
-
-  // Start waiting for element
-  waitForElementAndScroll();
+  scheduleHomepageHashScroll(targetId, {
+    behavior: 'smooth',
+    settleDelaysMs: [150, 400, 900],
+  });
 
   // Also trigger a hashchange event to let the page component handle the scrolling
   window.dispatchEvent(new HashChangeEvent('hashchange'));
@@ -764,12 +713,10 @@ export default function Header({ hideMenuItems = false, variant = 'charity', isT
   /* Transparent frost header only on the true homepage — other public pages use a solid bar */
   const isHomePage = pathname === '/';
 
-  /** Compact brand mark stays in the header on every page, including `/`. */
-  const hideHeaderLogo = false;
-  const headerLogoSrc = isHomePage
-    ? '/images/KCNJ/logo_latest-transparent.png'
-    : '/images/logos/Mcefee/mcefee_logo_black_border_transparent.png';
-  const headerLogoAlt = isHomePage ? 'KCNJ' : 'MCEFEE';
+  /** Homepage uses the hero logo panel — hide the header mark only on `/`. */
+  const hideHeaderLogo = isHomePage;
+  const headerLogoSrc = '/images/KCNJ/logo_latest-transparent.png';
+  const headerLogoAlt = 'KCNJ — Kerala Center of New Jersey';
 
   // Frosted header when content scrolls under the sticky bar (homepage + all pages)
   useEffect(() => {
@@ -973,86 +920,53 @@ export default function Header({ hideMenuItems = false, variant = 'charity', isT
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const headerHeight = 128;
+
+    let cancelScheduled: (() => void) | undefined;
 
     const scrollToHashWithOffset = (behavior: ScrollBehavior = 'smooth') => {
       const hash = window.location.hash;
-      if (!hash || (window.location.pathname !== '/' && window.location.pathname !== '/charity-theme')) return;
+      if (!hash || (window.location.pathname !== '/' && window.location.pathname !== '/charity-theme')) {
+        return;
+      }
       const targetId = hash.replace('#', '');
 
-      // Show loading indicator for team section
       if (targetId === 'team-section') {
         showNavigationLoading();
       }
 
-      // Wait for element to exist before scrolling (especially important for dynamically loaded sections)
-      const maxWaitTime = targetId === 'team-section' ? 15000 : 10000; // 15 seconds for team-section, 10 for others
-      const pollInterval = 100; // Check every 100ms
-      const startTime = Date.now();
+      cancelScheduled?.();
+      cancelScheduled = scheduleHomepageHashScroll(targetId, {
+        behavior,
+        settleDelaysMs: behavior === 'auto' ? [150, 400, 900, 1800] : [150, 400],
+        maxWaitMs: targetId === 'team-section' ? 15000 : 12000,
+      });
 
-      const waitForElementAndScroll = () => {
-        const targetElement = document.getElementById(targetId);
-
-        if (targetElement) {
-          // CRITICAL: For team-section, ensure it's fully rendered and visible
-          // Check if element has content (not just the container)
-          if (targetId === 'team-section') {
-            // Check if element has actual content (team members loaded)
-            const hasContent = targetElement.querySelector('.max-w-7xl') &&
-              (targetElement.querySelector('.grid') || targetElement.querySelector('.flex') ||
-                targetElement.querySelector('[class*="team"]'));
-            if (!hasContent) {
-              // Element exists but content not loaded yet, keep waiting
-              const elapsed = Date.now() - startTime;
-              if (elapsed < maxWaitTime) {
-                setTimeout(waitForElementAndScroll, pollInterval);
-                return;
-              }
-            }
-          }
-
-          // Element exists and is ready, scroll to it with proper offset
-          // Use larger offset for team-section to ensure it's fully visible above the fold
-          const scrollOffset = targetId === 'team-section' ? headerHeight + 40 : headerHeight + 20;
-          const targetPosition = targetElement.offsetTop - scrollOffset;
-
-          // Ensure we scroll to the correct element by verifying the ID matches
-          if (targetElement.id === targetId) {
-            // Small delay to ensure layout is stable before scrolling
-            setTimeout(() => {
-              window.scrollTo({ top: Math.max(0, targetPosition), behavior });
-              hideNavigationLoading();
-              console.log('[Header useEffect] Successfully scrolled to:', targetId, 'at position:', targetPosition);
-            }, 100);
+      if (targetId === 'team-section') {
+        const start = Date.now();
+        const poll = () => {
+          if (document.getElementById(targetId) || Date.now() - start > 15000) {
+            hideNavigationLoading();
             return;
           }
-        }
-
-        // Element doesn't exist yet
-        const elapsed = Date.now() - startTime;
-        if (elapsed < maxWaitTime) {
-          // Keep waiting
-          setTimeout(waitForElementAndScroll, pollInterval);
-        } else {
-          // Timeout reached
-          console.warn('[Header useEffect] Timeout waiting for element:', targetId);
-          hideNavigationLoading();
-        }
-      };
-
-      // Start waiting for element
-      waitForElementAndScroll();
+          setTimeout(poll, 200);
+        };
+        poll();
+      }
     };
-
-    if ((window.location.pathname === '/' || window.location.pathname === '/charity-theme') && window.location.hash) {
-      requestAnimationFrame(() => scrollToHashWithOffset('auto'));
-      const timeout = setTimeout(() => scrollToHashWithOffset('auto'), 300);
-      return () => clearTimeout(timeout);
-    }
 
     const onHashChange = () => scrollToHashWithOffset('smooth');
     window.addEventListener('hashchange', onHashChange);
+
+    if (
+      (window.location.pathname === '/' || window.location.pathname === '/charity-theme') &&
+      window.location.hash
+    ) {
+      // Cold load / new tab: instant scroll + settle retries (contact is client-rendered).
+      scrollToHashWithOffset('auto');
+    }
+
     return () => {
+      cancelScheduled?.();
       window.removeEventListener('hashchange', onHashChange);
       hideNavigationLoading();
     };
@@ -1126,23 +1040,22 @@ export default function Header({ hideMenuItems = false, variant = 'charity', isT
         className={`fixed top-0 left-0 right-0 z-50 header-glass${headerScrolled ? ' header-glass--scrolled' : ''}${isHomePage ? ' header-glass--home' : ''}`}
       >
         <div className="w-full max-w-[90rem] mx-auto px-4 sm:px-6 lg:pl-5 lg:pr-8 xl:px-10">
-          <div className="header-inner-grid h-[8rem] w-full min-w-0 items-center gap-2 sm:gap-3 lg:gap-3 xl:gap-4">
-            {/* Brand — compact logo in the header on every page */}
+          <div className="header-inner-grid h-[6.5rem] sm:h-[7rem] lg:h-[7.5rem] w-full min-w-0 items-center gap-2 sm:gap-3 lg:gap-3 xl:gap-4">
+            {/* Brand — sized to stay inside the header bar (no overflow into page body) */}
             <div
-              className={`header-brand-col flex min-w-0 items-center h-full max-w-[calc(100%-5.75rem)] sm:max-w-[calc(100%-6.25rem)] lg:max-w-none${hideHeaderLogo ? ' header-brand-col--home-hidden' : ''}`}
+              className={`header-brand-col flex min-w-0 items-center h-full max-w-[calc(100%-6.5rem)] sm:max-w-[calc(100%-7rem)] lg:max-w-none${hideHeaderLogo ? ' header-brand-col--home-hidden' : ''}`}
             >
               {!hideHeaderLogo && (
-                <Link href="/" className="group flex min-w-0 items-center h-full" aria-label={`${headerLogoAlt} home`}>
-                  <div className="header-logo-image-wrap flex h-full w-[5.75rem] min-w-[5.75rem] sm:w-[6.75rem] sm:min-w-[6.75rem] lg:w-[6.5rem] lg:min-w-[6.5rem] xl:w-[7.5rem] xl:min-w-[7.5rem] 2xl:w-[9rem] 2xl:min-w-[9rem] flex-shrink-0 items-center justify-center overflow-hidden rounded-xl transition-all duration-300 group-hover:scale-105">
+                <Link href="/" className="group flex min-w-0 items-center h-full py-2" aria-label={`${headerLogoAlt} home`}>
+                  <div className="header-logo-image-wrap flex h-[4.75rem] max-h-[4.75rem] w-[5.25rem] min-w-[5.25rem] sm:h-[5.25rem] sm:max-h-[5.25rem] sm:w-[5.75rem] sm:min-w-[5.75rem] lg:h-[5.5rem] lg:max-h-[5.5rem] lg:w-[6.25rem] lg:min-w-[6.25rem] xl:h-[5.75rem] xl:max-h-[5.75rem] xl:w-[6.75rem] xl:min-w-[6.75rem] flex-shrink-0 items-center justify-center overflow-hidden rounded-xl transition-transform duration-300 group-hover:scale-[1.02]">
                     <Image
                       src={headerLogoSrc}
                       alt={headerLogoAlt}
-                      width={168}
-                      height={128}
+                      width={160}
+                      height={160}
                       priority
                       loading="eager"
-                      className="h-full w-full object-contain object-center"
-                      style={{ width: 'auto', height: '100%' }}
+                      className="max-h-full max-w-full h-auto w-auto object-contain object-center"
                     />
                   </div>
                 </Link>
@@ -1354,13 +1267,13 @@ export default function Header({ hideMenuItems = false, variant = 'charity', isT
                 onClick={closeMobileMenu}
                 aria-label={`${headerLogoAlt} home`}
               >
-                <div className="header-logo-image-wrap flex h-12 w-12 min-w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-14 sm:w-14 sm:min-w-14">
+                <div className="header-logo-image-wrap flex h-14 w-14 min-w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg sm:h-16 sm:w-16 sm:min-w-16">
                   <Image
                     src={headerLogoSrc}
                     alt={headerLogoAlt}
-                    width={56}
-                    height={56}
-                    className="h-full w-full object-contain"
+                    width={64}
+                    height={64}
+                    className="max-h-full max-w-full h-auto w-auto object-contain object-center"
                   />
                 </div>
               </Link>

@@ -1,6 +1,6 @@
 # Domain-Agnostic Payment System Documentation
 
-**Project:** MCEFEE Multi-Tenant Event Management Platform
+**Project:** KCNJ Multi-Tenant Event Management Platform
 **Version:** 1.0
 **Date:** October 20, 2025
 **Status:** Ready for Implementation
@@ -9,7 +9,7 @@
 
 ## Overview
 
-This directory contains comprehensive documentation for transforming the MCEFEE event management platform from a single-domain, Stripe-centric payment implementation to a **domain-agnostic, multi-provider payment architecture**.
+This directory contains comprehensive documentation for transforming the KCNJ event management platform from a single-domain, Stripe-centric payment implementation to a **domain-agnostic, multi-provider payment architecture**.
 
 ## Problem Statement
 
