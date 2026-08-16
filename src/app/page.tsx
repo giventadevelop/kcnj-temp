@@ -5,7 +5,7 @@ import { fetchFeaturedEventsForHomepageServer } from '@/lib/homepage/fetchFeatur
 export const metadata: Metadata = {
   title: 'Home',
   description: 'Upcoming events, tickets, membership, and community updates.',
-  keywords: ['home', 'events', 'tickets', 'membership', 'Event Site Manager'],
+  keywords: ['home', 'events', 'tickets', 'membership', 'KCNJ'],
 };
 
 export default async function HomePage() {

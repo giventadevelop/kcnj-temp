@@ -12,10 +12,10 @@ const CLERK_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? process.env.A
 export const metadata: Metadata = {
   title: {
     default: 'Admin Home',
-    template: '%s | Admin | Event Site Manager',
+    template: '%s | Admin | KCNJ',
   },
   description: 'Administration console for events, users, media, tenant settings, and communications.',
-  keywords: ['admin', 'event management', 'tenant settings', 'Event Site Manager'],
+  keywords: ['admin', 'event management', 'tenant settings', 'KCNJ'],
 };
 
 /**

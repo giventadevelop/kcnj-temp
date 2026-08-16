@@ -4,7 +4,7 @@
  */
 
 const MOSC_BRAND = 'Malankara Orthodox Syrian Church';
-const APP_BRAND = 'Event Site Manager';
+const APP_BRAND = 'KCNJ';
 const ADMIN_BRAND = 'Admin';
 
 /** Known path segments → searchable labels (keywords for tab search / hover). */

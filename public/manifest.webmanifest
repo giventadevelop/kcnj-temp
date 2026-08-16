@@ -1,7 +1,7 @@
 {
-  "name": "MCEFEE - Event Management",
-  "short_name": "MCEFEE",
-  "description": "Malayalee Cultural Events and Entertainment Foundation",
+  "name": "KCNJ",
+  "short_name": "KCNJ",
+  "description": "Malayalee Cultural Events Federation for Education & Empowerment",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -41,13 +41,5 @@
       "purpose": "any"
     }
   ],
-  "categories": ["events", "entertainment", "culture"],
-  "screenshots": [
-    {
-      "src": "/images/spark_kerala_event_2025/spark_kerala_event_2025.jpg",
-      "sizes": "1280x720",
-      "type": "image/jpeg",
-      "form_factor": "wide"
-    }
-  ]
+  "categories": ["events", "entertainment", "culture"]
 }

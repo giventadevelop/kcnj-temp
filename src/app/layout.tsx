@@ -25,11 +25,19 @@ import { getSharedAdsensePublisherIdForMeta } from "@/lib/adsense/sharedPublishe
 /** Default tab / SEO titles; pages may override. BrowserTabTitle fills unique titles per route. */
 export const metadata: Metadata = {
   title: {
-    default: 'Home | Event Site Manager',
-    template: '%s | Event Site Manager',
+    default: 'Home | KCNJ',
+    template: '%s | KCNJ',
   },
-  description: 'Event management, ticketing, membership, and church website for your organization.',
-  applicationName: 'Event Site Manager',
+  description: 'Event management, ticketing, membership, and community website for KCNJ.',
+  applicationName: 'KCNJ',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
 };
 
 const DEBUG_LAYOUT = process.env.NEXT_PUBLIC_DEBUG_LAYOUT === 'true';
