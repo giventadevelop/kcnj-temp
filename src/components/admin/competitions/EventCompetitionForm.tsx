@@ -171,9 +171,20 @@ export default function EventCompetitionForm({ eventId, days, competition }: Pro
           }
         >
           <option value="">Discipline (optional)</option>
-          {(['SONG', 'SPEECH', 'DANCE', 'MUSIC', 'SPORTS', 'ART', 'OTHER'] as const).map((d) => (
-            <option key={d} value={d}>
-              {d}
+          {(
+            [
+              ['SONG', 'Song'],
+              ['SPEECH', 'Speech'],
+              ['DANCE', 'Dance'],
+              ['MUSIC', 'Music'],
+              ['SPORTS', 'Sports'],
+              ['ART', 'Art'],
+              ['PAINTING', 'Painting'],
+              ['OTHER', 'Other'],
+            ] as const
+          ).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
             </option>
           ))}
         </select>

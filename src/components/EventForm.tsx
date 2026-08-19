@@ -12,6 +12,7 @@ import RecurrencePreview from '@/components/RecurrencePreview';
 import type { RecurrencePattern, RecurrenceEndType } from '@/lib/recurrenceUtils';
 import { validateRecurrenceEndDate, generateOccurrenceDates } from '@/lib/recurrenceUtils';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import FromEmailSelect from '@/components/FromEmailSelect';
 import { fetchTenantEmailAddressesServer } from '@/app/admin/tenant-email-addresses/ApiServerActions';
 import EventFormHelpTooltip from '@/components/EventFormHelpTooltip';
@@ -1501,16 +1502,22 @@ export function EventForm({ event, eventTypes, onSubmit, loading, onCancel }: Ev
 
       {form.isCompetitionEvent && form.id && (
         <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg">
-          <p className="text-sm text-rose-800 mb-2">
+          <p className="text-sm text-rose-800 mb-3">
             Competition mode is enabled. Configure settings, schedule, and catalog in the admin competitions section.
           </p>
-          <button
-            type="button"
-            onClick={() => router.push(`/admin/events/${form.id}/competitions/settings`)}
-            className="text-sm font-semibold text-rose-700 hover:text-rose-900 underline"
+          <Link
+            href={`/admin/events/${form.id}/competitions/settings`}
+            className="w-full flex-shrink-0 h-14 rounded-xl bg-indigo-100 hover:bg-indigo-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105"
+            title="Open Competition Admin"
+            aria-label="Open Competition Admin"
           >
-            Open competition admin →
-          </button>
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-200 flex items-center justify-center">
+              <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </div>
+            <span className="font-semibold text-indigo-700">Open Competition Admin</span>
+          </Link>
         </div>
       )}
 

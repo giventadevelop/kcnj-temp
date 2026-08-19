@@ -178,13 +178,15 @@ export async function createCompetitionServer(
   payload: Omit<EventCompetitionDTO, 'id' | 'tenantId' | 'createdAt' | 'updatedAt' | 'event'>
 ): Promise<EventCompetitionDTO> {
   const now = new Date().toISOString();
+  const { competitionDay, ...rest } = payload;
   return proxyJson<EventCompetitionDTO>('/event-competitions', {
     method: 'POST',
     body: JSON.stringify(
       withTenantId({
-        ...payload,
+        ...rest,
         id: null,
         event: eventRef(eventId),
+        ...(competitionDay?.id ? { competitionDay: { id: competitionDay.id } } : {}),
         createdAt: now,
         updatedAt: now,
       })

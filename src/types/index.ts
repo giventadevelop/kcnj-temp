@@ -1792,6 +1792,7 @@ export type CompetitionDisciplineCode =
   | 'MUSIC'
   | 'SPORTS'
   | 'ART'
+  | 'PAINTING'
   | 'OTHER';
 export type CompetitionGroupMemberRole = 'CAPTAIN' | 'MEMBER';
 export type RegistrationActorMode = 'PARENT' | 'SELF' | 'TEAM_CAPTAIN';
