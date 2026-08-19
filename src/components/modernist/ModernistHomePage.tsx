@@ -561,10 +561,120 @@ function FeaturedEventsModernist({ items }: { items: FeaturedEventWithMedia[] })
   );
 }
 
+function LiveEventsModernist({ items }: { items: FeaturedEventWithMedia[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mh-featured-block mh-live-block">
+      <div className="mh-featured-section-head">
+        <div className="mh-section-head">
+          <span className="mh-eyebrow">Live now</span>
+          <Link href="/events" className="mh-link">
+            All events →
+          </Link>
+        </div>
+        <h2 className="mh-h2 mh-featured-section-title">Live Events</h2>
+      </div>
+
+      {items.map((item) => {
+        const { event } = item;
+        const imageUrl = getFeaturedEventImageUrl(item);
+        const timeLabel = formatEventTime(event.startTime, event.endTime);
+        const desc = (event.description || '').replace(/<[^>]+>/g, '').trim();
+
+        return (
+          <section
+            key={`live-${event.id ?? event.title}`}
+            className="mh-featured"
+            aria-label={`Live event: ${event.title}`}
+          >
+            <figure className="mh-featured-media">
+              {imageUrl ? (
+                <Link
+                  href={eventHref(event)}
+                  className="mh-featured-media-link"
+                  title={`View ${event.title}`}
+                  aria-label={`View ${event.title}`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- remote event media URLs (S3/presign) */}
+                  <img
+                    src={imageUrl}
+                    alt={item.media?.altText || event.title}
+                  />
+                </Link>
+              ) : (
+                <div className="mh-empty" style={{ padding: 48, textAlign: 'center' }}>
+                  No event image yet
+                </div>
+              )}
+              <span className="mh-live-badge" role="status" aria-label="Live now">
+                <span className="mh-live-badge-dot" aria-hidden />
+                Live
+              </span>
+            </figure>
+
+            <div className="mh-featured-body">
+              <div className="mh-featured-kicker">
+                <span className="mh-dot" aria-hidden />
+                <span className="mh-eyebrow" style={{ margin: 0 }}>
+                  Happening today
+                </span>
+              </div>
+
+              <h2>{event.title}</h2>
+
+              {desc ? (
+                <p className="mh-featured-lede">
+                  {desc.slice(0, 220)}
+                  {desc.length > 220 ? '…' : ''}
+                </p>
+              ) : null}
+
+              <div className="mh-featured-meta">
+                {event.startDate && (
+                  <div className="mh-featured-meta-row">
+                    <span className="mh-featured-meta-label">Date</span>
+                    <span className="mh-featured-meta-value">
+                      {formatEventDate(event.startDate, event.timezone)}
+                    </span>
+                  </div>
+                )}
+                {timeLabel && (
+                  <div className="mh-featured-meta-row">
+                    <span className="mh-featured-meta-label">Time</span>
+                    <span className="mh-featured-meta-value">{timeLabel}</span>
+                  </div>
+                )}
+                {event.location && (
+                  <div className="mh-featured-meta-row">
+                    <span className="mh-featured-meta-label">Venue</span>
+                    <span className="mh-featured-meta-value">{event.location}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mh-featured-actions">
+                <Link href={eventHref(event)} className="mh-btn mh-btn-primary">
+                  View event
+                </Link>
+                <Link href="/events" className="mh-btn mh-btn-secondary">
+                  All events
+                </Link>
+              </div>
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ModernistHomePage({
   initialFeaturedEvents,
+  initialLiveEvents,
 }: {
   initialFeaturedEvents: FeaturedEventWithMedia[];
+  initialLiveEvents: FeaturedEventWithMedia[];
 }) {
   const [team, setTeam] = useState<ExecutiveCommitteeTeamMemberDTO[]>([]);
   const [sponsors, setSponsors] = useState<EventSponsorsDTO[]>([]);
@@ -648,6 +758,9 @@ export default function ModernistHomePage({
     <main className="modernist-home">
       {/* Poster hero — rotation + left logo + fixed design copy (no media title overlays) */}
       <ModernistPosterHero />
+
+      {/* Live events happening today */}
+      <LiveEventsModernist items={initialLiveEvents} />
 
       {/* 1b — Red on-sale band */}
       {onSaleEvent && (
@@ -917,6 +1030,12 @@ export default function ModernistHomePage({
             })}
           </div>
         )}
+
+        <div className="mh-home-sponsors-footer">
+          <Link href="/sponsors" className="mh-link">
+            See all sponsors →
+          </Link>
+        </div>
       </section>
 
       <ContactSection />

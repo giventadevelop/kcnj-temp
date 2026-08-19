@@ -109,11 +109,12 @@ Paint the band in the artwork's own cream, then size the image by **height only*
 | Motif never cropped | `height: 100%; width: auto` — the image keeps its natural ratio at band height |
 | No visible letterbox | `.mh-events-hero` + `.mh-events-hero-media` background = `--mh-ribbon-canvas` (**must equal the JPG canvas colour**) |
 | Motif stays on the right | `.mh-events-hero-picture` is `position: absolute; right: 0; left: auto` |
-| Minimal height | `height: clamp(7rem, 9vw, 11rem)` — rem cap, never `vh` (huge on 6K) |
+| Minimal height | `min-height: clamp(7.5rem, 10vw, 12rem)` + `height: auto` — rem floor, never `vh`; band grows so kicker/title/lede are never clipped |
 | Gap under header | `margin-top: calc(var(--header-bar-height) + var(--mh-ribbon-header-gap))`; gap is `0.75rem`, `1.25rem` under 768px |
 | No seam where the JPG starts | Left-edge `mask-image: linear-gradient(to right, transparent 0%, #000 22%)` on the image, and **no scrim** |
 | Text legibility | Dark text on the cream band: `--mh-brand-green` h1, `--mh-text` kicker/lede — no wash needed |
 | Heading vs motif collision | `padding-right` on `.mh-events-hero-content` below 1280px (motif ≈ 1.1 × band height) |
+| Kicker/title never clipped | `.mh-events-hero` is `overflow: visible` (not `hidden`). Clip the artwork only on `.mh-events-hero-media { overflow: hidden }`. Kicker is `display: flex` with `line-height: 1.45`. Do not put `line-height: 0` on the hero — that sliced uppercase kickers. |
 
 ```css
 /* ✅ Matched canvas, height-anchored, right-pinned */
@@ -121,11 +122,12 @@ Paint the band in the artwork's own cream, then size the image by **height only*
   --mh-ribbon-header-gap: 0.75rem;
   width: 100%;
   margin-top: calc(var(--header-bar-height) + var(--mh-ribbon-header-gap));
-  height: clamp(7rem, 9vw, 11rem);
+  height: auto;
+  min-height: clamp(7.5rem, 10vw, 12rem);
   background: var(--mh-ribbon-canvas, #f2e7d5);
-  overflow: hidden;
+  overflow: visible; /* text must never clip; clip the image on .mh-events-hero-media */
 }
-.mh-events-hero-media { background: var(--mh-ribbon-canvas, #f2e7d5); }
+.mh-events-hero-media { background: var(--mh-ribbon-canvas, #f2e7d5); overflow: hidden; }
 .mh-events-hero-picture {
   position: absolute;
   top: 0; right: 0; bottom: 0; left: auto;
@@ -156,7 +158,7 @@ background: #1a1816;        /* dark band exposes the image edge as a hard seam *
 background: linear-gradient(to right, …70%, transparent 72%);
 ```
 
-**Why overflow is safe:** on narrow viewports the image's natural width (band height × ratio) can exceed the viewport. Since it's right-pinned inside `overflow: hidden`, the only thing clipped is blank cream on the left.
+**Why image overflow is safe:** on narrow viewports the image's natural width (band height × ratio) can exceed the viewport. Clip that on `.mh-events-hero-media` (`overflow: hidden`), never on `.mh-events-hero` — hiding overflow on the band itself slices the uppercase kicker. The only thing clipped is blank cream on the left of the motif.
 
 ### Two ways a seam appears (both fixed, don't reintroduce them)
 

@@ -4,6 +4,8 @@ import { PollDetailsPage } from './PollDetailsPage';
 import { fetchEventPollServer, fetchEventPollOptionsServer } from '@/app/admin/polls/ApiServerActions';
 import { fetchUserProfileServer } from '@/app/profile/ApiServerActions';
 import type { EventPollDTO, EventPollOptionDTO } from '@/types';
+import PollsPageBackground from '../PollsPageBackground';
+import '@/styles/modernist-homepage.css';
 
 interface PollPageProps {
   params: {
@@ -52,11 +54,14 @@ export default async function PollPage({ params }: PollPageProps) {
   }
 
   return (
-    <PollDetailsPage 
-      poll={poll} 
-      options={options} 
-      userId={userProfile?.id}
-    />
+    <>
+      <PollsPageBackground />
+      <PollDetailsPage
+        poll={poll}
+        options={options}
+        userId={userProfile?.id}
+      />
+    </>
   );
 }
 

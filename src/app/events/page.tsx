@@ -8,6 +8,7 @@ import { isRecurringEvent, getNextOccurrenceDate } from '@/lib/eventUtils';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
 import { resolveBuyTicketsTarget } from '@/lib/eventcube/utils';
 import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
+import EventCardResultsPanel from '@/components/competitions/EventCardResultsPanel';
 import '@/styles/modernist-homepage.css';
 
 const EVENTS_PAGE_SIZE = 20; // Minimum events to display per page
@@ -61,6 +62,7 @@ export default function EventsPage() {
   const [hasCheckedInitialLoad, setHasCheckedInitialLoad] = useState(false);
   const [isAutoSwitching, setIsAutoSwitching] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<number, boolean>>({});
+  const [expandedResults, setExpandedResults] = useState<Record<number, boolean>>({});
 
   // Apply the homepage organic design system (also set globally by PublicOrganicDesignBody).
   useLayoutEffect(() => {
@@ -556,6 +558,8 @@ export default function EventsPage() {
                 const buyTicketsTarget = isUpcomingLocal ? resolveBuyTicketsTarget(event) : null;
                 // Donation-based events (not ticketed fundraiser)
                 const showDonationButton = isDonationBasedEvent(event) && isUpcomingLocal && !isTicketedFundraiserEvent(event);
+                const showResultsButton = event.isCompetitionEvent === true && !isUpcomingLocal;
+                const resultsOpen = !!(event.id && expandedResults[event.id]);
 
                 const isLongDescription = !!event.description && event.description.length > 200;
 
@@ -766,7 +770,38 @@ export default function EventsPage() {
                           Make a Donation
                         </Link>
                       )}
+
+                      {showResultsButton && event.id && (
+                        <button
+                          type="button"
+                          className={`mh-btn mh-btn-results${resultsOpen ? ' is-open' : ''}`}
+                          title={resultsOpen ? 'Hide Result' : 'Show Result'}
+                          aria-label={resultsOpen ? 'Hide Result' : 'Show Result'}
+                          aria-expanded={resultsOpen}
+                          aria-controls={`event-results-${event.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedResults((prev) => ({
+                              ...prev,
+                              [event.id!]: !prev[event.id!],
+                            }));
+                          }}
+                        >
+                          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zm-2 4h14"
+                            />
+                          </svg>
+                          {resultsOpen ? 'Hide Result' : 'Result'}
+                        </button>
+                      )}
                     </div>
+                    {showResultsButton && event.id && resultsOpen && (
+                      <EventCardResultsPanel eventId={event.id} eventTitle={event.title} />
+                    )}
                     </div>
                   </article>
                 );

@@ -8,7 +8,13 @@ import type { FeaturedEventWithMedia } from '@/lib/homepage/featuredEvents';
 import { scheduleHomepageHashScroll } from '@/lib/homepageHashScroll';
 import ModernistHomePage from '@/components/modernist/ModernistHomePage';
 
-function HomePageContent({ initialFeaturedEvents }: { initialFeaturedEvents: FeaturedEventWithMedia[] }) {
+function HomePageContent({
+  initialFeaturedEvents,
+  initialLiveEvents,
+}: {
+  initialFeaturedEvents: FeaturedEventWithMedia[];
+  initialLiveEvents: FeaturedEventWithMedia[];
+}) {
   // Hash navigation for #contact / #about-us (including "Open in new tab")
   useEffect(() => {
     const run = () => {
@@ -34,13 +40,20 @@ function HomePageContent({ initialFeaturedEvents }: { initialFeaturedEvents: Fea
     };
   }, []);
 
-  return <ModernistHomePage initialFeaturedEvents={initialFeaturedEvents} />;
+  return (
+    <ModernistHomePage
+      initialFeaturedEvents={initialFeaturedEvents}
+      initialLiveEvents={initialLiveEvents}
+    />
+  );
 }
 
 export default function HomePageClient({
   initialFeaturedEvents,
+  initialLiveEvents,
 }: {
   initialFeaturedEvents: FeaturedEventWithMedia[];
+  initialLiveEvents: FeaturedEventWithMedia[];
 }) {
   const pathname = usePathname();
   const { isSignedIn, userId, isLoaded } = useAuth();
@@ -88,5 +101,10 @@ export default function HomePageClient({
     }
   }, [isLoaded, isSignedIn, userId, user, pathname, hasCheckedRedirect]);
 
-  return <HomePageContent initialFeaturedEvents={initialFeaturedEvents} />;
+  return (
+    <HomePageContent
+      initialFeaturedEvents={initialFeaturedEvents}
+      initialLiveEvents={initialLiveEvents}
+    />
+  );
 }

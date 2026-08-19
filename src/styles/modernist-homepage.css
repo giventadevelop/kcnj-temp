@@ -337,6 +337,26 @@ body.modernist-home.organic-home .mh-btn-donate:hover {
   background: var(--mh-accent-2-800);
   border-color: var(--mh-accent-2-800);
 }
+body.modernist-home .mh-btn-results {
+  background: #b45309;
+  border-color: #b45309;
+  color: #fff;
+}
+body.modernist-home .mh-btn-results:hover,
+body.modernist-home .mh-btn-results.is-open {
+  background: #92400e;
+  border-color: #92400e;
+}
+body.modernist-home.organic-home .mh-btn-results {
+  background: #8a5a1a;
+  border-color: #8a5a1a;
+  color: var(--mh-bg);
+}
+body.modernist-home.organic-home .mh-btn-results:hover,
+body.modernist-home.organic-home .mh-btn-results.is-open {
+  background: #643312;
+  border-color: #643312;
+}
 
 body.modernist-home .mh-btn svg {
   flex-shrink: 0;
@@ -1109,6 +1129,55 @@ body.modernist-home .mh-featured-actions .mh-btn {
   font-size: 14px;
 }
 
+/* Live Events — small LIVE badge on the media panel only */
+body.modernist-home .mh-live-block .mh-live-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 7px 10px;
+  border-radius: var(--mh-radius-pill);
+  background: var(--mh-accent);
+  color: var(--mh-bg);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--mh-accent) 35%, transparent);
+  pointer-events: none;
+}
+
+body.modernist-home .mh-live-block .mh-live-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mh-bg);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--mh-bg) 70%, transparent);
+  animation: mh-live-pulse 1.6s ease-out infinite;
+}
+
+@keyframes mh-live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--mh-bg) 70%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--mh-bg) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--mh-bg) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.modernist-home .mh-live-block .mh-live-badge-dot {
+    animation: none;
+  }
+}
+
 /* ?? What we do (interactive cards) ?? */
 body.modernist-home .mh-services {
   padding-top: 84px;
@@ -1434,6 +1503,12 @@ body.modernist-home .mh-home-sponsors-grid > .mh-event-card {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+}
+
+body.modernist-home .mh-home-sponsors-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 32px;
 }
 
 body.modernist-home .mh-home-sponsors .mh-event-card-actions .mh-btn svg {
@@ -2404,30 +2479,37 @@ body.modernist-home .mh-events-hero {
    * the ribbon still reads as edge-to-edge at any width, including 6K.
    */
   aspect-ratio: auto;
-  height: clamp(7rem, 9vw, 11rem);
+  /*
+   * min-height, not height: kicker + title + lede must stay fully visible.
+   * Do NOT overflow:hidden here — that clipped the uppercase kicker on every
+   * public ribbon page (line-height: 0 + flex-end sliced the first line).
+   * Image overflow is clipped on .mh-events-hero-media instead.
+   */
+  height: auto;
+  min-height: clamp(7.5rem, 10vw, 12rem);
   /* Keep the band height when the ribbon is a direct flex child (e.g. /profile) */
   flex: 0 0 auto;
   display: flex;
-  align-items: flex-end;
-  overflow: hidden;
+  align-items: center;
+  overflow: visible;
   background: var(--mh-ribbon-canvas, #f2e7d5);
   color: var(--mh-text);
   border-radius: 0;
-  line-height: 0;
+  line-height: normal;
 }
 
 @media (max-width: 767px) {
   body.modernist-home .mh-events-hero {
-    --mh-header-clearance: 0.5rem;
+    --mh-header-clearance: 0.75rem;
     /* The mobile logo sits low in the bar, so it needs a wider gap */
     --mh-ribbon-header-gap: 1.25rem;
-    height: clamp(6rem, 22vw, 8.5rem);
+    min-height: clamp(7rem, 24vw, 9.5rem);
   }
 }
 
 @media (min-width: 768px) and (max-width: 1023px) {
   body.modernist-home .mh-events-hero {
-    height: clamp(6.5rem, 13vw, 10rem);
+    min-height: clamp(7rem, 14vw, 11rem);
   }
 }
 
@@ -2438,6 +2520,7 @@ body.modernist-home .mh-events-hero-media {
   padding: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
   /* Same cream as the artwork canvas — hides where the image actually ends */
   background: var(--mh-ribbon-canvas, #f2e7d5);
 }
@@ -2499,8 +2582,9 @@ body.modernist-home .mh-events-hero-content {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--mh-header-clearance) 72px 0.85rem;
+  padding: 0.9rem 72px 0.9rem;
   line-height: normal;
+  overflow: visible;
 }
 
 /*
@@ -2514,14 +2598,25 @@ body.modernist-home .mh-events-hero-content {
 }
 
 body.modernist-home .mh-events-hero-kicker {
-  display: inline-flex;
+  /* Block flex — not inline-flex. Keep overflow visible so uppercase glyphs
+     are never sliced by the ribbon band. */
+  display: flex;
   align-items: center;
   gap: 10px;
   font-size: 13px;
+  line-height: 1.45;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-bottom: 16px;
+  margin: 0 0 8px;
+  padding-top: 0.2em;
+  overflow: visible;
+  flex-shrink: 0;
   color: color-mix(in srgb, var(--mh-text) 68%, transparent);
+}
+
+body.modernist-home .mh-events-hero-kicker span {
+  line-height: 1.45;
+  overflow: visible;
 }
 
 body.modernist-home .mh-events-hero h1 {
@@ -2529,8 +2624,9 @@ body.modernist-home .mh-events-hero h1 {
   font-family: var(--mh-font);
   font-weight: 800;
   font-size: clamp(28px, 4vw, 42px);
-  line-height: 1.05;
+  line-height: 1.2;
   letter-spacing: -0.015em;
+  overflow: visible;
   color: var(--mh-brand-green);
 }
 
@@ -2937,6 +3033,206 @@ body.modernist-home .mh-event-card-actions .mh-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+}
+
+body.modernist-home .mh-event-results-panel {
+  margin-top: 14px;
+  padding: 18px 18px 20px;
+  background: var(--mh-surface);
+  border-top: 3px solid var(--mh-accent);
+  animation: mh-results-open 0.28s ease;
+}
+
+@keyframes mh-results-open {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+body.modernist-home .mh-event-results-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mh-accent-800);
+}
+
+body.modernist-home .mh-event-results-kicker svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+body.modernist-home .mh-event-results-group + .mh-event-results-group {
+  margin-top: 16px;
+}
+
+body.modernist-home .mh-event-results-group-title {
+  margin: 0 0 10px;
+  font-family: var(--mh-font-heading);
+  font-weight: var(--mh-font-heading-weight);
+  font-size: 16px;
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home .mh-event-results-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.modernist-home .mh-event-results-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--mh-neutral-100);
+  border-left: 3px solid var(--mh-neutral-300);
+}
+
+body.modernist-home .mh-event-results-row--gold {
+  border-left-color: #c9a227;
+  background: color-mix(in srgb, #c9a227 10%, var(--mh-neutral-100));
+}
+
+body.modernist-home .mh-event-results-row--silver {
+  border-left-color: #8a8478;
+  background: color-mix(in srgb, #8a8478 10%, var(--mh-neutral-100));
+}
+
+body.modernist-home .mh-event-results-row--bronze {
+  border-left-color: var(--mh-accent);
+  background: color-mix(in srgb, var(--mh-accent) 10%, var(--mh-neutral-100));
+}
+
+body.modernist-home .mh-event-results-medal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 800;
+  font-feature-settings: 'tnum' 1;
+  background: var(--mh-neutral-300);
+  color: var(--mh-text);
+}
+
+body.modernist-home .mh-event-results-row--gold .mh-event-results-medal {
+  background: #c9a227;
+  color: #fff8e8;
+}
+
+body.modernist-home .mh-event-results-row--silver .mh-event-results-medal {
+  background: #8a8478;
+  color: #fff8f0;
+}
+
+body.modernist-home .mh-event-results-row--bronze .mh-event-results-medal {
+  background: var(--mh-accent);
+  color: var(--mh-bg);
+}
+
+body.modernist-home .mh-event-results-copy {
+  min-width: 0;
+}
+
+body.modernist-home .mh-event-results-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--mh-text);
+}
+
+body.modernist-home .mh-event-results-place {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mh-accent-800);
+}
+
+body.modernist-home .mh-event-results-detail {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--mh-neutral-700);
+}
+
+body.modernist-home .mh-event-results-docs {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--mh-neutral-300);
+}
+
+body.modernist-home .mh-event-results-doc {
+  padding: 10px 0 0;
+}
+
+body.modernist-home .mh-event-results-doc h5 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--mh-text);
+}
+
+body.modernist-home .mh-event-results-doc p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  color: var(--mh-neutral-800);
+}
+
+body.modernist-home .mh-event-results-empty {
+  padding: 6px 0 2px;
+}
+
+body.modernist-home .mh-event-results-empty-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home .mh-event-results-empty-copy {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mh-neutral-800);
+}
+
+body.modernist-home .mh-event-results-pending {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 2px;
+}
+
+body.modernist-home .mh-event-results-pending-line {
+  display: block;
+  height: 12px;
+  width: 72%;
+  background: color-mix(in srgb, var(--mh-neutral-500) 28%, var(--mh-surface));
+}
+
+body.modernist-home .mh-event-results-pending-line--short {
+  width: 44%;
 }
 
 body.modernist-home .mh-event-card-loc-tools {
@@ -3763,6 +4059,156 @@ body.modernist-home .mh-polls-vote-panel [class*='bg-clip-text'] {
   -webkit-text-fill-color: var(--mh-text) !important;
 }
 
+/* Poll detail (/polls/[id]) — Skip-style back + calendar-nav tabs */
+body.modernist-home .mh-poll-detail {
+  min-height: 100vh;
+  padding-top: calc(var(--header-bar-height, 7.5rem) + 0.5rem);
+}
+
+body.modernist-home .mh-poll-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 3.5rem;
+  padding: 0 1.5rem;
+  margin-bottom: 1.25rem;
+  background: color-mix(in srgb, var(--mh-brand-green) 10%, var(--mh-surface));
+  border: 1px solid color-mix(in srgb, var(--mh-brand-green) 28%, transparent);
+  color: var(--mh-brand-green);
+  border-radius: var(--mh-radius-pill);
+  box-shadow: var(--mh-shadow-sm);
+  font-family: var(--mh-font-heading);
+  font-weight: var(--mh-font-heading-weight);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+body.modernist-home .mh-poll-back:hover {
+  background: color-mix(in srgb, var(--mh-brand-green) 16%, var(--mh-surface));
+  transform: scale(1.03);
+}
+
+body.modernist-home .mh-poll-back-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--mh-radius-md, 0.75rem);
+  background: color-mix(in srgb, var(--mh-brand-green) 18%, var(--mh-neutral-100));
+}
+
+body.modernist-home .mh-poll-back-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--mh-brand-green);
+  stroke: currentColor;
+}
+
+body.modernist-home .mh-poll-detail-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--mh-font-heading);
+  font-weight: var(--mh-font-heading-weight);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home .mh-poll-detail-lede {
+  margin: 0 0 1rem;
+  max-width: 56ch;
+  font-size: 0.95rem;
+  color: color-mix(in srgb, var(--mh-text) 78%, transparent);
+}
+
+body.modernist-home .mh-poll-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+body.modernist-home .mh-poll-tabs .mh-btn svg {
+  color: inherit;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+/* Each poll tab keeps a unique organic fill; active = brighter + inset ring. */
+body.modernist-home .mh-poll-tabs .mh-poll-tab {
+  color: var(--mh-bg);
+  border: 1px solid transparent;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--mh-brand-green) 12%, transparent);
+}
+
+body.modernist-home .mh-poll-tabs .mh-poll-tab.is-active {
+  box-shadow:
+    0 10px 22px color-mix(in srgb, var(--mh-brand-green) 16%, transparent),
+    inset 0 0 0 2px color-mix(in srgb, var(--mh-bg) 55%, transparent);
+}
+
+body.modernist-home .mh-poll-tabs .mh-poll-tab--vote {
+  background: var(--mh-accent);
+}
+
+body.modernist-home .mh-poll-tabs .mh-poll-tab--vote:hover,
+body.modernist-home .mh-poll-tabs .mh-poll-tab--vote.is-active {
+  background: var(--mh-accent-500);
+}
+
+body.modernist-home .mh-poll-tabs .mh-poll-tab--results {
+  background: var(--mh-brand-green);
+}
+
+body.modernist-home .mh-poll-tabs .mh-poll-tab--results:hover,
+body.modernist-home .mh-poll-tabs .mh-poll-tab--results.is-active {
+  background: var(--mh-brand-green-mid);
+}
+
+body.modernist-home .mh-poll-tabs .mh-poll-tab--comments {
+  background: var(--mh-accent-700);
+}
+
+body.modernist-home .mh-poll-tabs .mh-poll-tab--comments:hover,
+body.modernist-home .mh-poll-tabs .mh-poll-tab--comments.is-active {
+  background: var(--mh-accent-800);
+}
+
+body.modernist-home .mh-poll-tabs .mh-poll-tab--analytics {
+  background: var(--mh-brand-green-bright);
+}
+
+body.modernist-home .mh-poll-tabs .mh-poll-tab--analytics:hover,
+body.modernist-home .mh-poll-tabs .mh-poll-tab--analytics.is-active {
+  background: var(--mh-accent-2-800);
+}
+
+body.modernist-home .mh-poll-detail-panel {
+  background: var(--mh-surface);
+  border: 1px solid color-mix(in srgb, var(--mh-brand-green) 16%, transparent);
+  border-radius: var(--mh-radius-xl);
+  box-shadow: var(--mh-shadow-sm);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+body.modernist-home .mh-poll-detail-info h3 {
+  margin: 0 0 0.25rem;
+  font-family: var(--mh-font-heading);
+  font-weight: var(--mh-font-heading-weight);
+  font-size: 1.25rem;
+  color: var(--mh-brand-green);
+}
+
+body.modernist-home .mh-poll-detail-info > p {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--mh-text) 72%, transparent);
+}
+
 /* ?? Calendar page (shares mh-events-* shell) ?? */
 body.modernist-home .mh-calendar-page .mh-events-head {
   justify-content: space-between;
@@ -4161,6 +4607,44 @@ body.modernist-home .mh-team-page .mh-team-modal-contact {
 }
 
 /* ?? Sponsors page (shares mh-events-* shell) ?? */
+/* Name field 50% / Search+Clear 50% on one row (events grid has a dates column) */
+body.modernist-home .mh-sponsors-page .mh-events-search {
+  grid-template-columns: 1fr 1fr;
+  align-items: end;
+}
+
+body.modernist-home .mh-sponsors-page .mh-events-search-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 12px;
+  width: 100%;
+}
+
+body.modernist-home .mh-sponsors-page .mh-events-search-actions .mh-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+}
+
+@media (max-width: 1024px) {
+  body.modernist-home .mh-sponsors-page .mh-events-search {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  body.modernist-home .mh-sponsors-page .mh-events-search-actions {
+    grid-column: auto;
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 767px) {
+  body.modernist-home .mh-sponsors-page .mh-events-search {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* Match /events poster media: full-width container, image fills width (no max-height / letterbox) */
 body.modernist-home .mh-sponsors-page .mh-sponsor-card-media {
   position: relative;
@@ -4382,6 +4866,17 @@ body.modernist-home.organic-home .mh-featured-media-link {
   min-height: 280px;
 }
 
+body.modernist-home.organic-home .mh-live-block .mh-live-badge {
+  background: var(--mh-accent);
+  color: #fff8f0;
+  border-radius: 999px;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--mh-accent) 28%, transparent);
+}
+
+body.modernist-home.organic-home .mh-live-block .mh-live-badge-dot {
+  background: #fff8f0;
+}
+
 body.modernist-home.organic-home .mh-featured-block {
   border-top: 0;
 }
@@ -4557,9 +5052,10 @@ body.modernist-home.organic-home .mh-events-page h2 {
 }
 
 body.modernist-home.organic-home .mh-events-hero {
-  /* Full-bleed edge-to-edge; no inset card look on ultra-wide */
+  /* Full-bleed edge-to-edge; no inset card look on ultra-wide.
+     overflow must stay visible so kicker/title/lede are never clipped. */
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /*
@@ -4810,11 +5306,61 @@ body.modernist-home.organic-home .homepage-glass-card button[type='submit'] {
   background: var(--mh-brand-green) !important;
   border-color: var(--mh-brand-green) !important;
   color: #fff !important;
+  border-radius: var(--mh-radius-pill);
 }
 
 body.modernist-home.organic-home .mh-profile-panel button[type='submit']:hover,
 body.modernist-home.organic-home .homepage-glass-card button[type='submit']:hover {
   filter: brightness(1.05);
+}
+
+/* Inner Tailwind span/icon must not keep green-700 on the dark fill */
+body.modernist-home.organic-home .mh-profile-panel button[type='submit'] span,
+body.modernist-home.organic-home .homepage-glass-card button[type='submit'] span,
+body.modernist-home.organic-home .mh-profile-panel button[type='submit'] .text-green-700,
+body.modernist-home.organic-home .homepage-glass-card button[type='submit'] .text-green-700 {
+  color: #fff !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel button[type='submit'] .bg-green-200,
+body.modernist-home.organic-home .homepage-glass-card button[type='submit'] .bg-green-200 {
+  background: color-mix(in srgb, #fff 18%, transparent) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel button[type='submit'] svg,
+body.modernist-home.organic-home .homepage-glass-card button[type='submit'] svg,
+body.modernist-home.organic-home .mh-profile-panel button[type='submit'] .text-green-600,
+body.modernist-home.organic-home .homepage-glass-card button[type='submit'] .text-green-600 {
+  color: #fff !important;
+}
+
+/* Skip for now — cream/forest secondary, not leftover indigo */
+body.modernist-home.organic-home .mh-profile-panel a.bg-indigo-100,
+body.modernist-home.organic-home .homepage-glass-card a.bg-indigo-100 {
+  background: color-mix(in srgb, var(--mh-brand-green) 10%, var(--mh-surface)) !important;
+  border: 1px solid color-mix(in srgb, var(--mh-brand-green) 28%, transparent);
+  color: var(--mh-brand-green) !important;
+  border-radius: var(--mh-radius-pill);
+  box-shadow: var(--mh-shadow-sm);
+}
+
+body.modernist-home.organic-home .mh-profile-panel a.bg-indigo-100:hover,
+body.modernist-home.organic-home .homepage-glass-card a.bg-indigo-100:hover {
+  background: color-mix(in srgb, var(--mh-brand-green) 16%, var(--mh-surface)) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel a.bg-indigo-100 .bg-indigo-200,
+body.modernist-home.organic-home .homepage-glass-card a.bg-indigo-100 .bg-indigo-200 {
+  background: color-mix(in srgb, var(--mh-brand-green) 18%, var(--mh-neutral-100)) !important;
+}
+
+body.modernist-home.organic-home .mh-profile-panel a.bg-indigo-100 .text-indigo-600,
+body.modernist-home.organic-home .homepage-glass-card a.bg-indigo-100 .text-indigo-600,
+body.modernist-home.organic-home .mh-profile-panel a.bg-indigo-100 .text-indigo-700,
+body.modernist-home.organic-home .homepage-glass-card a.bg-indigo-100 .text-indigo-700,
+body.modernist-home.organic-home .mh-profile-panel a.bg-indigo-100 svg,
+body.modernist-home.organic-home .homepage-glass-card a.bg-indigo-100 svg {
+  color: var(--mh-brand-green) !important;
 }
 
 body.modernist-home.organic-home .mh-profile-panel .bg-blue-600,

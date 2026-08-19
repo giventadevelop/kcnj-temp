@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import HomePageClient from './HomePageClient';
 import { fetchFeaturedEventsForHomepageServer } from '@/lib/homepage/fetchFeaturedEventsServer';
+import { fetchLiveEventsForHomepageServer } from '@/lib/homepage/fetchLiveEventsServer';
 
 export const metadata: Metadata = {
   title: 'Home',
@@ -10,5 +11,11 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const initialFeaturedEvents = await fetchFeaturedEventsForHomepageServer();
-  return <HomePageClient initialFeaturedEvents={initialFeaturedEvents} />;
+  const initialLiveEvents = await fetchLiveEventsForHomepageServer();
+  return (
+    <HomePageClient
+      initialFeaturedEvents={initialFeaturedEvents}
+      initialLiveEvents={initialLiveEvents}
+    />
+  );
 }

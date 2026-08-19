@@ -307,8 +307,8 @@ export default function EventRegisterPage({ params }: { params: Promise<{ id: st
 
   // Responsive layout: summary+thumbnail above form on mobile, side-by-side on desktop
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-12">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 pt-28 pb-12 md:pt-32">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Event summary and thumbnail */}
         <div className="md:col-span-1 flex flex-col items-center md:items-start">
           {flyer && flyer.fileUrl && (

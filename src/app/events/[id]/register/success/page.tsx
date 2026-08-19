@@ -77,7 +77,7 @@ export default function RegistrationSuccessPage({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[600px] w-full px-4 sm:px-6 lg:px-8 py-16">
+      <div className="flex justify-center items-center min-h-[600px] w-full px-4 sm:px-6 lg:px-8 pt-28 pb-16 md:pt-32">
         <div className="relative w-full max-w-6xl">
           <Image
             src="/images/loading_events.jpg"
@@ -100,7 +100,7 @@ export default function RegistrationSuccessPage({
 
   if (!event) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 md:pt-32">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
           <p className="text-red-800">Event not found. Please check the event ID.</p>
           <Link href="/events" className="text-blue-600 hover:underline mt-4 inline-block">
@@ -141,7 +141,7 @@ export default function RegistrationSuccessPage({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-emerald-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-emerald-50 pt-28 md:pt-32">
       {/* Success Header Section */}
       <div className="bg-gradient-to-r from-emerald-100 via-blue-100 to-indigo-100 py-20 pb-[116px] border-b border-blue-200/70">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
