@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { useTenantSettings } from '@/components/TenantSettingsProvider';
 import { useDeferredFetch } from '@/hooks/usePageReady';
 import { getTenantId } from '@/lib/env';
-import { resolveHeroImages } from '@/lib/hero/defaultHeroImages';
+import { BUNDLED_EMERGENCY_HERO_IMAGE, resolveHeroImages } from '@/lib/hero/defaultHeroImages';
 import {
   fetchEventDetailsByIdForTenant,
   fetchHomepageHeroMediaList,
@@ -20,8 +20,6 @@ import { getHomepageCacheKey, HOMEPAGE_CACHE_INVALIDATE_CHANNEL } from '@/lib/ho
 import { getOverlayInfo } from '@/lib/heroOverlay';
 import type { EventDetailsDTO } from '@/types';
 
-/** Bundled poster when no event/tenant hero slides are available. */
-const DEFAULT_HERO_IMAGE = '/images/modernist/mcefee/kathakali_hero.png';
 /** Transparent brand mark — Organic left hero panel. */
 const HERO_LOGO = '/images/KCNJ/logo_latest-transparent.png';
 const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -42,7 +40,7 @@ type HeroCachePayload = {
 };
 
 const DEFAULT_SLIDE: HeroOverlaySlide = {
-  url: DEFAULT_HERO_IMAGE,
+  url: BUNDLED_EMERGENCY_HERO_IMAGE,
   durationMs: 8000,
   overlayTitle: null,
   overlayDescription: null,
@@ -152,7 +150,7 @@ export default function ModernistPosterHero() {
       return;
     }
     applySlides([DEFAULT_SLIDE], false);
-    preloadUrls([DEFAULT_HERO_IMAGE], 1);
+    preloadUrls([BUNDLED_EMERGENCY_HERO_IMAGE], 1);
   }, [cacheKey, applySlides]);
 
   useEffect(() => {
@@ -226,7 +224,6 @@ export default function ModernistPosterHero() {
                 defaultHeroMaxDisplayCount: tenantSettings.defaultHeroMaxDisplayCount,
               }
             : null,
-          noImagesFallbackUrl: DEFAULT_HERO_IMAGE,
         });
 
         const nextSlides: HeroOverlaySlide[] = resolved.imageUrls.map((url, i) => {

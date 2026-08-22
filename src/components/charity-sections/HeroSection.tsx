@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { EventDetailsDTO } from '@/types';
 import { proxyApiPath } from '@/lib/proxyApiPath';
 import { getOverlayInfo } from '@/lib/heroOverlay';
+import { BUNDLED_EMERGENCY_HERO_IMAGE } from '@/lib/hero/defaultHeroImages';
 
 // Add EventWithMedia type for local use
 interface EventWithMedia extends EventDetailsDTO {
@@ -22,8 +23,7 @@ const DynamicHeroImage: React.FC = () => {
   const [currentEvent, setCurrentEvent] = useState<EventWithMedia | null>(null);
   const [hasTicketedEvents, setHasTicketedEvents] = useState(false);
 
-  // Default image path
-  const defaultImage = "/images/hero_section/default_hero_section_second_column_poster.jpeg";
+  const defaultImage = BUNDLED_EMERGENCY_HERO_IMAGE;
 
   // Fetch events with media function
   const fetchEventsWithMedia = async (): Promise<EventWithMedia[]> => {

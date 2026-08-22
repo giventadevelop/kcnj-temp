@@ -25,6 +25,8 @@ import {
   normalizeDefaultHeroImageUrlsJsonForApi,
   type DefaultHeroDisplayMode,
 } from '@/lib/hero/defaultHeroImages';
+import { tenantSettingsTabQuery, type TenantSettingsTab } from '@/lib/tenantSettingsTabs';
+import { usePathname, useRouter } from 'next/navigation';
 import GoogleAdsensePlacementsFields from '@/app/admin/tenant-management/components/GoogleAdsensePlacementsFields';
 import {
   adsensePlacementFieldsFromJson,
@@ -48,6 +50,7 @@ interface TenantSettingsFormProps {
   mode: 'create' | 'edit';
   availableOrganizations?: TenantOrganizationDTO[];
   settingsId?: number; // Pass settingsId explicitly for uploads
+  initialTab?: TenantSettingsTab;
 }
 
 export default function TenantSettingsForm({
@@ -57,11 +60,20 @@ export default function TenantSettingsForm({
   loading = false,
   mode,
   availableOrganizations = [],
-  settingsId: propSettingsId
+  settingsId: propSettingsId,
+  initialTab = 'general',
 }: TenantSettingsFormProps) {
-  const [activeTab, setActiveTab] = useState<
-    'general' | 'integrations' | 'limits' | 'homepageHero' | 'customization'
-  >('general');
+  const router = useRouter();
+  const pathname = usePathname();
+  const [activeTab, setActiveTab] = useState<TenantSettingsTab>(initialTab);
+  const selectTab = useCallback(
+    (tab: TenantSettingsTab) => {
+      setActiveTab(tab);
+      if (!pathname) return;
+      router.replace(`${pathname}${tenantSettingsTabQuery(tab)}`, { scroll: false });
+    },
+    [pathname, router]
+  );
   const [uploadingFooterHtml, setUploadingFooterHtml] = useState(false);
   const [addSiteFooter, setAddSiteFooter] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -342,7 +354,7 @@ export default function TenantSettingsForm({
         twilioAuthToken: data.twilioAuthToken,
       });
       if (!whatsappValidation.valid) {
-        setActiveTab('integrations');
+        selectTab('integrations');
         for (const [field, message] of Object.entries(whatsappValidation.fieldErrors)) {
           setError(field as WhatsappIntegrationField, { type: 'manual', message });
         }
@@ -356,7 +368,7 @@ export default function TenantSettingsForm({
         adsensePlacements
       );
       if (!adsenseValidation.valid) {
-        setActiveTab('integrations');
+        selectTab('integrations');
         if (adsenseValidation.field === 'googleAdsensePublisherId') {
           setError('googleAdsensePublisherId', {
             type: 'manual',
@@ -373,7 +385,7 @@ export default function TenantSettingsForm({
 
       const placementsJson = serializeAdsensePlacementFields(adsensePlacements);
       if (placementsJson.length > 8192) {
-        setActiveTab('integrations');
+        selectTab('integrations');
         setAdsensePlacementsFormError('Combined placements exceed the maximum allowed size.');
         showIntegrationSaveValidationError('Ad placement configuration is too large.', [
           'Remove unused slot IDs or shorten values, then try again.',
@@ -907,7 +919,7 @@ export default function TenantSettingsForm({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => selectTab(tab.id as TenantSettingsTab)}
                 className={`py-2.5 px-3 sm:px-4 border-2 font-semibold text-sm sm:text-base flex items-center gap-2 sm:gap-3 rounded-lg transition-all duration-300 flex-[1_1_calc(50%-0.25rem)] md:flex-[1_1_calc(33.333%-0.34rem)] min-w-[10rem] max-w-full ${
                   isActive ? colors.active : colors.inactive
                 }`}

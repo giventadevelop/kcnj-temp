@@ -3,19 +3,30 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
 import { FaCog, FaCode, FaImage } from 'react-icons/fa';
 import { TenantSettingsDTO, TenantOrganizationDTO } from '@/app/admin/tenant-management/types';
 import TenantDefaultHeroView from '@/app/admin/tenant-management/components/TenantDefaultHeroView';
+import { tenantSettingsTabQuery, type TenantSettingsTab } from '@/lib/tenantSettingsTabs';
 
 interface TenantSettingsViewClientProps {
   settings: TenantSettingsDTO;
   settingsId: number;
   organization?: TenantOrganizationDTO | null;
+  initialTab?: TenantSettingsTab;
 }
 
-export default function TenantSettingsViewClient({ settings, settingsId, organization }: TenantSettingsViewClientProps) {
-  const [activeTab, setActiveTab] = useState<'general' | 'integrations' | 'limits' | 'homepageHero' | 'customization'>('general');
+export default function TenantSettingsViewClient({ settings, settingsId, organization, initialTab = 'general' }: TenantSettingsViewClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [activeTab, setActiveTab] = useState<TenantSettingsTab>(initialTab);
   const [logoUrlCopyFeedback, setLogoUrlCopyFeedback] = useState<string | null>(null);
+
+  const selectTab = (tab: TenantSettingsTab) => {
+    setActiveTab(tab);
+    if (!pathname) return;
+    router.replace(`${pathname}${tenantSettingsTabQuery(tab)}`, { scroll: false });
+  };
 
   // Tab navigation with colorful icons
   const tabs = [
@@ -97,7 +108,7 @@ export default function TenantSettingsViewClient({ settings, settingsId, organiz
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => selectTab(tab.id)}
                 className={`py-2.5 px-3 sm:px-4 border-2 font-semibold text-sm sm:text-base flex items-center gap-2 sm:gap-3 rounded-lg transition-all duration-300 flex-[1_1_calc(50%-0.25rem)] md:flex-[1_1_calc(33.333%-0.34rem)] min-w-[10rem] max-w-full ${
                   isActive ? colors.active : colors.inactive
                 }`}

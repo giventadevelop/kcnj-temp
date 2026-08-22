@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { EventDetailsDTO, EventSponsorsDTO, ExecutiveCommitteeTeamMemberDTO } from '@/types';
 import {
+  computeFeaturedEventsFromMedia,
   getFeaturedEventImageUrl,
   MAX_FEATURED_EVENTS_HOMEPAGE,
   mediaImageUrl,
@@ -16,7 +17,7 @@ import UpcomingEventsSection from '@/components/UpcomingEventsSection';
 import ModernistPosterHero from '@/components/modernist/ModernistPosterHero';
 import { useTenantSettings } from '@/components/TenantSettingsProvider';
 import { InstagramIcon } from '@/components/icons/InstagramIcon';
-import { useFilteredEvents } from '@/hooks/useFilteredEvents';
+import { useEventsData } from '@/hooks/useEventsData';
 import { useDeferredFetch } from '@/hooks/usePageReady';
 import '@/styles/modernist-homepage.css';
 
@@ -69,6 +70,35 @@ function admissionLabel(event: EventDetailsDTO): string {
 
 function eventHref(event: EventDetailsDTO): string {
   return event.id ? `/events/${event.id}` : '/events';
+}
+
+function isUpcomingStartDate(startDate?: string): boolean {
+  if (!startDate) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [year, month, day] = startDate.split('-').map(Number);
+  if (!year || !month || !day) return false;
+  const start = new Date(year, month - 1, day);
+  start.setHours(0, 0, 0, 0);
+  return start >= today;
+}
+
+function plainTextFromHtml(value?: string | null, maxLength = 180): string {
+  if (!value) return '';
+  const text = value
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  const clipped = text.slice(0, maxLength).replace(/\s+\S*$/, '');
+  return `${clipped || text.slice(0, maxLength)}…`;
 }
 
 function parseSponsorList(data: unknown): EventSponsorsDTO[] {
@@ -682,9 +712,15 @@ export default function ModernistHomePage({
   const [sponsors, setSponsors] = useState<EventSponsorsDTO[]>([]);
 
   const featuredFetchEnabled = useDeferredFetch(400);
-  const { filteredEvents: clientFeatured, isLoading: featuredLoading } = useFilteredEvents(
-    'featured',
-    featuredFetchEnabled
+  const {
+    eventsWithMedia,
+    upcomingEvents,
+    isLoading: featuredLoading,
+  } = useEventsData(featuredFetchEnabled);
+
+  const clientFeatured = useMemo(
+    () => computeFeaturedEventsFromMedia(eventsWithMedia),
+    [eventsWithMedia]
   );
 
   const featuredItems =
@@ -692,6 +728,21 @@ export default function ModernistHomePage({
       ? clientFeatured.slice(0, MAX_FEATURED_EVENTS_HOMEPAGE)
       : initialFeaturedEvents.slice(0, MAX_FEATURED_EVENTS_HOMEPAGE);
   const featuredEvent = featuredItems[0]?.event ?? null;
+  const upcomingFeaturedEvent =
+    featuredItems.find((item) => isUpcomingStartDate(item.event.startDate))?.event ?? null;
+  const closeCtaEvent = upcomingFeaturedEvent ?? upcomingEvents[0] ?? featuredEvent ?? null;
+  const closeCtaHeading = closeCtaEvent?.title?.trim() || 'Browse upcoming events';
+  const closeCtaLede =
+    (closeCtaEvent &&
+      (plainTextFromHtml(closeCtaEvent.description) ||
+        closeCtaEvent.caption?.trim() ||
+        [closeCtaEvent.location, formatEventDate(closeCtaEvent.startDate, closeCtaEvent.timezone)]
+          .filter(Boolean)
+          .join(' · '))) ||
+    'Community nights and cultural celebrations will appear here as they are published.';
+  const closeCtaIsTicketed = closeCtaEvent
+    ? admissionLabel(closeCtaEvent) === 'Ticketed'
+    : false;
 
   // Prefer a ticketed featured event for the on-sale band; otherwise any featured event
   const onSaleEvent =
@@ -895,31 +946,29 @@ export default function ModernistHomePage({
           )}
         </section>
 
-      {/* 1a — Red CTA close */}
+      {/* Close CTA — title + description from featured (upcoming) or next upcoming event */}
       <section className="mh-close" aria-label="Call to action">
         <p className="mh-close-kicker">Join us</p>
         <h3>
-          <span style={{ display: 'block' }}>Save your seat at the sadhya.</span>
+          <span style={{ display: 'block' }}>{closeCtaHeading}</span>
         </h3>
-        <p className="mh-close-lede">
-          Tickets, community nights, and cultural celebrations — all in one place.
-        </p>
+        <p className="mh-close-lede">{closeCtaLede}</p>
         <div className="mh-cta-row">
           <Link
-            href={featuredEvent ? eventHref(featuredEvent) : '/events'}
+            href={closeCtaEvent ? eventHref(closeCtaEvent) : '/events'}
             className="mh-btn mh-btn-on-dark mh-close-cta-primary"
             title={
-              featuredEvent
-                ? `Get tickets for ${featuredEvent.title}`
+              closeCtaEvent
+                ? `${closeCtaIsTicketed ? 'Get tickets' : 'View event'} for ${closeCtaEvent.title}`
                 : 'Browse events'
             }
             aria-label={
-              featuredEvent
-                ? `Get tickets for ${featuredEvent.title}`
+              closeCtaEvent
+                ? `${closeCtaIsTicketed ? 'Get tickets' : 'View event'} for ${closeCtaEvent.title}`
                 : 'Browse events'
             }
           >
-            {featuredEvent ? 'Get tickets' : 'Browse events'}
+            {closeCtaEvent ? (closeCtaIsTicketed ? 'Get tickets' : 'View event') : 'Browse events'}
           </Link>
           <GivebutterDonateButton className="mh-btn mh-btn-on-dark mh-close-cta-secondary">
             Donate
