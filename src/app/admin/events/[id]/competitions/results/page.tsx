@@ -6,6 +6,7 @@ import {
   fetchCompetitionRegistrationsForEventServer,
   fetchCompetitionsForEventServer,
   fetchCompetitionSettingsForEventServer,
+  reconcileFreeCompetitionRegistrationsServer,
 } from '../ApiServerActions';
 import Link from 'next/link';
 
@@ -16,12 +17,16 @@ export default async function CompetitionResultsPage(props: {
   if (!userId) return <div>You must be logged in.</div>;
   const params = typeof props.params.then === 'function' ? await props.params : props.params;
   const eventId = params.id;
-  const [results, registrations, competitions, settings] = await Promise.all([
+  const [results, rawRegistrations, competitions, settings] = await Promise.all([
     fetchCompetitionResultsForEventServer(eventId),
     fetchCompetitionRegistrationsForEventServer(eventId),
     fetchCompetitionsForEventServer(eventId),
     fetchCompetitionSettingsForEventServer(eventId),
   ]);
+  const registrations = await reconcileFreeCompetitionRegistrationsServer(
+    eventId,
+    rawRegistrations
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-8 py-8" style={{ paddingTop: '180px' }}>

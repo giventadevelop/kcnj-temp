@@ -69,7 +69,9 @@ const Footer = () => {
   const pathname = usePathname();
   const { settings, organizationIdentity } = useTenantSettings();
   const hasAnySocial = settings?.facebookUrl?.trim() || settings?.instagramUrl?.trim() || settings?.twitterUrl?.trim() || settings?.linkedinUrl?.trim() || settings?.youtubeUrl?.trim() || settings?.tiktokUrl?.trim();
-  const contactEmail = settings?.email?.trim() || '';
+  const rawEmail = settings?.email?.trim() || '';
+  const contactEmail =
+    rawEmail.toLowerCase() === 'contactus@kcnj.org' ? 'keralacenternj@gmail.com' : rawEmail;
   const contactPhone = settings?.phoneNumber?.trim() || '';
   const footerDescription = organizationIdentity.description?.trim() || '';
 

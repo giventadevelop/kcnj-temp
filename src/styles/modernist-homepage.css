@@ -3150,6 +3150,17 @@ body.modernist-home .mh-event-results-copy {
   min-width: 0;
 }
 
+body.modernist-home .mh-event-results-photo {
+  display: block;
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--mh-neutral-300);
+  background: var(--mh-neutral-100);
+}
+
 body.modernist-home .mh-event-results-name {
   margin: 0;
   font-size: 15px;

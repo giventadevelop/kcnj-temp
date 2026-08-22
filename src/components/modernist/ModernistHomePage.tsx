@@ -121,7 +121,9 @@ function sponsorWebsiteHref(url?: string | null): string | null {
 
 function ContactSection() {
   const { settings } = useTenantSettings();
-  const contactEmail = settings?.email?.trim() || '';
+  const rawEmail = settings?.email?.trim() || '';
+  const contactEmail =
+    rawEmail.toLowerCase() === 'contactus@kcnj.org' ? 'keralacenternj@gmail.com' : rawEmail;
   const contactPhone = settings?.phoneNumber?.trim() || '';
   const hasAnySocial =
     settings?.facebookUrl?.trim() ||
@@ -826,7 +828,7 @@ export default function ModernistHomePage({
             <p className="mh-about-legal-contact">
               New Jersey, USA ·{' '}
               <a href="tel:+19734826159">(973) 482-6159</a> ·{' '}
-              <a href="mailto:contactus@kcnj.org">contactus@kcnj.org</a>
+              <a href="mailto:keralacenternj@gmail.com">keralacenternj@gmail.com</a>
             </p>
           </div>
         </div>

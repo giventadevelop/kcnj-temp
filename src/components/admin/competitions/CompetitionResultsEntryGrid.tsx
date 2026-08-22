@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import type {
   EventCompetitionDTO,
   EventCompetitionRegistrationDTO,
@@ -9,10 +9,18 @@ import type {
 } from '@/types';
 import {
   createCompetitionResultServer,
+  patchCompetitionResultDirectServer,
   patchCompetitionResultServer,
 } from '@/app/admin/events/[id]/competitions/ApiServerActions';
 import { getDefaultPointsForPlacement, PLACEMENT_LABELS } from '@/lib/competitionEligibility';
 import WinnerPhotoUpload from './WinnerPhotoUpload';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface Props {
   eventId: string;
@@ -32,6 +40,7 @@ export default function CompetitionResultsEntryGrid({
   const [results, setResults] = useState(initialResults);
   const [filterCompId, setFilterCompId] = useState<number | ''>('');
   const [error, setError] = useState<string | null>(null);
+  const [showPublishSuccess, setShowPublishSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const pointsSettings = {
@@ -41,7 +50,24 @@ export default function CompetitionResultsEntryGrid({
     pointsFourth: settings?.pointsFourth ?? 0,
   };
 
-  const confirmedRegs = registrations.filter((r) => r.registrationStatus === 'CONFIRMED');
+  useEffect(() => {
+    if (!showPublishSuccess) return;
+    const timer = window.setTimeout(() => setShowPublishSuccess(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [showPublishSuccess]);
+
+  // Free regs may still be PENDING_PAYMENT in DB (shown as "Registered" on the registrations table).
+  // Results must include those; paid regs still require CONFIRMED after payment.
+  const confirmedRegs = registrations.filter((r) => {
+    if (r.registrationStatus === 'CANCELLED' || r.registrationStatus === 'REFUNDED') return false;
+    if (r.registrationStatus === 'CONFIRMED') return true;
+    const isFree = !(Number(r.feeAmount) > 0);
+    return (
+      isFree &&
+      (r.registrationStatus === 'PENDING_PAYMENT' ||
+        r.registrationStatus?.includes('PAYMENT') === true)
+    );
+  });
 
   const filteredResults = useMemo(() => {
     if (filterCompId === '') return results;
@@ -54,13 +80,107 @@ export default function CompetitionResultsEntryGrid({
       .map((r) => r.placement)
       .filter(Boolean);
 
-  const saveResult = (result: EventCompetitionResultDTO) => {
+  const resetResultFormFields = (resultId: number) => {
+    setResults((prev) =>
+      prev.map((r) =>
+        r.id === resultId
+          ? {
+              ...r,
+              displayName: '',
+              placement: 1,
+              placementLabel: PLACEMENT_LABELS[1],
+              pointsAwarded: getDefaultPointsForPlacement(1, pointsSettings),
+              prizeTitle: '',
+              prizeDetails: '',
+              notes: '',
+              isPublished: false,
+              publishedAt: null,
+              winnerPhotoUrl: '',
+              winnerMedia: undefined,
+            }
+          : r
+      )
+    );
+  };
+
+  const clearWinnerPhoto = (resultId: number) => {
+    startTransition(async () => {
+      try {
+        setError(null);
+        try {
+          await patchCompetitionResultDirectServer(resultId, {
+            winnerMedia: null,
+            winnerPhotoUrl: '',
+          } as Partial<EventCompetitionResultDTO>);
+        } catch {
+          await patchCompetitionResultDirectServer(resultId, { winnerPhotoUrl: '' });
+        }
+        setResults((prev) =>
+          prev.map((r) =>
+            r.id === resultId ? { ...r, winnerPhotoUrl: '', winnerMedia: undefined } : r
+          )
+        );
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to remove photo');
+      }
+    });
+  };
+
+  const clearResultForm = (result: EventCompetitionResultDTO) => {
     if (!result.id) return;
     startTransition(async () => {
       try {
         setError(null);
-        const updated = await patchCompetitionResultServer(result.id!, eventId, result);
-        setResults((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+        if (result.winnerPhotoUrl || result.winnerMedia?.id) {
+          try {
+            await patchCompetitionResultDirectServer(result.id, {
+              winnerMedia: null,
+              winnerPhotoUrl: '',
+            } as Partial<EventCompetitionResultDTO>);
+          } catch {
+            await patchCompetitionResultDirectServer(result.id, { winnerPhotoUrl: '' });
+          }
+        }
+        resetResultFormFields(result.id);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Clear failed');
+      }
+    });
+  };
+
+  const saveResult = (result: EventCompetitionResultDTO) => {
+    if (!result.id) return;
+    const publishedAt = result.publishedAt || new Date().toISOString();
+    const payload: Partial<EventCompetitionResultDTO> = {
+      id: result.id,
+      displayName: result.displayName,
+      placement: result.placement,
+      placementLabel: result.placementLabel,
+      prizeTitle: result.prizeTitle ?? '',
+      prizeDetails: result.prizeDetails ?? '',
+      pointsAwarded: result.pointsAwarded,
+      winnerPhotoUrl: result.winnerPhotoUrl ?? '',
+      notes: result.notes ?? '',
+      isPublished: true,
+      publishedAt,
+      competition: result.competition?.id ? ({ id: result.competition.id } as EventCompetitionResultDTO['competition']) : undefined,
+      participantProfile: result.participantProfile?.id
+        ? ({ id: result.participantProfile.id } as EventCompetitionResultDTO['participantProfile'])
+        : undefined,
+      registration: result.registration?.id
+        ? ({ id: result.registration.id } as EventCompetitionResultDTO['registration'])
+        : undefined,
+      ...(result.winnerMedia?.id
+        ? { winnerMedia: { id: result.winnerMedia.id } as EventCompetitionResultDTO['winnerMedia'] }
+        : {}),
+    };
+
+    startTransition(async () => {
+      try {
+        setError(null);
+        await patchCompetitionResultServer(result.id!, eventId, payload);
+        resetResultFormFields(result.id!);
+        setShowPublishSuccess(true);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Update failed');
       }
@@ -154,7 +274,11 @@ export default function CompetitionResultsEntryGrid({
             e.target.value = '';
           }}
         >
-          <option value="">Select confirmed registration...</option>
+          <option value="">
+            {confirmedRegs.length === 0
+              ? 'No eligible registrations yet'
+              : 'Select registration...'}
+          </option>
           {confirmedRegs.map((r) => (
             <option key={r.id} value={r.id}>
               {r.competition?.name} — {r.teamDisplayName || r.participantProfile?.firstName}{' '}
@@ -225,41 +349,99 @@ export default function CompetitionResultsEntryGrid({
                   }
                 />
               </div>
-              <label className="flex items-center gap-2 mt-3 text-sm">
-                <input
-                  type="checkbox"
-                  checked={result.isPublished}
-                  onChange={(e) =>
-                    setResults((prev) =>
-                      prev.map((r) =>
-                        r.id === result.id
-                          ? {
-                              ...r,
-                              isPublished: e.target.checked,
-                              publishedAt: e.target.checked ? new Date().toISOString() : null,
-                            }
-                          : r
-                      )
-                    )
-                  }
-                />
-                Published
-              </label>
+              <div className="mt-3 flex flex-wrap items-start gap-4">
+                <div className="custom-grid-cell" style={{ minWidth: '120px' }}>
+                  <label className="flex flex-col items-center">
+                    <span className="relative flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={result.isPublished}
+                        onChange={(e) =>
+                          setResults((prev) =>
+                            prev.map((r) =>
+                              r.id === result.id
+                                ? {
+                                    ...r,
+                                    isPublished: e.target.checked,
+                                    publishedAt: e.target.checked ? new Date().toISOString() : null,
+                                  }
+                                : r
+                            )
+                          )
+                        }
+                        onClick={(e) => e.stopPropagation()}
+                        className="custom-checkbox custom-checkbox--yellow"
+                        title="Published"
+                        aria-label="Published"
+                      />
+                      <span className="custom-checkbox-tick">
+                        {result.isPublished && (
+                          <svg
+                            className="w-6 h-6 text-gray-800"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l5 5L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                    </span>
+                    <span className="mt-2 text-sm font-semibold text-center select-none break-words max-w-[8rem]">
+                      Published
+                    </span>
+                  </label>
+                </div>
+              </div>
               {result.id && (
-                <div className="mt-3 flex flex-wrap items-center gap-4">
+                <div className="mt-3 flex flex-wrap items-center gap-3">
                   {result.winnerPhotoUrl && (
-                    <img
-                      src={result.winnerPhotoUrl}
-                      alt={result.displayName}
-                      className="w-24 h-24 object-contain rounded-lg border"
-                    />
+                    <div className="relative w-24 h-24 flex-shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={result.winnerPhotoUrl}
+                        alt={result.displayName || 'Winner photo'}
+                        className="w-24 h-24 object-contain rounded-lg border bg-gray-50"
+                      />
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => clearWinnerPhoto(result.id!)}
+                        className="absolute -top-2 -right-2 w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm border border-red-200 disabled:opacity-50"
+                        title="Remove photo"
+                        aria-label="Remove photo"
+                      >
+                        <svg
+                          className="w-4 h-4 text-red-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   )}
                   <WinnerPhotoUpload
                     eventId={eventId}
                     resultId={result.id}
-                    onUploaded={(url) =>
+                    onUploaded={(url, mediaId) =>
                       setResults((prev) =>
-                        prev.map((r) => (r.id === result.id ? { ...r, winnerPhotoUrl: url } : r))
+                        prev.map((r) =>
+                          r.id === result.id
+                            ? {
+                                ...r,
+                                winnerPhotoUrl: url,
+                                winnerMedia: { id: mediaId } as EventCompetitionResultDTO['winnerMedia'],
+                              }
+                            : r
+                        )
                       )
                     }
                   />
@@ -268,11 +450,74 @@ export default function CompetitionResultsEntryGrid({
                     disabled={isPending}
                     onClick={() => {
                       const current = results.find((r) => r.id === result.id);
+                      if (current) clearResultForm(current);
+                    }}
+                    className="flex-shrink-0 h-14 rounded-xl bg-orange-100 hover:bg-orange-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 px-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    title="Clear"
+                    aria-label="Clear"
+                  >
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-200 flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-orange-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </div>
+                    <span className="font-semibold text-orange-700">Clear</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => {
+                      const current = results.find((r) => r.id === result.id);
                       if (current) saveResult(current);
                     }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                    className="flex-shrink-0 h-14 rounded-xl bg-blue-100 hover:bg-blue-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 px-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    title="Save"
+                    aria-label="Save"
                   >
-                    Save
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-200 flex items-center justify-center">
+                      {isPending ? (
+                        <svg className="animate-spin w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-6 h-6 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="font-semibold text-blue-700">{isPending ? 'Saving...' : 'Save'}</span>
                   </button>
                 </div>
               )}
@@ -280,6 +525,27 @@ export default function CompetitionResultsEntryGrid({
           );
         })}
       </div>
+
+      <AlertDialog open={showPublishSuccess} onOpenChange={setShowPublishSuccess}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-center text-green-800">
+              Results published successfully
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-gray-600">
+              Placement details are now visible on the event results section. Winner photos appear in
+              the event media gallery when uploaded.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-center pb-2">
+            <div className="flex-shrink-0 w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center">
+              <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -222,13 +222,140 @@ export async function deleteCompetitionServer(id: number): Promise<void> {
 
 // --- Registrations ---
 
+function relatedEntityId(value: unknown): number | null {
+  if (value == null) return null;
+  if (typeof value === 'number' && !Number.isNaN(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value))) {
+    return Number(value);
+  }
+  if (typeof value === 'object' && value !== null && 'id' in value) {
+    const id = (value as { id?: number | string | null }).id;
+    if (id == null) return null;
+    const n = Number(id);
+    return Number.isNaN(n) ? null : n;
+  }
+  return null;
+}
+
+async function fetchParticipantByIdServer(
+  id: number
+): Promise<EventCompetitionParticipantDTO | null> {
+  try {
+    return await proxyJson<EventCompetitionParticipantDTO>(`/event-competition-participants/${id}`);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchCompetitionRegistrationsForEventServer(
   eventId: string
 ): Promise<EventCompetitionRegistrationDTO[]> {
-  return listFromBackend<EventCompetitionRegistrationDTO>(
-    'event-competition-registrations',
-    `eventId.equals=${eventId}&sort=createdAt,desc`
+  const [registrations, competitions] = await Promise.all([
+    listFromBackend<EventCompetitionRegistrationDTO>(
+      'event-competition-registrations',
+      `eventId.equals=${eventId}&sort=createdAt,desc`
+    ),
+    fetchCompetitionsForEventServer(eventId),
+  ]);
+
+  const competitionById = new Map(
+    competitions.filter((c) => c.id != null).map((c) => [Number(c.id), c])
   );
+
+  const participantIds = Array.from(
+    new Set(
+      registrations
+        .map((r) => {
+          const nested = relatedEntityId(r.participantProfile);
+          const flat = relatedEntityId(
+            (r as EventCompetitionRegistrationDTO & { participantProfileId?: number | null })
+              .participantProfileId
+          );
+          return nested ?? flat;
+        })
+        .filter((id): id is number => id != null)
+    )
+  );
+
+  const participantEntries = await Promise.all(
+    participantIds.map(async (id) => {
+      const participant = await fetchParticipantByIdServer(id);
+      return [id, participant] as const;
+    })
+  );
+  const participantById = new Map(
+    participantEntries.filter(([, p]) => p != null) as Array<[number, EventCompetitionParticipantDTO]>
+  );
+
+  return registrations.map((r) => {
+    const competitionId =
+      relatedEntityId(r.competition) ??
+      relatedEntityId(
+        (r as EventCompetitionRegistrationDTO & { competitionId?: number | null }).competitionId
+      );
+    const participantId =
+      relatedEntityId(r.participantProfile) ??
+      relatedEntityId(
+        (r as EventCompetitionRegistrationDTO & { participantProfileId?: number | null })
+          .participantProfileId
+      );
+
+    const competition =
+      (competitionId != null ? competitionById.get(competitionId) : undefined) ?? r.competition;
+    const participantProfile =
+      (participantId != null ? participantById.get(participantId) : undefined) ??
+      r.participantProfile;
+
+    return {
+      ...r,
+      competition,
+      participantProfile,
+    };
+  });
+}
+
+/**
+ * Free registrations created before fee→CONFIRMED may still be PENDING_PAYMENT.
+ * Promote them so Results and other CONFIRMED-only flows see them.
+ */
+export async function reconcileFreeCompetitionRegistrationsServer(
+  eventId: string,
+  registrations: EventCompetitionRegistrationDTO[]
+): Promise<EventCompetitionRegistrationDTO[]> {
+  const now = new Date().toISOString();
+  const updated = await Promise.all(
+    registrations.map(async (r) => {
+      const isFree = !(Number(r.feeAmount) > 0);
+      const needsConfirm =
+        isFree &&
+        r.id != null &&
+        (r.registrationStatus === 'PENDING_PAYMENT' ||
+          r.registrationStatus?.includes('PAYMENT') === true);
+      if (!needsConfirm) return r;
+
+      try {
+        const patched = await proxyJson<EventCompetitionRegistrationDTO>(
+          `/event-competition-registrations/${r.id}`,
+          {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/merge-patch+json' },
+            body: JSON.stringify(
+              withTenantId({
+                id: r.id,
+                registrationStatus: 'CONFIRMED',
+                updatedAt: now,
+              })
+            ),
+          }
+        );
+        return { ...r, ...patched, registrationStatus: 'CONFIRMED' as const };
+      } catch (err) {
+        console.error('[competitions-admin] Failed to confirm free registration', r.id, err);
+        return r;
+      }
+    })
+  );
+  return updated;
 }
 
 // --- Results ---
@@ -289,7 +416,7 @@ export async function patchCompetitionResultDirectServer(
   if (!token) token = await generateApiJwt();
   const url = `${getApiBase()}/api/event-competition-results/${resultId}`;
   const finalPayload = { ...payload, id: resultId, updatedAt: new Date().toISOString() };
-  const res = await fetch(url, {
+  const res = await fetchWithJwtRetry(url, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/merge-patch+json',
@@ -299,6 +426,104 @@ export async function patchCompetitionResultDirectServer(
   });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+/**
+ * Upload a winner photo for a competition result (generic event-medias upload + PATCH result).
+ * Mirrors program-director / performer poster uploads so required backend query fields are present.
+ */
+export async function uploadCompetitionWinnerPhotoServer(
+  eventId: string,
+  resultId: number,
+  formData: FormData
+): Promise<{ fileUrl: string; mediaId: number }> {
+  const file = formData.get('file');
+  if (!(file instanceof File) && !(file instanceof Blob)) {
+    throw new Error('No image file provided');
+  }
+
+  const uploadForm = new FormData();
+  uploadForm.append('file', file, file instanceof File ? file.name : `winner-${resultId}.jpg`);
+
+  const today = new Date().toISOString().split('T')[0];
+  const params = new URLSearchParams();
+  params.append('eventId', String(eventId));
+  params.append('tenantId', getTenantId());
+  params.append('title', `Winner photo - result ${resultId}`);
+  params.append('description', `Competition winner photo for event ${eventId}, result ${resultId}`);
+  params.append('isPublic', 'true');
+  params.append('eventMediaType', 'gallery');
+  // Ensure it appears in admin/public event media lists (non-official docs)
+  params.append('isEventManagementOfficialDocument', 'false');
+  params.append('eventFlyer', 'false');
+  params.append('isHeroImage', 'false');
+  params.append('isActiveHeroImage', 'false');
+  params.append('isFeaturedImage', 'false');
+  params.append('storageType', 'S3');
+  params.append('startDisplayingFromDate', today);
+
+  // Call backend directly (avoid Next proxy port/host mismatches from server actions)
+  const apiUrl = `${getApiBase()}/api/event-medias/upload?${params.toString()}`;
+  const response = await fetchWithJwtRetry(
+    apiUrl,
+    {
+      method: 'POST',
+      body: uploadForm,
+      timeout: 120000,
+    },
+    'competition-winner-photo-upload'
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error('[competitions-admin] Winner photo upload failed:', response.status, text);
+    let message = `Upload failed (HTTP ${response.status})`;
+    try {
+      const parsed = JSON.parse(text) as { message?: string; error?: string; detail?: string };
+      message = parsed.message || parsed.detail || parsed.error || message;
+    } catch {
+      if (text) message = text.slice(0, 240);
+    }
+    throw new Error(message);
+  }
+
+  const media = await response.json();
+  const mediaId = Number(
+    media?.id ?? media?.data?.[0]?.id ?? media?.eventMedias?.[0]?.id
+  );
+  const fileUrl = String(
+    media?.fileUrl ?? media?.data?.[0]?.fileUrl ?? media?.url ?? media?.data?.[0]?.url ?? ''
+  );
+
+  if (!mediaId || !fileUrl) {
+    console.error('[competitions-admin] Unexpected upload response shape:', media);
+    throw new Error('Upload succeeded but media id/url was missing from the response');
+  }
+
+  // Hibernate rejects changing winnerMedia.id in place ("identifier ... was altered from X to Y").
+  // Clear the association first, then attach the newly uploaded media.
+  try {
+    await patchCompetitionResultDirectServer(resultId, {
+      winnerMedia: null,
+    } as Partial<EventCompetitionResultDTO>);
+  } catch (clearErr) {
+    console.warn('[competitions-admin] Could not clear previous winnerMedia (continuing):', clearErr);
+  }
+
+  try {
+    await patchCompetitionResultDirectServer(resultId, {
+      winnerMedia: { id: mediaId } as EventCompetitionResultDTO['winnerMedia'],
+      winnerPhotoUrl: fileUrl,
+    });
+  } catch (linkErr) {
+    // Fallback: persist the public URL even if the association update fails
+    console.warn('[competitions-admin] winnerMedia link failed; saving winnerPhotoUrl only:', linkErr);
+    await patchCompetitionResultDirectServer(resultId, {
+      winnerPhotoUrl: fileUrl,
+    });
+  }
+
+  return { fileUrl, mediaId };
 }
 
 // --- Content blocks ---

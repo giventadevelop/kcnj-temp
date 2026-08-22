@@ -62,7 +62,7 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
       setLoading(true);
       setError(false);
       try {
-        const [resultsRes, blocksRes] = await Promise.all([
+        const [resultsRes, blocksRes, compsRes] = await Promise.all([
           fetch(
             `/api/proxy/event-competition-results?eventId.equals=${eventId}&isPublished.equals=true&sort=placement,asc`,
             { cache: 'no-store' }
@@ -71,13 +71,40 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
             `/api/proxy/event-competition-content-blocks?eventId.equals=${eventId}&sort=sortOrder,asc`,
             { cache: 'no-store' }
           ),
+          fetch(
+            `/api/proxy/event-competitions?eventId.equals=${eventId}&sort=displayOrder,asc`,
+            { cache: 'no-store' }
+          ),
         ]);
 
         const resultsJson = resultsRes.ok ? await resultsRes.json() : [];
         const blocksJson = blocksRes.ok ? await blocksRes.json() : [];
+        const compsJson = compsRes.ok ? await compsRes.json() : [];
         if (cancelled) return;
 
-        setResults(parseApiListResponse<EventCompetitionResultDTO>(resultsJson));
+        const competitions = parseApiListResponse<{ id?: number; name?: string }>(compsJson);
+        const competitionById = new Map(
+          competitions.filter((c) => c.id != null).map((c) => [Number(c.id), c])
+        );
+        const hydratedResults = parseApiListResponse<EventCompetitionResultDTO>(resultsJson).map(
+          (r) => {
+            const competitionId =
+              r.competition?.id ??
+              (r as EventCompetitionResultDTO & { competitionId?: number | null }).competitionId ??
+              null;
+            const competition =
+              (competitionId != null ? competitionById.get(Number(competitionId)) : undefined) ??
+              r.competition;
+            return {
+              ...r,
+              competition: competition
+                ? ({ ...r.competition, ...competition } as EventCompetitionResultDTO['competition'])
+                : r.competition,
+            };
+          }
+        );
+
+        setResults(hydratedResults);
         setBlocks(parseApiListResponse<EventCompetitionContentBlockDTO>(blocksJson));
         if (!resultsRes.ok && !blocksRes.ok) setError(true);
       } catch {
@@ -159,6 +186,14 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
                       {placementMark(result)}
                     </span>
                     <div className="mh-event-results-copy">
+                      {result.winnerPhotoUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={result.winnerPhotoUrl}
+                          alt=""
+                          className="mh-event-results-photo"
+                        />
+                      )}
                       <p className="mh-event-results-name">{result.displayName}</p>
                       <p className="mh-event-results-place">
                         {result.placementLabel ||
