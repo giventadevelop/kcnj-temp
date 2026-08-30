@@ -640,12 +640,27 @@ export default function TenantDefaultHeroManager({
         </div>
         <div className="flex items-start md:pt-8">
           <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={includeWithEvents}
-              onChange={(e) => onIncludeWithEventsChange(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-gray-400 text-teal-600 focus:ring-teal-500"
-            />
+            <span className="relative flex flex-shrink-0 items-center justify-center mt-0.5">
+              <input
+                type="checkbox"
+                checked={includeWithEvents}
+                onChange={(e) => onIncludeWithEventsChange(e.target.checked)}
+                className="custom-checkbox"
+              />
+              <span className="custom-checkbox-tick">
+                {includeWithEvents && (
+                  <svg
+                    className="w-6 h-6 text-black"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={4}
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l5 5L19 7" />
+                  </svg>
+                )}
+              </span>
+            </span>
             <span className="text-sm text-gray-700">
               Show default hero slides on the homepage (active slides only). When enabled, slides
               are appended after upcoming event hero images when those exist.

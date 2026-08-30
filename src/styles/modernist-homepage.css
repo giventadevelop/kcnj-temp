@@ -529,6 +529,30 @@ body.modernist-home .mh-poster-hero-media {
   position: absolute;
   inset: 0;
   margin: 0;
+  /* Dark fill so any micro-gap never flashes the light grey panel */
+  background: #1a0a2e;
+}
+
+/* Two stacked layers — outgoing stays visible while incoming fades in (no blank gap). */
+body.modernist-home .mh-poster-hero-crossfade-stack {
+  position: absolute;
+  inset: 0;
+}
+
+body.modernist-home .mh-poster-hero-crossfade-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  /* Keep in sync with CROSSFADE_MS in ModernistPosterHero.tsx */
+  transition: opacity 1.1s cubic-bezier(0.33, 0, 0.2, 1);
+}
+
+body.modernist-home .mh-poster-hero-crossfade-layer.is-visible {
+  opacity: 1;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 /*
@@ -537,6 +561,8 @@ body.modernist-home .mh-poster-hero-media {
  * cropped a different slice off every poster on every screen. The poster is
  * `contain` so it is never cut on any side; the blurred backdrop below fills the
  * panel so containing it does not leave bare bars.
+ *
+ * Layer opacity handles crossfade — images inside a layer stay fully opaque.
  */
 body.modernist-home .mh-poster-hero-media img,
 body.modernist-home.organic-home .mh-poster-hero-img {
@@ -545,13 +571,8 @@ body.modernist-home.organic-home .mh-poster-hero-img {
   object-fit: contain;
   object-position: center center;
   display: block;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  filter: none;
-}
-
-body.modernist-home .mh-poster-hero-img.is-visible {
   opacity: 1;
+  filter: none;
 }
 
 body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop {
@@ -560,14 +581,39 @@ body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop {
   transform: scale(1.25);
   filter: blur(30px) saturate(1.12);
   z-index: 0;
-}
-
-body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-backdrop.is-visible {
   opacity: 0.92;
 }
 
-body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img:not(.mh-poster-hero-img-backdrop) {
+body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-poster {
   z-index: 1;
+  transform: scale(1);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Slow Ken Burns zoom while the slide layer is on screen. */
+@keyframes mh-poster-hero-ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
+body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-poster.is-zooming {
+  animation: mh-poster-hero-ken-burns 9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.modernist-home .mh-poster-hero-crossfade-layer {
+    transition: opacity 0.2s ease;
+  }
+
+  body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-poster.is-zooming {
+    animation: none;
+    transform: none;
+  }
 }
 
 body.modernist-home .mh-poster-hero-scrim,

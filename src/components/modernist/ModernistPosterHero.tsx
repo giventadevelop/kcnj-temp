@@ -23,7 +23,8 @@ import type { EventDetailsDTO } from '@/types';
 /** Transparent brand mark — Organic left hero panel. */
 const HERO_LOGO = '/images/KCNJ/logo_latest-transparent.png';
 const CACHE_TTL_MS = 5 * 60 * 1000;
-const CROSSFADE_MS = 420;
+/** Must stay in sync with `.mh-poster-hero-crossfade-layer` opacity transition in modernist-homepage.css */
+const CROSSFADE_MS = 1100;
 
 type HeroOverlaySlide = {
   url: string;
@@ -37,6 +38,13 @@ type HeroOverlaySlide = {
 
 type HeroCachePayload = {
   slides: HeroOverlaySlide[];
+};
+
+/** Two stacked layers — true crossfade with no blank gap between slides. */
+type HeroSlideCrossfade = {
+  a: number;
+  b: number;
+  showA: boolean;
 };
 
 const DEFAULT_SLIDE: HeroOverlaySlide = {
@@ -87,6 +95,52 @@ function preloadUrls(urls: string[], count = 2) {
     });
 }
 
+function HeroSlideLayer({
+  slide,
+  isActive,
+  priority,
+  onPosterLoad,
+}: {
+  slide: HeroOverlaySlide;
+  isActive: boolean;
+  priority?: boolean;
+  onPosterLoad?: (ratio: number) => void;
+}) {
+  return (
+    <>
+      {/*
+        Over-scaled, blurred copy of the same art. It fills the panel so the
+        poster above it can be `object-fit: contain` without leaving bare bars.
+      */}
+      <Image
+        src={slide.url}
+        alt=""
+        aria-hidden
+        fill
+        loading="eager"
+        sizes="480px"
+        className="mh-poster-hero-img mh-poster-hero-img-backdrop"
+      />
+      <Image
+        src={slide.url}
+        alt={slide.overlayTitle || 'KCNJ cultural hero'}
+        fill
+        priority={priority}
+        sizes="(min-width: 1024px) 74vw, 100vw"
+        className={`mh-poster-hero-img mh-poster-hero-img-poster${isActive ? ' is-zooming' : ''}`}
+        style={{ objectPosition: 'center center' }}
+        onLoad={(event) => {
+          if (!onPosterLoad) return;
+          const { naturalWidth, naturalHeight } = event.currentTarget;
+          if (naturalWidth > 0 && naturalHeight > 0) {
+            onPosterLoad(naturalWidth / naturalHeight);
+          }
+        }}
+      />
+    </>
+  );
+}
+
 /**
  * Modernist homepage poster hero: rotates event/tenant hero images (same resolver as HeroSection),
  * transparent logo in the header band (top-left of nav), no headline text overlay, and
@@ -101,19 +155,30 @@ export default function ModernistPosterHero() {
 
   const [slides, setSlides] = useState<HeroOverlaySlide[]>([DEFAULT_SLIDE]);
   const [index, setIndex] = useState(0);
-  const [fadeIn, setFadeIn] = useState(true);
+  const [slide, setSlide] = useState<HeroSlideCrossfade>({ a: 0, b: 1, showA: true });
   const [ready, setReady] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [heroDataVersion, setHeroDataVersion] = useState(0);
   /** Event details keyed by id — used for Buy Tickets overlay (hero_section_image_rotation.mdc). */
   const [eventsById, setEventsById] = useState<Record<number, EventDetailsDTO>>({});
+  /**
+   * Natural ratio of the slide on screen. The panel sizes itself to this so a
+   * contained poster fills it edge to edge. Updated on load rather than on slide
+   * change so the panel resizes once, together with the crossfade.
+   */
+  const [slideRatio, setSlideRatio] = useState<number | null>(null);
 
   const slidesRef = useRef(slides);
   const indexRef = useRef(index);
   const isPausedRef = useRef(isPaused);
+  const slideRef = useRef(slide);
+  const isCrossfadingRef = useRef(false);
+  const pendingCrossfadeTargetRef = useRef<number | null>(null);
+  const crossfadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rotationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchHideRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleNextRotationRef = useRef<((imageIndex: number) => void) | null>(null);
 
   useEffect(() => {
     slidesRef.current = slides;
@@ -124,6 +189,9 @@ export default function ModernistPosterHero() {
   useEffect(() => {
     isPausedRef.current = isPaused;
   }, [isPaused]);
+  useEffect(() => {
+    slideRef.current = slide;
+  }, [slide]);
 
   const applySlides = useCallback(
     (next: HeroOverlaySlide[], markReady: boolean) => {
@@ -132,6 +200,14 @@ export default function ModernistPosterHero() {
       slidesRef.current = safe;
       setIndex(0);
       indexRef.current = 0;
+      setSlide({ a: 0, b: Math.min(1, safe.length - 1), showA: true });
+      slideRef.current = { a: 0, b: Math.min(1, safe.length - 1), showA: true };
+      isCrossfadingRef.current = false;
+      pendingCrossfadeTargetRef.current = null;
+      if (crossfadeTimeoutRef.current) {
+        clearTimeout(crossfadeTimeoutRef.current);
+        crossfadeTimeoutRef.current = null;
+      }
       if (markReady) {
         setReady(true);
         writeCache(cacheKey, safe);
@@ -255,33 +331,104 @@ export default function ModernistPosterHero() {
     };
   }, [heroFetchEnabled, tenantSettingsLoading, tenantSettings, heroDataVersion, applySlides]);
 
-  /**
-   * Natural ratio of the slide on screen. The panel sizes itself to this so a
-   * contained poster fills it edge to edge. Updated on load rather than on slide
-   * change so the panel resizes once, together with the crossfade.
-   */
-  const [slideRatio, setSlideRatio] = useState<number | null>(null);
-
-  const goToIndex = useCallback((nextIndex: number) => {
+  /** True crossfade: two stacked layers; no sequential fade-out gap before swapping `src`. */
+  const beginCrossfadeTo = useCallback((toIdx: number) => {
     const list = slidesRef.current;
-    if (list.length < 2) return;
     const n = list.length;
-    const target = ((nextIndex % n) + n) % n;
-    setFadeIn(false);
-    window.setTimeout(() => {
-      setIndex(target);
-      indexRef.current = target;
-      setFadeIn(true);
-    }, CROSSFADE_MS / 2);
+    if (n < 2) {
+      setIndex(toIdx);
+      indexRef.current = toIdx;
+      return;
+    }
+
+    if (isCrossfadingRef.current) return;
+
+    const s = slideRef.current;
+    const fromIdx = s.showA ? s.a : s.b;
+    if (toIdx === fromIdx) return;
+
+    isCrossfadingRef.current = true;
+    pendingCrossfadeTargetRef.current = toIdx;
+
+    const nextUrl = list[toIdx]?.url;
+    if (nextUrl) preloadUrls([nextUrl], 1);
+
+    // Load incoming into the hidden layer first…
+    setSlide((prev) => (prev.showA ? { ...prev, b: toIdx } : { ...prev, a: toIdx }));
+
+    // …then flip visibility on the next frames so both layers overlap during the fade.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setSlide((prev) => ({ ...prev, showA: !prev.showA }));
+      });
+    });
+
+    if (crossfadeTimeoutRef.current) {
+      clearTimeout(crossfadeTimeoutRef.current);
+    }
+    crossfadeTimeoutRef.current = setTimeout(() => {
+      crossfadeTimeoutRef.current = null;
+      const targetIdx = pendingCrossfadeTargetRef.current ?? toIdx;
+      const n2 = slidesRef.current.length;
+
+      setSlide((prev) => {
+        const vIdx = prev.showA ? prev.a : prev.b;
+        const preload = (vIdx + 1) % n2;
+        return prev.showA
+          ? { a: vIdx, b: preload, showA: true }
+          : { a: preload, b: vIdx, showA: false };
+      });
+
+      setIndex(targetIdx);
+      indexRef.current = targetIdx;
+      isCrossfadingRef.current = false;
+      pendingCrossfadeTargetRef.current = null;
+
+      window.setTimeout(() => {
+        if (!isPausedRef.current && scheduleNextRotationRef.current) {
+          scheduleNextRotationRef.current(targetIdx);
+        }
+      }, 10);
+    }, CROSSFADE_MS);
   }, []);
 
   const goNext = useCallback(() => {
-    goToIndex(indexRef.current + 1);
-  }, [goToIndex]);
+    const n = slidesRef.current.length;
+    if (n < 2) return;
+    const s = slideRef.current;
+    const fromIdx = s.showA ? s.a : s.b;
+    beginCrossfadeTo((fromIdx + 1) % n);
+  }, [beginCrossfadeTo]);
 
   const goPrev = useCallback(() => {
-    goToIndex(indexRef.current - 1);
-  }, [goToIndex]);
+    const n = slidesRef.current.length;
+    if (n < 2) return;
+    const s = slideRef.current;
+    const fromIdx = s.showA ? s.a : s.b;
+    beginCrossfadeTo((fromIdx - 1 + n) % n);
+  }, [beginCrossfadeTo]);
+
+  const scheduleNextRotation = useCallback(
+    (imageIndex: number) => {
+      if (rotationTimeoutRef.current) {
+        clearTimeout(rotationTimeoutRef.current);
+        rotationTimeoutRef.current = null;
+      }
+      if (!ready || slidesRef.current.length < 2 || isPausedRef.current) return;
+
+      const current = slidesRef.current[imageIndex];
+      const ms = current?.durationMs ?? 8000;
+      rotationTimeoutRef.current = setTimeout(() => {
+        if (isPausedRef.current) return;
+        goNext();
+      }, ms);
+    },
+    [ready, goNext]
+  );
+
+  useEffect(() => {
+    scheduleNextRotationRef.current = scheduleNextRotation;
+  }, [scheduleNextRotation]);
 
   useEffect(() => {
     if (!ready || slides.length < 2 || isPaused) {
@@ -291,29 +438,21 @@ export default function ModernistPosterHero() {
       }
       return;
     }
-
-    const schedule = () => {
-      if (rotationTimeoutRef.current) clearTimeout(rotationTimeoutRef.current);
-      const current = slidesRef.current[indexRef.current];
-      const ms = current?.durationMs ?? 8000;
-      rotationTimeoutRef.current = setTimeout(() => {
-        if (isPausedRef.current) return;
-        goNext();
-      }, ms);
-    };
-
-    schedule();
+    if (isCrossfadingRef.current) return;
+    scheduleNextRotation(index);
     return () => {
       if (rotationTimeoutRef.current) {
         clearTimeout(rotationTimeoutRef.current);
         rotationTimeoutRef.current = null;
       }
     };
-  }, [ready, slides, index, isPaused, goNext]);
+  }, [ready, slides, index, isPaused, scheduleNextRotation]);
 
   useEffect(() => {
     return () => {
       if (touchHideRef.current) clearTimeout(touchHideRef.current);
+      if (crossfadeTimeoutRef.current) clearTimeout(crossfadeTimeoutRef.current);
+      if (rotationTimeoutRef.current) clearTimeout(rotationTimeoutRef.current);
     };
   }, []);
 
@@ -325,11 +464,18 @@ export default function ModernistPosterHero() {
   /** Buy Tickets / fundraiser image — bottom-right (hero_section_image_rotation.mdc). */
   const overlayInfo = getOverlayInfo(currentEvent);
 
+  const onPosterLoad = useCallback((ratio: number) => {
+    setSlideRatio(ratio);
+  }, []);
+
   const bumpControls = () => {
     setShowControls(true);
     if (touchHideRef.current) clearTimeout(touchHideRef.current);
     touchHideRef.current = setTimeout(() => setShowControls(false), 3000);
   };
+
+  const slideA = slides[slide.a] ?? DEFAULT_SLIDE;
+  const slideB = slides[slide.b] ?? slides[0] ?? DEFAULT_SLIDE;
 
   return (
     <section className="mh-poster-hero" aria-label="Homepage hero">
@@ -363,36 +509,41 @@ export default function ModernistPosterHero() {
             onTouchStart={bumpControls}
           >
             <figure className="mh-poster-hero-media">
-              {/*
-                Over-scaled, blurred copy of the same art. It fills the panel so the
-                poster above it can be `object-fit: contain` without leaving bare bars.
-              */}
-              <Image
-                key={`backdrop-${current.url}-${index}`}
-                src={current.url}
-                alt=""
-                aria-hidden
-                fill
-                loading="eager"
-                sizes="480px"
-                className={`mh-poster-hero-img mh-poster-hero-img-backdrop${fadeIn ? ' is-visible' : ''}`}
-              />
-              <Image
-                key={current.url + String(index)}
-                src={current.url}
-                alt={current.overlayTitle || 'KCNJ cultural hero'}
-                fill
-                priority
-                sizes="(min-width: 1024px) 74vw, 100vw"
-                className={`mh-poster-hero-img${fadeIn ? ' is-visible' : ''}`}
-                style={{ objectPosition: 'center center' }}
-                onLoad={(event) => {
-                  const { naturalWidth, naturalHeight } = event.currentTarget;
-                  if (naturalWidth > 0 && naturalHeight > 0) {
-                    setSlideRatio(naturalWidth / naturalHeight);
-                  }
-                }}
-              />
+              {hasMultiple ? (
+                <div className="mh-poster-hero-crossfade-stack">
+                  <div
+                    className={`mh-poster-hero-crossfade-layer${slide.showA ? ' is-visible' : ''}`}
+                  >
+                    <HeroSlideLayer
+                      slide={slideA}
+                      isActive={slide.showA}
+                      priority={slide.showA}
+                      onPosterLoad={slide.showA ? onPosterLoad : undefined}
+                    />
+                  </div>
+                  <div
+                    className={`mh-poster-hero-crossfade-layer${!slide.showA ? ' is-visible' : ''}`}
+                  >
+                    <HeroSlideLayer
+                      slide={slideB}
+                      isActive={!slide.showA}
+                      priority={!slide.showA}
+                      onPosterLoad={!slide.showA ? onPosterLoad : undefined}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="mh-poster-hero-crossfade-stack">
+                  <div className="mh-poster-hero-crossfade-layer is-visible">
+                    <HeroSlideLayer
+                      slide={current}
+                      isActive
+                      priority
+                      onPosterLoad={onPosterLoad}
+                    />
+                  </div>
+                </div>
+              )}
             </figure>
 
             {overlayInfo && (

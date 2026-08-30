@@ -29,32 +29,28 @@ const ROOT = resolve(__dirname, '..');
 const IMAGE_DIR = join(ROOT, 'public', 'images', 'KCNJ', 'kcnj_sponsor_images');
 
 /**
- * Scraped from:
- *  - womens_bolly_workout.jpeg
- *  - dr_radhika_remadevi.jpeg
- *  - box_office_cinemas.jpeg
+ * Scraped from flyer/logo images under kcnj_sponsor_images/ and Final/.
  */
 const SPONSORS = [
   {
-    key: 'womens-bollyworkout',
-    name: "Women's Bollyworkout",
-    companyName: "Women's Bollyworkout",
+    key: 'trinity-realty-investments',
+    name: 'Trinity Realty Investments',
+    companyName: 'Trinity Realty Investments',
     type: 'Bronze',
-    priorityRanking: 100,
-    tagline: 'Zumba with Bollywood Music — Get Fit with Roshini',
+    /** High priority (gold-tier display) — sits with Gold sponsors at rank 1–2. */
+    priorityRanking: 2,
+    tagline: 'Building Dreams, Creating Wealth',
     description: [
-      "Women's Bollyworkout: Zumba with Bollywood music for women 30+.",
-      'Lead instructor: Roshini. Location: Sheraton Parsippany, 199 Smith Road, Parsippany-Troy, NJ 07054.',
-      'Tuesday 5:30–6:30 PM: Full Cardio with Bollywood Songs (Zumba).',
-      'Friday 5:30–6:30 PM: 30 min body strengthening & 30 min cardio.',
-      'Pricing: $15 single class (1/week); $10/class for 2 classes/week.',
-      'Prepay: $10 off when prepaying 16 sessions; groups of 5+ get an extra $15 off the 16-session price.',
-      'Phone: 201-417-9591.',
+      'Trinity Realty Investments — real estate investment across the USA (TX, TN, NJ and beyond).',
+      'Short-term vacation rental cabins, real estate appreciation, tax benefits, 1031 exchange opportunities.',
+      'Why invest: stable cash flow, long-term appreciation, economies of scale, tax benefits,',
+      'community building, recession resilience, property management, leverage.',
+      'Phone: 201-315-2225 · www.trinityrealty.biz',
     ].join(' '),
-    contactPhone: '201-417-9591',
+    contactPhone: '201-315-2225',
     contactEmail: '',
-    websiteUrl: '',
-    imageFile: 'womens_bolly_workout.jpeg',
+    websiteUrl: 'https://www.trinityrealty.biz',
+    imageFile: 'Final/trinity_realty_landscape.jpeg',
     imageRole: 'banner',
   },
   {
@@ -89,9 +85,165 @@ const SPONSORS = [
     contactPhone: '',
     contactEmail: '',
     websiteUrl: '',
-    imageFile: 'box_office_cinemas.jpeg',
+    imageFile: 'Final/box_office_cinemas.jpeg',
     /** Logo-style asset — set both logo and banner URLs to the uploaded file. */
     imageRole: 'logo+banner',
+  },
+  {
+    key: 'dr-miriam-thomas',
+    name: 'Dr. Miriam Thomas',
+    companyName: 'Pediatric Care of Morris',
+    type: 'Bronze',
+    priorityRanking: 130,
+    tagline: 'Pediatric Care of Morris — Welcoming New Patients',
+    description: [
+      'Pediatric Care of Morris — Dr. Miriam Thomas.',
+      '25+ years experience. No wait times. Same-day appointments. Round-the-clock comprehensive coverage.',
+      '16 Pocono Rd STE 204, Denville, NJ 07834.',
+      'Phone: (973) 627-6129.',
+    ].join(' '),
+    contactPhone: '(973) 627-6129',
+    contactEmail: '',
+    websiteUrl: '',
+    imageFile: 'Final/dr_miriam_landscape.jpeg',
+    imageRole: 'banner',
+  },
+  {
+    key: 'jiby-thomas-kwik-mortgage',
+    name: 'Jiby Thomas',
+    companyName: 'Kwik Mortgage Corporation',
+    type: 'Bronze',
+    priorityRanking: 140,
+    tagline: 'Unlock Your Dream Home with Kwik Mortgage',
+    description: [
+      'Jiby Thomas, Mortgage Banker (NMLS #1793429) — Kwik Mortgage Corporation (NMLS #138075).',
+      'Home purchase loans, refinancing, first-time buyer programs, FHA/VA/conventional, jumbo and investment property loans.',
+      'Local expertise, fast approvals, personalized guidance, competitive rates.',
+      '959 Route 46 East, Suite 401, Parsippany, NJ 07054.',
+      'Office: (908) 731-7606 · Cell: (914) 573-1616 · Jthomas@kwikmtg.com · www.kwikmtg.com',
+    ].join(' '),
+    contactPhone: '(908) 731-7606',
+    contactEmail: 'Jthomas@kwikmtg.com',
+    websiteUrl: 'https://www.kwikmtg.com',
+    imageFile: 'Final/Kwik_Mortgage.png',
+    imageRole: 'banner',
+  },
+  {
+    key: 'manisha-patel-cpa',
+    name: 'Manisha Patel, CPA',
+    companyName: 'Manisha Patel CPA LLC',
+    type: 'Bronze',
+    priorityRanking: 150,
+    tagline: 'Certified Public Accountant · IRS Certified Acceptance Agent',
+    description: [
+      'Manisha Patel, CPA — Certified Public Accountant, IRS Certified Acceptance Agent, Financial Services Professional, Healthcare Planner.',
+      'Personal & business taxes, bookkeeping, payroll, retirement & education planning, will & trust, 401K/IRA rollovers, life insurance.',
+      '269 Baldwin Rd UNIT 202, Parsippany, NJ 07054.',
+      'Phone: 862-222-5819 · mpatel@manishapatelcpa.com · manishapatelcpa.com',
+    ].join(' '),
+    contactPhone: '862-222-5819',
+    contactEmail: 'mpatel@manishapatelcpa.com',
+    websiteUrl: 'https://manishapatelcpa.com',
+    imageFile: 'Final/manisha_patel_cpa.png',
+    imageRole: 'banner',
+  },
+  {
+    key: 'meena-upadhyay',
+    name: 'Meena Upadhyay',
+    companyName: 'New York Life',
+    type: 'Bronze',
+    priorityRanking: 160,
+    tagline: 'Financial Services Professional — Forbes Best-in-State 2026',
+    description: [
+      'Meena Upadhyay — Financial Services Professional with New York Life.',
+      'Forbes Best-in-State Financial Security Professionals 2026 (Shook Research).',
+      'Phone: (732) 529-5814 · mupadhyay@ft.newyorklife.com',
+    ].join(' '),
+    contactPhone: '(732) 529-5814',
+    contactEmail: 'mupadhyay@ft.newyorklife.com',
+    websiteUrl: '',
+    imageFile: 'Final/meena_upadhyay.jpeg',
+    imageRole: 'banner',
+  },
+  {
+    key: 'raman-abrol-cpa',
+    name: 'Raman Abrol, CPA',
+    companyName: 'Raman Abrol, CPA',
+    type: 'Bronze',
+    priorityRanking: 170,
+    tagline: 'Certified Public Accountant',
+    description: [
+      'Raman Abrol, CPA — business consulting, tax planning & consultation, IRS & state audit representation,',
+      'regulatory tax compliance for US and India, formation of business entities, audit/compliance/review services,',
+      'accounting, sales tax & payroll, tax preparation for individuals & businesses.',
+      '1130 US Highway 46 West, Suite #27, Parsippany, NJ 07054.',
+      'Tel: 973-331-5178 · Cell: 973-896-3541 · Fax: 973-718-4666 · raman@racpaus.com',
+    ].join(' '),
+    contactPhone: '973-331-5178',
+    contactEmail: 'raman@racpaus.com',
+    websiteUrl: '',
+    imageFile: 'Final/Raman_Abrol.png',
+    imageRole: 'banner',
+  },
+  {
+    key: 'veda-dental-aesthetics',
+    name: 'Veda Dental Aesthetics',
+    companyName: 'Veda Family Dentistry',
+    type: 'Bronze',
+    priorityRanking: 180,
+    tagline: 'Family Dentistry — Devipriya Thirugnanasambandam DDS',
+    description: [
+      'Veda Dental Aesthetics / Veda Family Dentistry — Devipriya Thirugnanasambandam DDS.',
+      'Invisalign, implants, cosmetic veneers, dentures, bridges, crowns, root canals, fillings, extractions, whitening, smile design, pediatric care.',
+      'Accepts major PPO plans; in-house membership and flexible payment options.',
+      'West New York: 5405 Bergenline Ave, West New York, NJ 07093 · (201) 223-4444.',
+      'Dover: 30 Orchard Street, Dover, NJ 07801 · (973) 366-0311 · vedafamilydentistry.com',
+    ].join(' '),
+    contactPhone: '(201) 223-4444',
+    contactEmail: '',
+    websiteUrl: 'https://vedafamilydentistry.com',
+    imageFile: 'Final/Veda_dental_aesthetics.png',
+    imageRole: 'banner',
+  },
+  {
+    key: 'womens-bollyworkout',
+    name: "Women's Bollyworkout",
+    companyName: "Women's Bollyworkout",
+    type: 'Bronze',
+    priorityRanking: 190,
+    tagline: 'Zumba with Bollywood Music — Get Fit with Roshini',
+    description: [
+      "Women's Bollyworkout: Zumba with Bollywood music for women 30+.",
+      'Lead instructor: Roshini. Location: Sheraton Parsippany, 199 Smith Road, Parsippany-Troy, NJ 07054.',
+      'Tuesday 5:30–6:30 PM: Full Cardio with Bollywood Songs (Zumba).',
+      'Friday 5:30–6:30 PM: 30 min body strengthening & 30 min cardio.',
+      'Pricing: $15 single class (1/week); $10/class for 2 classes/week.',
+      'Prepay: $10 off when prepaying 16 sessions; groups of 5+ get an extra $15 off the 16-session price.',
+      'Phone: 201-417-9591.',
+    ].join(' '),
+    contactPhone: '201-417-9591',
+    contactEmail: '',
+    websiteUrl: '',
+    imageFile: 'Final/womens_bollyworkout.jpeg',
+    imageRole: 'banner',
+  },
+  {
+    key: 'giventa',
+    name: 'Giventa',
+    companyName: 'Giventa Inc',
+    type: 'Bronze',
+    priorityRanking: 200,
+    tagline: 'Providing AI-Based Solutions',
+    description: [
+      'Giventa Inc — community platforms, software services, and AI-based solutions.',
+      'Website designed and developed by Giventa for the Parsippany Malayali community; powering keralacenter.org.',
+      'New Jersey, USA · sales@giventa.com · www.giventa.com',
+    ].join(' '),
+    contactPhone: '',
+    contactEmail: 'sales@giventa.com',
+    websiteUrl: 'https://www.giventa.com',
+    imageFile: 'Final/giventa_kcnj_flyer.jpeg',
+    imageRole: 'banner',
   },
 ];
 
@@ -122,10 +274,12 @@ async function findExistingByName(name, token) {
     token
   );
   if (!res.ok) return [];
-  if (Array.isArray(json)) return json;
-  if (Array.isArray(json?.content)) return json.content;
-  if (Array.isArray(json?._embedded?.eventSponsors)) return json._embedded.eventSponsors;
-  return [];
+  let rows = [];
+  if (Array.isArray(json)) rows = json;
+  else if (Array.isArray(json?.content)) rows = json.content;
+  else if (Array.isArray(json?._embedded?.eventSponsors)) rows = json._embedded.eventSponsors;
+  // Backend name.equals may be case-insensitive or loose — keep exact name matches only.
+  return rows.filter((row) => row?.name === name);
 }
 
 async function createSponsor(spec, token) {
@@ -266,10 +420,19 @@ async function seedOne(spec, token) {
     console.log(`[seed-kcnj-sponsors] ✓ ${role}=${fileUrl}`);
   }
 
-  // Backend may ignore priorityRanking on POST — always patch rank + any image URLs.
+  // Backend may ignore priorityRanking on POST — always patch rank + metadata + any image URLs.
   await patchSponsorUrls(
     sponsorId,
-    { priorityRanking: spec.priorityRanking, ...urls },
+    {
+      priorityRanking: spec.priorityRanking,
+      tagline: spec.tagline || '',
+      description: spec.description || '',
+      companyName: spec.companyName || '',
+      contactPhone: spec.contactPhone || undefined,
+      contactEmail: spec.contactEmail || undefined,
+      websiteUrl: spec.websiteUrl || undefined,
+      ...urls,
+    },
     token
   );
   console.log(
