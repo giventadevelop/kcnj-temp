@@ -5,6 +5,7 @@ import { getApiBaseUrl, getAppUrl, getTenantId } from '@/lib/env';
 import { parseApiListResponse } from '@/lib/parseApiListResponse';
 import { fetchWithJwtRetry } from '@/lib/proxyHandler';
 import { withTenantId } from '@/lib/withTenantId';
+import { hydrateCompetitionResults, matchCompetitionByName } from '@/lib/competitions/resultsPodium';
 import type {
   EventCompetitionContentBlockDTO,
   EventCompetitionDayDTO,
@@ -41,13 +42,20 @@ async function proxyJson<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-async function listFromBackend<T>(resource: string, query: string): Promise<T[]> {
+async function listFromBackend<T>(
+  resource: string,
+  query: string,
+  options?: { throwOnError?: boolean }
+): Promise<T[]> {
   const tenantId = getTenantId();
   const url = `${getApiBase()}/api/${resource}?${query}&tenantId.equals=${tenantId}`;
   const res = await fetchWithJwtRetry(url, { cache: 'no-store' });
   if (!res.ok) {
     const text = await res.text();
     console.error(`[competitions-admin] GET ${resource} failed:`, res.status, text);
+    if (options?.throwOnError) {
+      throw new Error(`Could not load ${resource} (HTTP ${res.status}).`);
+    }
     return [];
   }
   const data = await res.json();
@@ -361,12 +369,49 @@ export async function reconcileFreeCompetitionRegistrationsServer(
 // --- Results ---
 
 export async function fetchCompetitionResultsForEventServer(
-  eventId: string
+  eventId: string,
+  options?: { throwOnError?: boolean }
 ): Promise<EventCompetitionResultDTO[]> {
   return listFromBackend<EventCompetitionResultDTO>(
     'event-competition-results',
-    `eventId.equals=${eventId}&sort=placement,asc`
+    `eventId.equals=${eventId}&sort=placement,asc`,
+    options
   );
+}
+
+export async function importOfficialPlacementsFromPodiumServer(
+  eventId: string,
+  drafts: EventCompetitionResultDTO[],
+  competitions: EventCompetitionDTO[]
+): Promise<{ created: EventCompetitionResultDTO[]; skipped: string[] }> {
+  const skipped: string[] = [];
+  const created: EventCompetitionResultDTO[] = [];
+  const now = new Date().toISOString();
+
+  for (const draft of drafts) {
+    const match = matchCompetitionByName(competitions, draft.competition?.name);
+    if (!match?.id) {
+      skipped.push(`${draft.displayName} (${draft.competition?.name || 'no competition'})`);
+      continue;
+    }
+    const row = await createCompetitionResultServer(eventId, {
+      displayName: draft.displayName,
+      placement: draft.placement ?? null,
+      placementLabel: draft.placementLabel ?? null,
+      prizeTitle: draft.prizeTitle ?? '',
+      prizeDetails: draft.prizeDetails ?? '',
+      pointsAwarded: Number(draft.pointsAwarded) || 0,
+      winnerPhotoUrl: draft.winnerPhotoUrl ?? '',
+      workPhotoUrl: draft.workPhotoUrl ?? '',
+      notes: draft.notes ?? '',
+      isPublished: true,
+      publishedAt: now,
+      competition: { id: match.id } as EventCompetitionDTO,
+    } as EventCompetitionResultDTO);
+    created.push({ ...row, competition: match });
+  }
+
+  return { created: hydrateCompetitionResults(created, competitions), skipped };
 }
 
 export async function createCompetitionResultServer(
@@ -429,31 +474,39 @@ export async function patchCompetitionResultDirectServer(
 }
 
 /**
- * Upload a winner photo for a competition result (generic event-medias upload + PATCH result).
+ * Upload a winner portrait or winning-work photo (generic event-medias upload + PATCH result).
  * Mirrors program-director / performer poster uploads so required backend query fields are present.
  */
+export type CompetitionResultPhotoKind = 'winner' | 'work';
+
 export async function uploadCompetitionWinnerPhotoServer(
   eventId: string,
   resultId: number,
-  formData: FormData
+  formData: FormData,
+  kind: CompetitionResultPhotoKind = 'winner'
 ): Promise<{ fileUrl: string; mediaId: number }> {
   const file = formData.get('file');
   if (!(file instanceof File) && !(file instanceof Blob)) {
     throw new Error('No image file provided');
   }
 
+  const isWork = kind === 'work';
   const uploadForm = new FormData();
-  uploadForm.append('file', file, file instanceof File ? file.name : `winner-${resultId}.jpg`);
+  uploadForm.append('file', file, file instanceof File ? file.name : `${kind}-${resultId}.jpg`);
 
   const today = new Date().toISOString().split('T')[0];
   const params = new URLSearchParams();
   params.append('eventId', String(eventId));
   params.append('tenantId', getTenantId());
-  params.append('title', `Winner photo - result ${resultId}`);
-  params.append('description', `Competition winner photo for event ${eventId}, result ${resultId}`);
+  params.append('title', isWork ? `Winning work - result ${resultId}` : `Winner photo - result ${resultId}`);
+  params.append(
+    'description',
+    isWork
+      ? `Competition winning work for event ${eventId}, result ${resultId}`
+      : `Competition winner photo for event ${eventId}, result ${resultId}`
+  );
   params.append('isPublic', 'true');
   params.append('eventMediaType', 'gallery');
-  // Ensure it appears in admin/public event media lists (non-official docs)
   params.append('isEventManagementOfficialDocument', 'false');
   params.append('eventFlyer', 'false');
   params.append('isHeroImage', 'false');
@@ -462,7 +515,6 @@ export async function uploadCompetitionWinnerPhotoServer(
   params.append('storageType', 'S3');
   params.append('startDisplayingFromDate', today);
 
-  // Call backend directly (avoid Next proxy port/host mismatches from server actions)
   const apiUrl = `${getApiBase()}/api/event-medias/upload?${params.toString()}`;
   const response = await fetchWithJwtRetry(
     apiUrl,
@@ -471,12 +523,12 @@ export async function uploadCompetitionWinnerPhotoServer(
       body: uploadForm,
       timeout: 120000,
     },
-    'competition-winner-photo-upload'
+    isWork ? 'competition-work-photo-upload' : 'competition-winner-photo-upload'
   );
 
   if (!response.ok) {
     const text = await response.text();
-    console.error('[competitions-admin] Winner photo upload failed:', response.status, text);
+    console.error('[competitions-admin] Photo upload failed:', kind, response.status, text);
     let message = `Upload failed (HTTP ${response.status})`;
     try {
       const parsed = JSON.parse(text) as { message?: string; error?: string; detail?: string };
@@ -500,27 +552,27 @@ export async function uploadCompetitionWinnerPhotoServer(
     throw new Error('Upload succeeded but media id/url was missing from the response');
   }
 
-  // Hibernate rejects changing winnerMedia.id in place ("identifier ... was altered from X to Y").
-  // Clear the association first, then attach the newly uploaded media.
+  const mediaField = isWork ? 'workMedia' : 'winnerMedia';
+  const urlField = isWork ? 'workPhotoUrl' : 'winnerPhotoUrl';
+
   try {
     await patchCompetitionResultDirectServer(resultId, {
-      winnerMedia: null,
+      [mediaField]: null,
     } as Partial<EventCompetitionResultDTO>);
   } catch (clearErr) {
-    console.warn('[competitions-admin] Could not clear previous winnerMedia (continuing):', clearErr);
+    console.warn('[competitions-admin] Could not clear previous media association (continuing):', clearErr);
   }
 
   try {
     await patchCompetitionResultDirectServer(resultId, {
-      winnerMedia: { id: mediaId } as EventCompetitionResultDTO['winnerMedia'],
-      winnerPhotoUrl: fileUrl,
-    });
+      [mediaField]: { id: mediaId },
+      [urlField]: fileUrl,
+    } as Partial<EventCompetitionResultDTO>);
   } catch (linkErr) {
-    // Fallback: persist the public URL even if the association update fails
-    console.warn('[competitions-admin] winnerMedia link failed; saving winnerPhotoUrl only:', linkErr);
+    console.warn('[competitions-admin] media link failed; saving URL only:', linkErr);
     await patchCompetitionResultDirectServer(resultId, {
-      winnerPhotoUrl: fileUrl,
-    });
+      [urlField]: fileUrl,
+    } as Partial<EventCompetitionResultDTO>);
   }
 
   return { fileUrl, mediaId };

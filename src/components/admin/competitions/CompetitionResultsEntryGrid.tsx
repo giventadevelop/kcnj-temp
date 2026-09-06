@@ -9,6 +9,7 @@ import type {
 } from '@/types';
 import {
   createCompetitionResultServer,
+  importOfficialPlacementsFromPodiumServer,
   patchCompetitionResultDirectServer,
   patchCompetitionResultServer,
 } from '@/app/admin/events/[id]/competitions/ApiServerActions';
@@ -28,6 +29,8 @@ interface Props {
   registrations: EventCompetitionRegistrationDTO[];
   initialResults: EventCompetitionResultDTO[];
   settings?: EventCompetitionSettingsDTO | null;
+  podiumDrafts?: EventCompetitionResultDTO[];
+  fetchError?: string | null;
 }
 
 export default function CompetitionResultsEntryGrid({
@@ -36,12 +39,17 @@ export default function CompetitionResultsEntryGrid({
   registrations,
   initialResults,
   settings,
+  podiumDrafts = [],
+  fetchError = null,
 }: Props) {
   const [results, setResults] = useState(initialResults);
   const [filterCompId, setFilterCompId] = useState<number | ''>('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(fetchError);
   const [showPublishSuccess, setShowPublishSuccess] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [manualName, setManualName] = useState('');
+  const [manualCompId, setManualCompId] = useState<number | ''>(competitions[0]?.id ?? '');
+  const [manualPlacement, setManualPlacement] = useState(1);
 
   const pointsSettings = {
     pointsFirst: settings?.pointsFirst ?? 10,
@@ -56,8 +64,6 @@ export default function CompetitionResultsEntryGrid({
     return () => window.clearTimeout(timer);
   }, [showPublishSuccess]);
 
-  // Free regs may still be PENDING_PAYMENT in DB (shown as "Registered" on the registrations table).
-  // Results must include those; paid regs still require CONFIRMED after payment.
   const confirmedRegs = registrations.filter((r) => {
     if (r.registrationStatus === 'CANCELLED' || r.registrationStatus === 'REFUNDED') return false;
     if (r.registrationStatus === 'CONFIRMED') return true;
@@ -97,27 +103,37 @@ export default function CompetitionResultsEntryGrid({
               publishedAt: null,
               winnerPhotoUrl: '',
               winnerMedia: undefined,
+              workPhotoUrl: '',
+              workMedia: undefined,
             }
           : r
       )
     );
   };
 
-  const clearWinnerPhoto = (resultId: number) => {
+  const clearPhoto = (resultId: number, kind: 'winner' | 'work') => {
     startTransition(async () => {
       try {
         setError(null);
+        const payload =
+          kind === 'work'
+            ? ({ workMedia: null, workPhotoUrl: '' } as Partial<EventCompetitionResultDTO>)
+            : ({ winnerMedia: null, winnerPhotoUrl: '' } as Partial<EventCompetitionResultDTO>);
         try {
-          await patchCompetitionResultDirectServer(resultId, {
-            winnerMedia: null,
-            winnerPhotoUrl: '',
-          } as Partial<EventCompetitionResultDTO>);
+          await patchCompetitionResultDirectServer(resultId, payload);
         } catch {
-          await patchCompetitionResultDirectServer(resultId, { winnerPhotoUrl: '' });
+          await patchCompetitionResultDirectServer(
+            resultId,
+            kind === 'work' ? { workPhotoUrl: '' } : { winnerPhotoUrl: '' }
+          );
         }
         setResults((prev) =>
           prev.map((r) =>
-            r.id === resultId ? { ...r, winnerPhotoUrl: '', winnerMedia: undefined } : r
+            r.id === resultId
+              ? kind === 'work'
+                ? { ...r, workPhotoUrl: '', workMedia: undefined }
+                : { ...r, winnerPhotoUrl: '', winnerMedia: undefined }
+              : r
           )
         );
       } catch (e: unknown) {
@@ -131,14 +147,19 @@ export default function CompetitionResultsEntryGrid({
     startTransition(async () => {
       try {
         setError(null);
-        if (result.winnerPhotoUrl || result.winnerMedia?.id) {
+        if (result.winnerPhotoUrl || result.winnerMedia?.id || result.workPhotoUrl || result.workMedia?.id) {
           try {
             await patchCompetitionResultDirectServer(result.id, {
               winnerMedia: null,
               winnerPhotoUrl: '',
+              workMedia: null,
+              workPhotoUrl: '',
             } as Partial<EventCompetitionResultDTO>);
           } catch {
-            await patchCompetitionResultDirectServer(result.id, { winnerPhotoUrl: '' });
+            await patchCompetitionResultDirectServer(result.id, {
+              winnerPhotoUrl: '',
+              workPhotoUrl: '',
+            });
           }
         }
         resetResultFormFields(result.id);
@@ -160,10 +181,13 @@ export default function CompetitionResultsEntryGrid({
       prizeDetails: result.prizeDetails ?? '',
       pointsAwarded: result.pointsAwarded,
       winnerPhotoUrl: result.winnerPhotoUrl ?? '',
+      workPhotoUrl: result.workPhotoUrl ?? '',
       notes: result.notes ?? '',
       isPublished: true,
       publishedAt,
-      competition: result.competition?.id ? ({ id: result.competition.id } as EventCompetitionResultDTO['competition']) : undefined,
+      competition: result.competition?.id
+        ? ({ id: result.competition.id } as EventCompetitionResultDTO['competition'])
+        : undefined,
       participantProfile: result.participantProfile?.id
         ? ({ id: result.participantProfile.id } as EventCompetitionResultDTO['participantProfile'])
         : undefined,
@@ -173,13 +197,30 @@ export default function CompetitionResultsEntryGrid({
       ...(result.winnerMedia?.id
         ? { winnerMedia: { id: result.winnerMedia.id } as EventCompetitionResultDTO['winnerMedia'] }
         : {}),
+      ...(result.workMedia?.id
+        ? { workMedia: { id: result.workMedia.id } as EventCompetitionResultDTO['workMedia'] }
+        : {}),
     };
 
     startTransition(async () => {
       try {
         setError(null);
-        await patchCompetitionResultServer(result.id!, eventId, payload);
-        resetResultFormFields(result.id!);
+        const saved = await patchCompetitionResultServer(result.id!, eventId, payload);
+        setResults((prev) =>
+          prev.map((r) =>
+            r.id === result.id
+              ? {
+                  ...r,
+                  ...saved,
+                  isPublished: true,
+                  publishedAt,
+                  competition: r.competition,
+                  winnerPhotoUrl: saved.winnerPhotoUrl ?? r.winnerPhotoUrl,
+                  workPhotoUrl: saved.workPhotoUrl ?? r.workPhotoUrl,
+                }
+              : r
+          )
+        );
         setShowPublishSuccess(true);
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Update failed');
@@ -190,8 +231,8 @@ export default function CompetitionResultsEntryGrid({
   const applyPlacement = (resultId: number, placement: number) => {
     const compId = results.find((r) => r.id === resultId)?.competition?.id;
     const comp = competitions.find((c) => c.id === compId);
-    const maxPlacements = comp?.maxPlacements ?? settings?.defaultMaxPlacements ?? 3;
-    if (placement > maxPlacements) {
+    const maxPlacements = Math.max(comp?.maxPlacements ?? settings?.defaultMaxPlacements ?? 3, placement);
+    if (placement > (comp?.maxPlacements ?? settings?.defaultMaxPlacements ?? 5) && placement > 5) {
       setError(`Placement ${placement} exceeds max placements (${maxPlacements}) for this competition.`);
       return;
     }
@@ -226,6 +267,7 @@ export default function CompetitionResultsEntryGrid({
           prizeDetails: '',
           pointsAwarded: getDefaultPointsForPlacement(1, pointsSettings),
           winnerPhotoUrl: '',
+          workPhotoUrl: '',
           notes: '',
           isPublished: false,
           competition: reg.competition?.id ? { id: reg.competition.id } : undefined,
@@ -239,16 +281,103 @@ export default function CompetitionResultsEntryGrid({
     });
   };
 
+  const addManualResult = () => {
+    const displayName = manualName.trim();
+    if (!displayName) {
+      setError('Enter a winner name to add a result.');
+      return;
+    }
+    if (!manualCompId) {
+      setError('Select a competition for the new result.');
+      return;
+    }
+    const comp = competitions.find((c) => c.id === manualCompId);
+    startTransition(async () => {
+      try {
+        setError(null);
+        const created = await createCompetitionResultServer(eventId, {
+          displayName,
+          placement: manualPlacement,
+          placementLabel: PLACEMENT_LABELS[manualPlacement] ?? `${manualPlacement}th`,
+          prizeTitle: '',
+          prizeDetails: '',
+          pointsAwarded: getDefaultPointsForPlacement(manualPlacement, pointsSettings),
+          winnerPhotoUrl: '',
+          workPhotoUrl: '',
+          notes: '',
+          isPublished: false,
+          competition: { id: manualCompId } as EventCompetitionDTO,
+        } as EventCompetitionResultDTO);
+        setResults((prev) => [...prev, { ...created, competition: comp ?? created.competition }]);
+        setManualName('');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Create failed');
+      }
+    });
+  };
+
+  const importPodium = () => {
+    startTransition(async () => {
+      try {
+        setError(null);
+        const { created, skipped } = await importOfficialPlacementsFromPodiumServer(
+          eventId,
+          podiumDrafts,
+          competitions
+        );
+        setResults((prev) => [...prev, ...created]);
+        if (skipped.length > 0) {
+          setError(`Imported ${created.length} placement(s). Skipped: ${skipped.join(', ')}`);
+        }
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Import failed');
+      }
+    });
+  };
+
+  const showImportBanner = !fetchError && results.length === 0 && podiumDrafts.length > 0;
+
   return (
     <div className="space-y-6">
       {error && <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm">{error}</div>}
+
+      {showImportBanner && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4">
+          <h3 className="font-semibold text-amber-900 mb-2">Official results on the public page</h3>
+          <p className="text-sm text-amber-800 mb-3">
+            The public event page is showing {podiumDrafts.length} placement(s) from a podium block.
+            Import them here so you can edit, publish, and attach photos.
+          </p>
+          <ul className="text-sm text-amber-900 mb-4 list-disc pl-5 space-y-1">
+            {podiumDrafts.map((row) => (
+              <li key={`${row.displayName}-${row.placement}-${row.competition?.name}`}>
+                {row.competition?.name ? `${row.competition.name} — ` : ''}
+                {row.displayName}
+                {row.placementLabel ? ` (${row.placementLabel})` : ''}
+              </li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={importPodium}
+            className="flex-shrink-0 h-14 rounded-xl bg-amber-100 hover:bg-amber-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 px-6 disabled:opacity-50"
+            title="Import official placements"
+            aria-label="Import official placements"
+          >
+            <span className="font-semibold text-amber-800">
+              {isPending ? 'Importing...' : 'Import official placements'}
+            </span>
+          </button>
+        </div>
+      )}
 
       <div className="bg-white rounded-lg shadow-md p-4 flex flex-wrap gap-4 items-end">
         <label className="block">
           <span className="text-sm font-medium text-gray-700">Filter by competition</span>
           <select
             className="mt-1 border border-gray-400 rounded-xl px-4 py-2 block min-w-[200px]"
-          value={filterCompId === '' ? '' : String(filterCompId)}
+            value={filterCompId === '' ? '' : String(filterCompId)}
             onChange={(e) => setFilterCompId(e.target.value ? parseInt(e.target.value, 10) : '')}
           >
             <option value="">All competitions</option>
@@ -288,11 +417,68 @@ export default function CompetitionResultsEntryGrid({
         </select>
       </div>
 
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <h3 className="font-semibold mb-2">Add result manually</h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Use this when a winner was not registered (for example, a seeded or judged placement).
+        </p>
+        <div className="flex flex-wrap gap-3 items-end">
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">Name</span>
+            <input
+              className="mt-1 border border-gray-400 rounded-xl px-4 py-2 block min-w-[200px]"
+              value={manualName}
+              onChange={(e) => setManualName(e.target.value)}
+              placeholder="Winner name"
+            />
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">Competition</span>
+            <select
+              className="mt-1 border border-gray-400 rounded-xl px-4 py-2 block min-w-[200px]"
+              value={manualCompId === '' ? '' : String(manualCompId)}
+              onChange={(e) => setManualCompId(e.target.value ? parseInt(e.target.value, 10) : '')}
+            >
+              <option value="">Select...</option>
+              {competitions.map((c) => (
+                <option key={c.id} value={c.id ?? ''}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-sm font-medium text-gray-700">Placement</span>
+            <select
+              className="mt-1 border border-gray-400 rounded-xl px-4 py-2 block"
+              value={manualPlacement}
+              onChange={(e) => setManualPlacement(parseInt(e.target.value, 10))}
+            >
+              {[1, 2, 3, 4, 5].map((p) => (
+                <option key={p} value={p}>
+                  {PLACEMENT_LABELS[p] ?? `${p}th`}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={addManualResult}
+            className="flex-shrink-0 h-14 rounded-xl bg-emerald-100 hover:bg-emerald-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 px-6 disabled:opacity-50"
+            title="Add result"
+            aria-label="Add result"
+          >
+            <span className="font-semibold text-emerald-700">{isPending ? 'Adding...' : 'Add result'}</span>
+          </button>
+        </div>
+      </div>
+
       <div className="space-y-4">
         {filteredResults.map((result, idx) => {
           const compId = result.competition?.id;
           const comp = competitions.find((c) => c.id === compId);
-          const maxPlacements = comp?.maxPlacements ?? settings?.defaultMaxPlacements ?? 3;
+          const maxPlacements = Math.max(comp?.maxPlacements ?? settings?.defaultMaxPlacements ?? 3, 5);
           const taken = usedPlacements(compId);
 
           return (
@@ -311,7 +497,7 @@ export default function CompetitionResultsEntryGrid({
                   }
                 />
                 <div className="flex flex-wrap gap-2 items-center">
-                  {[1, 2, 3, 4].slice(0, maxPlacements).map((p) => (
+                  {[1, 2, 3, 4, 5].slice(0, maxPlacements).map((p) => (
                     <button
                       key={p}
                       type="button"
@@ -395,130 +581,144 @@ export default function CompetitionResultsEntryGrid({
                 </div>
               </div>
               {result.id && (
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  {result.winnerPhotoUrl && (
-                    <div className="relative w-24 h-24 flex-shrink-0">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={result.winnerPhotoUrl}
-                        alt={result.displayName || 'Winner photo'}
-                        className="w-24 h-24 object-contain rounded-lg border bg-gray-50"
-                      />
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        onClick={() => clearWinnerPhoto(result.id!)}
-                        className="absolute -top-2 -right-2 w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm border border-red-200 disabled:opacity-50"
-                        title="Remove photo"
-                        aria-label="Remove photo"
-                      >
-                        <svg
-                          className="w-4 h-4 text-red-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                  <WinnerPhotoUpload
-                    eventId={eventId}
-                    resultId={result.id}
-                    onUploaded={(url, mediaId) =>
-                      setResults((prev) =>
-                        prev.map((r) =>
-                          r.id === result.id
-                            ? {
-                                ...r,
-                                winnerPhotoUrl: url,
-                                winnerMedia: { id: mediaId } as EventCompetitionResultDTO['winnerMedia'],
-                              }
-                            : r
-                        )
-                      )
-                    }
-                  />
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => {
-                      const current = results.find((r) => r.id === result.id);
-                      if (current) clearResultForm(current);
-                    }}
-                    className="flex-shrink-0 h-14 rounded-xl bg-orange-100 hover:bg-orange-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 px-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    title="Clear"
-                    aria-label="Clear"
-                  >
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-200 flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-orange-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
+                <div className="mt-3 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Winner photo</p>
+                      <div className="flex flex-wrap items-center gap-3">
+                        {result.winnerPhotoUrl && (
+                          <div className="relative w-24 h-24 flex-shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={result.winnerPhotoUrl}
+                              alt={result.displayName || 'Winner photo'}
+                              className="w-24 h-24 object-contain rounded-lg border bg-gray-50"
+                            />
+                            <button
+                              type="button"
+                              disabled={isPending}
+                              onClick={() => clearPhoto(result.id!, 'winner')}
+                              className="absolute -top-2 -right-2 w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm border border-red-200 disabled:opacity-50"
+                              title="Remove winner photo"
+                              aria-label="Remove winner photo"
+                            >
+                              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                        <WinnerPhotoUpload
+                          eventId={eventId}
+                          resultId={result.id}
+                          kind="winner"
+                          onUploaded={(url, mediaId) =>
+                            setResults((prev) =>
+                              prev.map((r) =>
+                                r.id === result.id
+                                  ? {
+                                      ...r,
+                                      winnerPhotoUrl: url,
+                                      winnerMedia: { id: mediaId } as EventCompetitionResultDTO['winnerMedia'],
+                                    }
+                                  : r
+                              )
+                            )
+                          }
                         />
-                      </svg>
+                      </div>
                     </div>
-                    <span className="font-semibold text-orange-700">Clear</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => {
-                      const current = results.find((r) => r.id === result.id);
-                      if (current) saveResult(current);
-                    }}
-                    className="flex-shrink-0 h-14 rounded-xl bg-blue-100 hover:bg-blue-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 px-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                    title="Save"
-                    aria-label="Save"
-                  >
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-200 flex items-center justify-center">
-                      {isPending ? (
-                        <svg className="animate-spin w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24">
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-6 h-6 text-blue-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
-                          />
-                        </svg>
-                      )}
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 mb-2">Winning work</p>
+                      <div className="flex flex-wrap items-center gap-3">
+                        {result.workPhotoUrl && (
+                          <div className="relative w-24 h-24 flex-shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={result.workPhotoUrl}
+                              alt={`${result.displayName || 'Winner'} work`}
+                              className="w-24 h-24 object-contain rounded-lg border bg-gray-50"
+                            />
+                            <button
+                              type="button"
+                              disabled={isPending}
+                              onClick={() => clearPhoto(result.id!, 'work')}
+                              className="absolute -top-2 -right-2 w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm border border-red-200 disabled:opacity-50"
+                              title="Remove winning work"
+                              aria-label="Remove winning work"
+                            >
+                              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                        <WinnerPhotoUpload
+                          eventId={eventId}
+                          resultId={result.id}
+                          kind="work"
+                          onUploaded={(url, mediaId) =>
+                            setResults((prev) =>
+                              prev.map((r) =>
+                                r.id === result.id
+                                  ? {
+                                      ...r,
+                                      workPhotoUrl: url,
+                                      workMedia: { id: mediaId } as EventCompetitionResultDTO['workMedia'],
+                                    }
+                                  : r
+                              )
+                            )
+                          }
+                        />
+                      </div>
                     </div>
-                    <span className="font-semibold text-blue-700">{isPending ? 'Saving...' : 'Save'}</span>
-                  </button>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => {
+                        const current = results.find((r) => r.id === result.id);
+                        if (current) clearResultForm(current);
+                      }}
+                      className="flex-shrink-0 h-14 rounded-xl bg-orange-100 hover:bg-orange-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 px-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      title="Clear"
+                      aria-label="Clear"
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-orange-200 flex items-center justify-center">
+                        <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
+                      <span className="font-semibold text-orange-700">Clear</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => {
+                        const current = results.find((r) => r.id === result.id);
+                        if (current) saveResult(current);
+                      }}
+                      className="flex-shrink-0 h-14 rounded-xl bg-blue-100 hover:bg-blue-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105 px-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      title="Save"
+                      aria-label="Save"
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-200 flex items-center justify-center">
+                        {isPending ? (
+                          <svg className="animate-spin w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="font-semibold text-blue-700">{isPending ? 'Saving...' : 'Save'}</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -533,8 +733,8 @@ export default function CompetitionResultsEntryGrid({
               Results published successfully
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center text-gray-600">
-              Placement details are now visible on the event results section. Winner photos appear in
-              the event media gallery when uploaded.
+              Placement details are now visible on the event results section. Winner photos and
+              winning-work images appear when uploaded.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex justify-center pb-2">

@@ -15,6 +15,7 @@ import { SocialIconLink } from '@/components/social/SocialIconLink';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
 import { resolveBuyTicketsTarget } from '@/lib/eventcube/utils';
 import { DEFAULT_HEADER_RIBBON_IMAGE } from '@/lib/headerRibbon';
+import EventCardResultsPanel from '@/components/competitions/EventCardResultsPanel';
 import '@/styles/modernist-homepage.css';
 
 // Helper function to get initials from a name
@@ -138,6 +139,7 @@ export default function EventDetailsPage() {
   const [eventFocusGroupIdFilter, setEventFocusGroupIdFilter] = useState<number | null>(null);
   const [eventFocusGroupOptions, setEventFocusGroupOptions] = useState<{ id: number; name: string }[]>([]);
   const [focusGroupNameByAssociationId, setFocusGroupNameByAssociationId] = useState<Record<number, string>>({});
+  const [resultsOpen, setResultsOpen] = useState(false);
 
   // Match homepage organic design system (also set globally by PublicOrganicDesignBody).
   useLayoutEffect(() => {
@@ -568,13 +570,15 @@ export default function EventDetailsPage() {
                 // BUT NOT if it's a ticketed fundraiser (use fundraiser image instead)
                 const showDonationButton = isDonationBasedEvent(event) && isUpcomingLocal && !isTicketedFundraiserEvent(event);
                 const showCompetitionLinks = event.isCompetitionEvent === true;
+                const showResultsButton = event.isCompetitionEvent === true && isPast;
 
                 // Don't render if no buttons should be shown
                 if (
                   !showRegisterButton &&
                   !buyTicketsTarget &&
                   !showDonationButton &&
-                  !showCompetitionLinks
+                  !showCompetitionLinks &&
+                  !showResultsButton
                 )
                   return null;
 
@@ -638,6 +642,27 @@ export default function EventDetailsPage() {
                         Competitions
                       </Link>
                     )}
+                    {showResultsButton && (
+                      <button
+                        type="button"
+                        className={`mh-btn mh-btn-results mh-event-detail-cta${resultsOpen ? ' is-open' : ''}`}
+                        title={resultsOpen ? 'Hide Result' : 'Show Result'}
+                        aria-label={resultsOpen ? 'Hide Result' : 'Show Result'}
+                        aria-expanded={resultsOpen}
+                        aria-controls={`event-results-${event.id}`}
+                        onClick={() => setResultsOpen((open) => !open)}
+                      >
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zm-2 4h14"
+                          />
+                        </svg>
+                        {resultsOpen ? 'Hide Result' : 'Result'}
+                      </button>
+                    )}
                   </div>
                 );
               })()}
@@ -650,6 +675,12 @@ export default function EventDetailsPage() {
                 <p className="mh-event-detail-caption sm:pr-48 lg:pr-56">
                   {event.caption}
                 </p>
+              )}
+
+              {resultsOpen && event.id && (
+                <div className="mt-6 mb-4">
+                  <EventCardResultsPanel eventId={event.id} eventTitle={event.title} />
+                </div>
               )}
 
               {/* Event Details - Centered flexbox layout */}

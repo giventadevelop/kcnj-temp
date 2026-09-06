@@ -1,9 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { EventCompetitionContentBlockDTO, EventCompetitionResultDTO } from '@/types';
+import type { EventCompetitionContentBlockDTO, EventCompetitionDTO, EventCompetitionResultDTO } from '@/types';
 import { parseApiListResponse } from '@/lib/parseApiListResponse';
 import { PLACEMENT_LABELS } from '@/lib/competitionEligibility';
+import {
+  hydrateCompetitionResults,
+  isResultsPodiumBlock,
+  parseResultsPodiumFromBlocks,
+} from '@/lib/competitions/resultsPodium';
 
 interface Props {
   eventId: number;
@@ -21,20 +26,6 @@ function groupByCompetition(results: EventCompetitionResultDTO[]) {
     items.sort((a, b) => (a.placement ?? 99) - (b.placement ?? 99));
   }
   return Array.from(map.entries());
-}
-
-function isPodiumBlock(block: EventCompetitionContentBlockDTO) {
-  return (block.blockType || '').toUpperCase() === 'RESULTS_PODIUM';
-}
-
-function parsePodiumBlock(block: EventCompetitionContentBlockDTO): EventCompetitionResultDTO[] {
-  try {
-    const parsed = JSON.parse(block.bodyMarkdown || '');
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((row) => row && typeof row.displayName === 'string') as EventCompetitionResultDTO[];
-  } catch {
-    return [];
-  }
 }
 
 function placementTone(placement?: number | null) {
@@ -82,26 +73,10 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
         const compsJson = compsRes.ok ? await compsRes.json() : [];
         if (cancelled) return;
 
-        const competitions = parseApiListResponse<{ id?: number; name?: string }>(compsJson);
-        const competitionById = new Map(
-          competitions.filter((c) => c.id != null).map((c) => [Number(c.id), c])
-        );
-        const hydratedResults = parseApiListResponse<EventCompetitionResultDTO>(resultsJson).map(
-          (r) => {
-            const competitionId =
-              r.competition?.id ??
-              (r as EventCompetitionResultDTO & { competitionId?: number | null }).competitionId ??
-              null;
-            const competition =
-              (competitionId != null ? competitionById.get(Number(competitionId)) : undefined) ??
-              r.competition;
-            return {
-              ...r,
-              competition: competition
-                ? ({ ...r.competition, ...competition } as EventCompetitionResultDTO['competition'])
-                : r.competition,
-            };
-          }
+        const competitions = parseApiListResponse<EventCompetitionDTO>(compsJson);
+        const hydratedResults = hydrateCompetitionResults(
+          parseApiListResponse<EventCompetitionResultDTO>(resultsJson),
+          competitions
         );
 
         setResults(hydratedResults);
@@ -120,11 +95,10 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
     };
   }, [eventId]);
 
-  const podiumBlocks = blocks.filter(isPodiumBlock);
   const documents = blocks.filter(
-    (block) => !isPodiumBlock(block) && ((block.title || '').trim() || (block.bodyMarkdown || '').trim())
+    (block) => !isResultsPodiumBlock(block) && ((block.title || '').trim() || (block.bodyMarkdown || '').trim())
   );
-  const fallbackResults = podiumBlocks.flatMap(parsePodiumBlock);
+  const fallbackResults = parseResultsPodiumFromBlocks(blocks);
   const displayResults = results.length > 0 ? results : fallbackResults;
   const grouped = groupByCompetition(displayResults);
   const hasResults = displayResults.length > 0;
@@ -186,13 +160,25 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
                       {placementMark(result)}
                     </span>
                     <div className="mh-event-results-copy">
-                      {result.winnerPhotoUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={result.winnerPhotoUrl}
-                          alt=""
-                          className="mh-event-results-photo"
-                        />
+                      {(result.winnerPhotoUrl || result.workPhotoUrl) && (
+                        <div className="mh-event-results-photos">
+                          {result.winnerPhotoUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={result.winnerPhotoUrl}
+                              alt=""
+                              className="mh-event-results-photo"
+                            />
+                          )}
+                          {result.workPhotoUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={result.workPhotoUrl}
+                              alt=""
+                              className="mh-event-results-photo mh-event-results-photo--work"
+                            />
+                          )}
+                        </div>
                       )}
                       <p className="mh-event-results-name">{result.displayName}</p>
                       <p className="mh-event-results-place">
