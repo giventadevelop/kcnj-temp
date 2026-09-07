@@ -1175,6 +1175,25 @@ body.modernist-home .mh-featured-actions .mh-btn {
   font-size: 14px;
 }
 
+/* Past featured — badge on media (ticket CTAs omitted in JSX) */
+body.modernist-home .mh-featured-past-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: var(--mh-radius-pill);
+  background: var(--mh-neutral-800, #2d2a26);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
 /* Live Events — small LIVE badge on the media panel only */
 body.modernist-home .mh-live-block .mh-live-badge {
   position: absolute;
@@ -3202,6 +3221,28 @@ body.modernist-home .mh-event-results-photos {
   margin-bottom: 8px;
 }
 
+body.modernist-home .mh-event-results-photo-btn {
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 10px;
+  line-height: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+body.modernist-home .mh-event-results-photo-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+body.modernist-home .mh-event-results-photo-btn:focus-visible {
+  outline: 2px solid var(--mh-accent);
+  outline-offset: 2px;
+}
+
 body.modernist-home .mh-event-results-photo {
   display: block;
   width: 56px;
@@ -3212,6 +3253,8 @@ body.modernist-home .mh-event-results-photo {
   margin-bottom: 8px;
   border: 1px solid var(--mh-neutral-300);
   background: var(--mh-neutral-100);
+  cursor: pointer;
+  pointer-events: none; /* click handled by button */
 }
 
 body.modernist-home .mh-event-results-photos .mh-event-results-photo {
@@ -3221,6 +3264,57 @@ body.modernist-home .mh-event-results-photos .mh-event-results-photo {
 body.modernist-home .mh-event-results-photo--work {
   width: 72px;
   height: 72px;
+}
+
+body.modernist-home .mh-event-results-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.88);
+  cursor: zoom-out;
+}
+
+body.modernist-home .mh-event-results-lightbox-img {
+  max-width: min(96vw, 1100px);
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  cursor: default;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+body.modernist-home .mh-event-results-lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+body.modernist-home .mh-event-results-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+body.modernist-home .mh-event-results-lightbox-close svg {
+  width: 22px;
+  height: 22px;
 }
 
 body.modernist-home .mh-event-results-name {
@@ -4937,6 +5031,13 @@ body.modernist-home.organic-home .mh-featured-media {
 
 body.modernist-home.organic-home .mh-featured-media-link {
   min-height: 280px;
+}
+
+body.modernist-home.organic-home .mh-featured-past-badge {
+  background: color-mix(in srgb, var(--mh-neutral-800, #2d2a26) 92%, transparent);
+  color: #fff8f0;
+  border-radius: 999px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
 }
 
 body.modernist-home.organic-home .mh-live-block .mh-live-badge {

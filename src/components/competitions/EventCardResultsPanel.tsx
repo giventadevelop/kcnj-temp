@@ -45,6 +45,7 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
   const [error, setError] = useState(false);
   const [results, setResults] = useState<EventCompetitionResultDTO[]>([]);
   const [blocks, setBlocks] = useState<EventCompetitionContentBlockDTO[]>([]);
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -94,6 +95,20 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
       cancelled = true;
     };
   }, [eventId]);
+
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(null);
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [lightbox]);
 
   const documents = blocks.filter(
     (block) => !isResultsPodiumBlock(block) && ((block.title || '').trim() || (block.bodyMarkdown || '').trim())
@@ -163,20 +178,46 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
                       {(result.winnerPhotoUrl || result.workPhotoUrl) && (
                         <div className="mh-event-results-photos">
                           {result.winnerPhotoUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={result.winnerPhotoUrl}
-                              alt=""
-                              className="mh-event-results-photo"
-                            />
+                            <button
+                              type="button"
+                              className="mh-event-results-photo-btn"
+                              onClick={() =>
+                                setLightbox({
+                                  src: result.winnerPhotoUrl!,
+                                  alt: `${result.displayName} — winner photo`,
+                                })
+                              }
+                              title={`Open photo of ${result.displayName}`}
+                              aria-label={`Open photo of ${result.displayName}`}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={result.winnerPhotoUrl}
+                                alt=""
+                                className="mh-event-results-photo"
+                              />
+                            </button>
                           )}
                           {result.workPhotoUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={result.workPhotoUrl}
-                              alt=""
-                              className="mh-event-results-photo mh-event-results-photo--work"
-                            />
+                            <button
+                              type="button"
+                              className="mh-event-results-photo-btn"
+                              onClick={() =>
+                                setLightbox({
+                                  src: result.workPhotoUrl!,
+                                  alt: `${result.displayName} — winning work`,
+                                })
+                              }
+                              title={`Open work photo for ${result.displayName}`}
+                              aria-label={`Open work photo for ${result.displayName}`}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={result.workPhotoUrl}
+                                alt=""
+                                className="mh-event-results-photo mh-event-results-photo--work"
+                              />
+                            </button>
                           )}
                         </div>
                       )}
@@ -208,6 +249,35 @@ export default function EventCardResultsPanel({ eventId, eventTitle }: Props) {
               {block.bodyMarkdown && <p>{block.bodyMarkdown}</p>}
             </article>
           ))}
+        </div>
+      )}
+
+      {lightbox && (
+        <div
+          className="mh-event-results-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={lightbox.alt}
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            type="button"
+            className="mh-event-results-lightbox-close"
+            onClick={() => setLightbox(null)}
+            title="Close"
+            aria-label="Close image"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightbox.src}
+            alt={lightbox.alt}
+            className="mh-event-results-lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
