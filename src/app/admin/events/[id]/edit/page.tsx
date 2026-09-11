@@ -2,6 +2,7 @@
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { EventForm } from '@/components/EventForm';
+import EventEditFocusGroupsPanel from './EventEditFocusGroupsPanel';
 import type { EventDetailsDTO, EventTypeDetailsDTO } from '@/types';
 import Link from 'next/link';
 import { FaUsers, FaPhotoVideo, FaCalendarAlt, FaTags, FaTicketAlt, FaHome, FaMicrophone, FaAddressBook, FaHandshake, FaEnvelope, FaUserTie, FaClipboardCheck, FaChartLine, FaDollarSign } from 'react-icons/fa';
@@ -293,6 +294,9 @@ export default function EditEventPage() {
         </div>
       </div>
 
+      {eventId && (
+        <EventEditFocusGroupsPanel eventId={Number(Array.isArray(eventId) ? eventId[0] : eventId)} />
+      )}
       <h1 className="text-2xl font-bold mb-4">Edit Event - ID: {eventId}</h1>
       <div className="border rounded p-4 bg-white shadow-sm min-h-[200px]">
         <EventForm event={event} eventTypes={eventTypes} onSubmit={handleSubmit} loading={loading} />

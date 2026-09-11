@@ -1,5 +1,13 @@
 'use server';
 
+/**
+ * Competition admin API pattern (nextjs_api_routes.mdc):
+ * - GET lists: server action → fetchWithJwtRetry (direct backend) with tenantId.equals + X-Tenant-ID
+ * - POST/PATCH via proxy: /api/proxy/* (createProxyHandler JWT + withTenantId)
+ * - Photo PATCH: direct backend merge-patch + service JWT (no proxy)
+ * Never call backend URLs from client components.
+ */
+
 import { getCachedApiJwt, generateApiJwt } from '@/lib/api/jwt';
 import { getApiBaseUrl, getAppUrl, getTenantId } from '@/lib/env';
 import { parseApiListResponse } from '@/lib/parseApiListResponse';
@@ -48,8 +56,9 @@ async function listFromBackend<T>(
   options?: { throwOnError?: boolean }
 ): Promise<T[]> {
   const tenantId = getTenantId();
-  const url = `${getApiBase()}/api/${resource}?${query}&tenantId.equals=${tenantId}`;
-  const res = await fetchWithJwtRetry(url, { cache: 'no-store' });
+  const url = `${getApiBase()}/api/${resource}?${query}&tenantId.equals=${encodeURIComponent(tenantId)}`;
+  // fetchWithJwtRetry attaches Authorization + X-Tenant-ID from env (single-tenant kcnj-temp)
+  const res = await fetchWithJwtRetry(url, { cache: 'no-store' }, `competitions-admin-list-${resource}`);
   if (!res.ok) {
     const text = await res.text();
     console.error(`[competitions-admin] GET ${resource} failed:`, res.status, text);
