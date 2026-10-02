@@ -726,6 +726,12 @@ export default function ModernistHomePage({
   initialFeaturedEvents: FeaturedEventWithMedia[];
   initialLiveEvents: FeaturedEventWithMedia[];
 }) {
+  const {
+    showEventsSection,
+    showTeamSection,
+    showSponsorsSection,
+    loading: tenantSettingsLoading,
+  } = useTenantSettings();
   const [team, setTeam] = useState<ExecutiveCommitteeTeamMemberDTO[]>([]);
   const [sponsors, setSponsors] = useState<EventSponsorsDTO[]>([]);
 
@@ -775,8 +781,11 @@ export default function ModernistHomePage({
     upcomingEvents[0] ||
     null;
 
-  // Always load executive team for homepage (shown for now; tenant flags may lag in cache).
   useEffect(() => {
+    if (tenantSettingsLoading || !showTeamSection) {
+      setTeam([]);
+      return;
+    }
     let cancelled = false;
 
     async function loadTeam() {
@@ -791,7 +800,7 @@ export default function ModernistHomePage({
           setTeam(parseExecutiveCommitteeTeamMembersResponse(data).slice(0, 6));
         }
       } catch (err) {
-        console.error('[ModernistHomePage] team:', err);
+        console.warn('[ModernistHomePage] team:', err);
       }
     }
 
@@ -799,11 +808,14 @@ export default function ModernistHomePage({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tenantSettingsLoading, showTeamSection]);
 
-  // Always load sponsors for homepage (section is shown at bottom for now).
   // Proxy injects tenantId — do not add tenantId.equals here.
   useEffect(() => {
+    if (tenantSettingsLoading || !showSponsorsSection) {
+      setSponsors([]);
+      return;
+    }
     let cancelled = false;
 
     async function loadSponsors() {
@@ -822,7 +834,7 @@ export default function ModernistHomePage({
         const withBanners = await Promise.all(limited.map((s) => resolveSponsorBanner(s)));
         if (!cancelled) setSponsors(withBanners);
       } catch (err) {
-        console.error('[ModernistHomePage] sponsors:', err);
+        console.warn('[ModernistHomePage] sponsors:', err);
       }
     }
 
@@ -830,7 +842,7 @@ export default function ModernistHomePage({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [tenantSettingsLoading, showSponsorsSection]);
 
   return (
     <main className="modernist-home">
@@ -868,8 +880,9 @@ export default function ModernistHomePage({
       {/* Featured events — event.isFeaturedEvent checkbox from admin edit */}
       <FeaturedEventsModernist items={featuredItems} />
 
-      {/* Upcoming / recent events — modernist card system (same layout as mcefee) */}
-      <UpcomingEventsSection variant="modernist" />
+      {!tenantSettingsLoading && showEventsSection && (
+        <UpcomingEventsSection variant="modernist" />
+      )}
 
       {/* 1a — What we do (interactive cards) */}
       <WhatWeDoSection />
@@ -910,7 +923,7 @@ export default function ModernistHomePage({
         </div>
       </section>
 
-      {/* Team — executive committee volunteers (same layout as mcefee; always shown for now) */}
+      {!tenantSettingsLoading && showTeamSection && (
       <section
           id="team-section"
           className="mh-section"
@@ -970,6 +983,7 @@ export default function ModernistHomePage({
             </div>
           )}
         </section>
+      )}
 
       {/* Close CTA — upcoming featured or next upcoming event only; hidden when none */}
       {closeCtaEvent && (
@@ -995,7 +1009,7 @@ export default function ModernistHomePage({
         </section>
       )}
 
-      {/* Our Sponsors — same layout as mcefee ModernistHomePage; Organic tokens; bottom of page for now */}
+      {!tenantSettingsLoading && showSponsorsSection && (
       <section
         className="mh-section mh-home-sponsors mh-section-tight-top"
         aria-label="Sponsors"
@@ -1107,6 +1121,7 @@ export default function ModernistHomePage({
           </Link>
         </div>
       </section>
+      )}
 
       <ContactSection />
     </main>

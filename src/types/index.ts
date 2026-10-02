@@ -192,6 +192,7 @@ export interface EventMediaDTO {
   fileSize?: number;
   isPublic?: boolean;
   eventFlyer?: boolean;
+  isAgendaFlyer?: boolean;
   isEventManagementOfficialDocument?: boolean;
   preSignedUrl?: string;
   preSignedUrlExpiresAt?: string;
@@ -1228,6 +1229,27 @@ export interface EventProgramDirectorsDTO {
   event?: EventDetailsDTO;
 }
 
+/**
+ * Timed event-day program item (Onam-style agenda). Overlapping times are allowed.
+ * `scheduleDate` null means inherit the event start date / single-day list.
+ */
+export interface EventAgendaItemDTO {
+  id?: number;
+  tenantId?: string;
+  scheduleDate?: string | null;
+  startTime: string;
+  endTime?: string | null;
+  title: string;
+  description?: string | null;
+  imageUrl?: string | null;
+  sortOrder: number;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+  event?: EventDetailsDTO;
+  eventMedia?: EventMediaDTO | null;
+}
+
 // WhatsApp Integration Types
 
 /**
@@ -1965,4 +1987,35 @@ export interface EventCompetitionContentBlockDTO {
   createdAt?: string;
   updatedAt?: string;
   event?: EventDetailsDTO;
+}
+
+/**
+ * One admin YouTube URL per tenant for the homepage live player.
+ */
+export interface HomepageYoutubeOverrideDTO {
+  id?: number | null;
+  tenantId?: string;
+  youtubeUrl?: string | null;
+  title?: string | null;
+  description?: string | null;
+  isActive?: boolean | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+/**
+ * One admin-entered YouTube video kept for older gallery entries.
+ */
+export interface GalleryYoutubeVideoDTO {
+  id?: number | null;
+  tenantId?: string;
+  youtubeUrl?: string | null;
+  title?: string | null;
+  description?: string | null;
+  displayOrder?: number | null;
+  isActive?: boolean | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }

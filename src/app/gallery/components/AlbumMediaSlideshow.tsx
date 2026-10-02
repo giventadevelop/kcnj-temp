@@ -13,6 +13,7 @@ import {
   Info
 } from 'lucide-react';
 import type { GalleryAlbumDTO, EventMediaDTO } from '@/types';
+import { isYoutubeGalleryMedia, youtubeThumbnailUrl, youtubeVideoId, youtubeWatchUrl } from '@/lib/gallery/youtubeMedia';
 
 interface AlbumMediaSlideshowProps {
   album: GalleryAlbumDTO;
@@ -35,7 +36,10 @@ export function AlbumMediaSlideshow({ album, media, onClose, initialIndex = 0 }:
   });
 
   const currentMedia = media[currentIndex];
-  const isVideo = currentMedia?.eventMediaType.startsWith('video/');
+  const youtubeUrl = currentMedia ? youtubeWatchUrl(currentMedia) : null;
+  const youtubeId = youtubeUrl ? youtubeVideoId(youtubeUrl) : null;
+  const isYoutube = Boolean(currentMedia && isYoutubeGalleryMedia(currentMedia) && youtubeId);
+  const isVideo = !isYoutube && currentMedia?.eventMediaType.startsWith('video/');
 
   // Update currentIndex when initialIndex changes
   useEffect(() => {
@@ -46,14 +50,14 @@ export function AlbumMediaSlideshow({ album, media, onClose, initialIndex = 0 }:
 
   // Auto-play functionality
   useEffect(() => {
-    if (isPlaying && !isVideo && media.length > 1) {
+    if (isPlaying && !isVideo && !isYoutube && media.length > 1) {
       const interval = setInterval(() => {
         setCurrentIndex((prev) => (prev + 1) % media.length);
       }, playbackSpeed);
 
       return () => clearInterval(interval);
     }
-  }, [isPlaying, isVideo, media.length, playbackSpeed]);
+  }, [isPlaying, isVideo, isYoutube, media.length, playbackSpeed]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -147,7 +151,17 @@ export function AlbumMediaSlideshow({ album, media, onClose, initialIndex = 0 }:
       <div className="flex flex-col items-center justify-center w-full h-full px-4">
         {/* Media display */}
         <div className="relative max-w-4xl max-h-[70vh] w-full mb-4">
-          {isVideo ? (
+          {isYoutube && youtubeId ? (
+            <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1`}
+                className="absolute inset-0 h-full w-full"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                title={currentMedia.title || 'YouTube video'}
+              />
+            </div>
+          ) : isVideo ? (
             <video
               src={currentMedia.fileUrl}
               controls
@@ -216,7 +230,7 @@ export function AlbumMediaSlideshow({ album, media, onClose, initialIndex = 0 }:
           {/* Controls */}
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-center space-x-4">
-              {!isVideo && media.length > 1 && (
+              {!isVideo && !isYoutube && media.length > 1 && (
                 <button
                   onClick={togglePlayPause}
                   className="flex items-center space-x-2 px-3 py-1 bg-white bg-opacity-20 rounded hover:bg-opacity-30 transition-colors"
@@ -230,7 +244,7 @@ export function AlbumMediaSlideshow({ album, media, onClose, initialIndex = 0 }:
                 </button>
               )}
 
-              {currentMedia.fileUrl && (
+              {currentMedia.fileUrl && !isYoutube && (
                 <a
                   href={currentMedia.fileUrl}
                   download
@@ -264,7 +278,13 @@ export function AlbumMediaSlideshow({ album, media, onClose, initialIndex = 0 }:
                       : 'border-transparent hover:border-gray-400'
                   }`}
                 >
-                  {mediaItem.fileUrl ? (
+                  {isYoutubeGalleryMedia(mediaItem) ? (
+                    <img
+                      src={youtubeThumbnailUrl(youtubeWatchUrl(mediaItem) || '') || mediaItem.fileUrl || ''}
+                      alt={mediaItem.altText || mediaItem.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : mediaItem.fileUrl ? (
                     <Image
                       src={mediaItem.fileUrl}
                       alt={mediaItem.altText || mediaItem.title}

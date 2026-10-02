@@ -9,7 +9,7 @@ import type { EventWithMedia, EventDetailsDTO } from "@/types";
 import { formatInTimeZone } from 'date-fns-tz';
 import { isRecurringEvent, getNextOccurrenceDate } from '@/lib/eventUtils';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
-import { resolveBuyTicketsTarget } from '@/lib/eventcube/utils';
+import { resolveBuyTicketsTarget, resolveRegisterTarget } from '@/lib/eventcube/utils';
 import { getTenantId } from '@/lib/env';
 import { useDeferredFetch } from '@/hooks/usePageReady';
 import { getHomepageCacheKey } from '@/lib/homepageCacheKeys';
@@ -68,7 +68,8 @@ function ModernistUpcomingEventCard({
   formatDate: (dateString: string, timezone?: string) => string;
   formatTime: (time: string) => string;
 }) {
-  const showRegister = isUpcomingEvents && event.isRegistrationRequired === true;
+  const registerTarget = isUpcomingEvents ? resolveRegisterTarget(event) : null;
+  const showRegister = registerTarget != null;
   const buyTicketsTarget = isUpcomingEvents ? resolveBuyTicketsTarget(event) : null;
   const showDonation =
     isUpcomingEvents && isDonationBasedEvent(event) && !isTicketedFundraiserEvent(event);
@@ -121,12 +122,15 @@ function ModernistUpcomingEventCard({
             See Event Details
           </Link>
 
-          {showRegister && (
+          {showRegister && registerTarget && (
             <Link
-              href={`/events/${event.id}/register`}
+              href={registerTarget.href}
               className="mh-btn mh-btn-register"
               title="Register"
               aria-label="Register"
+              {...(registerTarget.kind === 'external'
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
             >
               <IconRegister />
               Register
@@ -389,11 +393,19 @@ function UpcomingEventGlassCard({
               </Link>
 
               <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                {isUpcomingEvents && event.isRegistrationRequired === true && (
+                {isUpcomingEvents && (() => {
+                  const registerTarget = resolveRegisterTarget(event);
+                  if (!registerTarget) return null;
+                  return (
                   <Link
-                    href={`/events/${event.id}/register`}
+                    href={registerTarget.href}
                     onClick={(e) => e.stopPropagation()}
                     className="inline-block transition-transform hover:scale-105"
+                    title="Register Here"
+                    aria-label="Register Here"
+                    {...(registerTarget.kind === 'external'
+                      ? { target: '_blank', rel: 'noopener noreferrer' }
+                      : {})}
                   >
                     <img
                       src="/images/register_here_button.jpg"
@@ -403,7 +415,8 @@ function UpcomingEventGlassCard({
                       height={70}
                     />
                   </Link>
-                )}
+                  );
+                })()}
 
                 {isUpcomingEvents && (() => {
                   const buyTarget = resolveBuyTicketsTarget(event);
@@ -474,7 +487,6 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(false);
   const [isUpcomingEvents, setIsUpcomingEvents] = useState(true);
-  const [hasMoreEvents, setHasMoreEvents] = useState(false);
 
   // Defer upcoming events API call until page ready + 300ms
   // This section mounts after TenantSettings loads, adding natural delay on top
@@ -489,11 +501,10 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
     try {
       const cachedData = sessionStorage.getItem(CACHE_KEY);
       if (cachedData) {
-        const { data, timestamp, isUpcoming, hasMore } = JSON.parse(cachedData);
+        const { data, timestamp, isUpcoming } = JSON.parse(cachedData);
         if (Date.now() - timestamp < CACHE_DURATION) {
           setEvents(data ?? []);
           setIsUpcomingEvents(isUpcoming !== false);
-          setHasMoreEvents(hasMore === true);
           setLoading(false);
         }
       }
@@ -525,12 +536,11 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
       try {
         const cachedData = sessionStorage.getItem(CACHE_KEY);
         if (cachedData) {
-          const { data, timestamp, isUpcoming, hasMore } = JSON.parse(cachedData);
+          const { data, timestamp, isUpcoming } = JSON.parse(cachedData);
           if (Date.now() - timestamp < CACHE_DURATION) {
             console.log('✅ Using cached events data');
             setEvents(data);
             setIsUpcomingEvents(isUpcoming);
-            setHasMoreEvents(hasMore === true);
             setLoading(false);
             return;
           }
@@ -640,7 +650,6 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
 
           // Limit to 6 events for display after processing
           const limitedEvents = processedEvents.slice(0, 6);
-          const moreThanSix = processedEvents.length > 6;
 
           console.log(`[UpcomingEventsSection] Processed ${processedEvents.length} events (${recurringSeriesMap.size} recurring series, ${processedEvents.length - recurringSeriesMap.size} non-recurring), displaying ${limitedEvents.length} events`);
 
@@ -673,7 +682,6 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
               data: eventsWithMedia,
               timestamp: Date.now(),
               isUpcoming: true,
-              hasMore: moreThanSix,
             }));
           } catch (error) {
             console.warn('Failed to cache events data:', error);
@@ -681,7 +689,6 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
 
           setEvents(eventsWithMedia);
           setIsUpcomingEvents(true);
-          setHasMoreEvents(moreThanSix);
         } else {
           // No upcoming events, try to get past events
           // Fetch more events (15) to account for recurring events being grouped into single occurrences
@@ -774,7 +781,6 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
 
           // Limit to 6 events for display after processing
           const limitedPastEvents = processedPastEvents.slice(0, 6);
-          const moreThanSixPast = processedPastEvents.length > 6;
 
           console.log(`[UpcomingEventsSection] Processed ${processedPastEvents.length} past events (${recurringSeriesMap.size} recurring series, ${processedPastEvents.length - recurringSeriesMap.size} non-recurring), displaying ${limitedPastEvents.length} events`);
 
@@ -807,7 +813,6 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
               data: eventsWithMedia,
               timestamp: Date.now(),
               isUpcoming: false,
-              hasMore: moreThanSixPast,
             }));
           } catch (error) {
             console.warn('Failed to cache events data:', error);
@@ -815,7 +820,6 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
 
           setEvents(eventsWithMedia);
           setIsUpcomingEvents(false);
-          setHasMoreEvents(moreThanSixPast);
         }
       } catch (err) {
         setFetchError(true);
@@ -960,18 +964,16 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
             />
           ))}
         </div>
-        {hasMoreEvents && (
-          <div className="mh-home-events-more">
-            <Link
-              href="/events"
-              className="mh-btn mh-btn-readmore"
-              title="See more events"
-              aria-label="See more events"
-            >
-              See more events
-            </Link>
-          </div>
-        )}
+        <div className="mh-home-events-more">
+          <Link
+            href="/events"
+            className="mh-btn mh-btn-readmore"
+            title="View all events"
+            aria-label="View all events"
+          >
+            View all events
+          </Link>
+        </div>
       </section>
     );
   }

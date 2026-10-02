@@ -6,7 +6,7 @@ import type { EventWithMedia, EventDetailsDTO } from "@/types";
 import { formatInTimeZone } from 'date-fns-tz';
 import { isRecurringEvent, getNextOccurrenceDate } from '@/lib/eventUtils';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
-import { resolveBuyTicketsTarget } from '@/lib/eventcube/utils';
+import { resolveBuyTicketsTarget, resolveRegisterTarget } from '@/lib/eventcube/utils';
 import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import EventCardResultsPanel from '@/components/competitions/EventCardResultsPanel';
 import '@/styles/modernist-homepage.css';
@@ -245,10 +245,16 @@ export default function EventsPage() {
           processedEvents.push(event);
         });
 
-        // Sort by startDate to show earliest events first
+        // Sort by event occurrence date:
+        // - Past: latest (most recent) first, then older (e.g. Sep 5 before Aug 30)
+        // - Future: soonest upcoming first
         processedEvents.sort((a, b) => {
           if (!a.startDate || !b.startDate) return 0;
-          return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+          const aKey = a.startDate.split('T')[0];
+          const bKey = b.startDate.split('T')[0];
+          return loadingPastEvents
+            ? bKey.localeCompare(aKey)
+            : aKey.localeCompare(bKey);
         });
 
         // Limit to EVENTS_PAGE_SIZE (20) events for display after filtering
@@ -554,7 +560,8 @@ export default function EventsPage() {
                   isUpcomingLocal = eventDateStr >= todayStr;
                 }
 
-                const showRegisterButton = event.isRegistrationRequired === true && isUpcomingLocal;
+                const registerTarget = isUpcomingLocal ? resolveRegisterTarget(event) : null;
+                const showRegisterButton = registerTarget != null;
                 const buyTicketsTarget = isUpcomingLocal ? resolveBuyTicketsTarget(event) : null;
                 // Donation-based events (not ticketed fundraiser)
                 const showDonationButton = isDonationBasedEvent(event) && isUpcomingLocal && !isTicketedFundraiserEvent(event);
@@ -726,12 +733,15 @@ export default function EventsPage() {
                         See Event Details
                       </Link>
 
-                      {showRegisterButton && (
+                      {showRegisterButton && registerTarget && (
                         <Link
-                          href={`/events/${event.id}/register`}
+                          href={registerTarget.href}
                           className="mh-btn mh-btn-register"
                           title="Register"
                           aria-label="Register"
+                          {...(registerTarget.kind === 'external'
+                            ? { target: '_blank', rel: 'noopener noreferrer' }
+                            : {})}
                         >
                           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />

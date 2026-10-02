@@ -13,7 +13,7 @@ import cardGridStyles from './CenteredCardGrid.module.css';
 import { SponsorCard } from '@/components/sponsors/SponsorCard';
 import { SocialIconLink } from '@/components/social/SocialIconLink';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
-import { resolveBuyTicketsTarget } from '@/lib/eventcube/utils';
+import { resolveBuyTicketsTarget, resolveRegisterTarget } from '@/lib/eventcube/utils';
 import { DEFAULT_HEADER_RIBBON_IMAGE } from '@/lib/headerRibbon';
 import EventCardResultsPanel from '@/components/competitions/EventCardResultsPanel';
 import '@/styles/modernist-homepage.css';
@@ -564,7 +564,8 @@ export default function EventDetailsPage() {
                 const isPast = !isUpcomingLocal;
 
                 // Determine which buttons to show
-                const showRegisterButton = event.isRegistrationRequired === true && isUpcomingLocal;
+                const registerTarget = isUpcomingLocal ? resolveRegisterTarget(event) : null;
+                const showRegisterButton = registerTarget != null;
                 const buyTicketsTarget = isUpcomingLocal ? resolveBuyTicketsTarget(event, { internalPath: 'tickets' }) : null;
                 // Show Make a Donation button for donation-based events
                 // BUT NOT if it's a ticketed fundraiser (use fundraiser image instead)
@@ -584,12 +585,15 @@ export default function EventDetailsPage() {
 
                 return (
                   <div className="mh-event-detail-cta-stack absolute top-4 right-4 lg:top-6 lg:right-6 z-10 flex flex-col gap-2">
-                    {showRegisterButton && (
+                    {showRegisterButton && registerTarget && (
                       <Link
-                        href={`/events/${event.id}/register`}
+                        href={registerTarget.href}
                         className="mh-btn mh-btn-register mh-event-detail-cta"
                         title="Register Here"
                         aria-label="Register Here"
+                        {...(registerTarget.kind === 'external'
+                          ? { target: '_blank', rel: 'noopener noreferrer' }
+                          : {})}
                       >
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
