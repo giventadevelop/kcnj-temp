@@ -14,6 +14,8 @@ import { normalizeEventMediasList } from '@/lib/homepage/homepageApiNormalize';
 import { parseExecutiveCommitteeTeamMembersResponse } from '@/lib/parseExecutiveCommitteeTeamMembersResponse';
 import GivebutterDonateButton from '@/components/GivebutterDonateButton';
 import UpcomingEventsSection from '@/components/UpcomingEventsSection';
+import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
+import { resolveRegisterTarget } from '@/lib/eventcube/utils';
 import ModernistPosterHero from '@/components/modernist/ModernistPosterHero';
 import { useTenantSettings } from '@/components/TenantSettingsProvider';
 import { InstagramIcon } from '@/components/icons/InstagramIcon';
@@ -70,6 +72,16 @@ function admissionLabel(event: EventDetailsDTO): string {
 
 function eventHref(event: EventDetailsDTO): string {
   return event.id ? `/events/${event.id}` : '/events';
+}
+
+function isTicketedAdmission(event: EventDetailsDTO): boolean {
+  return admissionLabel(event) === 'Ticketed';
+}
+
+function showsDonateCta(event: EventDetailsDTO): boolean {
+  if (isDonationBasedEvent(event) || isTicketedFundraiserEvent(event)) return true;
+  const raw = (event.admissionType || '').toUpperCase();
+  return raw.includes('DONAT') || raw.includes('FUNDRAIS') || raw.includes('CHARITY');
 }
 
 function isUpcomingStartDate(startDate?: string): boolean {
@@ -503,7 +515,8 @@ function FeaturedEventsModernist({ items }: { items: FeaturedEventWithMedia[] })
         const timeLabel = formatEventTime(event.startTime, event.endTime);
         const desc = (event.description || '').replace(/<[^>]+>/g, '').trim();
         const isPastFeatured = !isUpcomingStartDate(event.startDate);
-        const isTicketed = admissionLabel(event) === 'Ticketed';
+        const isTicketed = isTicketedAdmission(event);
+        const registerTarget = !isPastFeatured && !isTicketed ? resolveRegisterTarget(event) : null;
 
         return (
           <section
@@ -589,9 +602,27 @@ function FeaturedEventsModernist({ items }: { items: FeaturedEventWithMedia[] })
               </div>
 
               <div className="mh-featured-actions">
-                {!isPastFeatured && (
+                {!isPastFeatured && isTicketed && (
                   <Link href={eventHref(event)} className="mh-btn mh-btn-primary">
-                    {isTicketed ? 'Get tickets' : 'View event'}
+                    Get tickets
+                  </Link>
+                )}
+                {!isPastFeatured && registerTarget && (
+                  <Link
+                    href={registerTarget.href}
+                    className="mh-btn mh-btn-primary"
+                    title="Register"
+                    aria-label="Register"
+                    {...(registerTarget.kind === 'external'
+                      ? { target: '_blank', rel: 'noopener noreferrer' }
+                      : {})}
+                  >
+                    Register
+                  </Link>
+                )}
+                {!isPastFeatured && !isTicketed && !registerTarget && (
+                  <Link href={eventHref(event)} className="mh-btn mh-btn-primary">
+                    View event
                   </Link>
                 )}
                 {isPastFeatured && (
@@ -764,9 +795,10 @@ export default function ModernistHomePage({
           .filter(Boolean)
           .join(' · '))) ||
     '';
-  const closeCtaIsTicketed = closeCtaEvent
-    ? admissionLabel(closeCtaEvent) === 'Ticketed'
-    : false;
+  const closeCtaIsTicketed = closeCtaEvent ? isTicketedAdmission(closeCtaEvent) : false;
+  const closeCtaRegister =
+    closeCtaEvent && !closeCtaIsTicketed ? resolveRegisterTarget(closeCtaEvent) : null;
+  const closeCtaShowDonate = closeCtaEvent ? showsDonateCta(closeCtaEvent) : false;
 
   // Same preference as before (ticketed featured → any featured), but upcoming only;
   // then fall back to upcoming events list. Past events never appear here.
@@ -852,11 +884,15 @@ export default function ModernistHomePage({
       {/* Live events happening today */}
       <LiveEventsModernist items={initialLiveEvents} />
 
-      {/* 1b — Red on-sale band */}
-      {onSaleEvent && (
-        <section className="mh-onsale-band" aria-label="On sale now">
+      {/* Band under the hero: ticketed events are on sale; free events say Register now */}
+      {onSaleEvent && (() => {
+        const onSaleIsTicketed = isTicketedAdmission(onSaleEvent);
+        const onSaleRegister = onSaleIsTicketed ? null : resolveRegisterTarget(onSaleEvent);
+        const bandLabel = onSaleIsTicketed ? 'On sale now' : 'Register now';
+        return (
+        <section className="mh-onsale-band" aria-label={bandLabel}>
           <div className="mh-onsale-band-copy">
-            <p className="mh-onsale-band-kicker">On sale now</p>
+            <p className="mh-onsale-band-kicker">{bandLabel}</p>
             <h2>{onSaleEvent.title}</h2>
             {(onSaleEvent.location || onSaleEvent.startDate) && (
               <p className="mh-onsale-band-meta">
@@ -871,11 +907,30 @@ export default function ModernistHomePage({
               </p>
             )}
           </div>
-          <Link href={eventHref(onSaleEvent)} className="mh-btn mh-btn-on-dark mh-onsale-band-cta">
-            Get tickets
-          </Link>
+          {onSaleIsTicketed ? (
+            <Link href={eventHref(onSaleEvent)} className="mh-btn mh-btn-on-dark mh-onsale-band-cta">
+              Get tickets
+            </Link>
+          ) : onSaleRegister ? (
+            <Link
+              href={onSaleRegister.href}
+              className="mh-btn mh-btn-on-dark mh-onsale-band-cta"
+              title="Register"
+              aria-label="Register"
+              {...(onSaleRegister.kind === 'external'
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+            >
+              Register
+            </Link>
+          ) : (
+            <Link href={eventHref(onSaleEvent)} className="mh-btn mh-btn-on-dark mh-onsale-band-cta">
+              View event
+            </Link>
+          )}
         </section>
-      )}
+        );
+      })()}
 
       {/* Featured events — event.isFeaturedEvent checkbox from admin edit */}
       <FeaturedEventsModernist items={featuredItems} />
@@ -888,10 +943,10 @@ export default function ModernistHomePage({
       <WhatWeDoSection />
 
       {/* 1a — About */}
-      <section id="about-us" className="mh-about" aria-label="About the foundation">
+      <section id="about-us" className="mh-about" aria-label="About Us">
         <div>
           <span id="about-us-label" className="mh-eyebrow" style={{ marginBottom: 14 }}>
-            About the foundation
+            About Us
           </span>
           <h2>Preserve and promote the rich cultural heritage of Kerala</h2>
         </div>
@@ -994,17 +1049,42 @@ export default function ModernistHomePage({
           </h3>
           {closeCtaLede ? <p className="mh-close-lede">{closeCtaLede}</p> : null}
           <div className="mh-cta-row">
-            <Link
-              href={eventHref(closeCtaEvent)}
-              className="mh-btn mh-btn-on-dark mh-close-cta-primary"
-              title={`${closeCtaIsTicketed ? 'Get tickets' : 'View event'} for ${closeCtaEvent.title}`}
-              aria-label={`${closeCtaIsTicketed ? 'Get tickets' : 'View event'} for ${closeCtaEvent.title}`}
-            >
-              {closeCtaIsTicketed ? 'Get tickets' : 'View event'}
-            </Link>
-            <GivebutterDonateButton className="mh-btn mh-btn-on-dark mh-close-cta-secondary">
-              Donate
-            </GivebutterDonateButton>
+            {closeCtaIsTicketed ? (
+              <Link
+                href={eventHref(closeCtaEvent)}
+                className="mh-btn mh-btn-on-dark mh-close-cta-primary"
+                title={`Get tickets for ${closeCtaEvent.title}`}
+                aria-label={`Get tickets for ${closeCtaEvent.title}`}
+              >
+                Get tickets
+              </Link>
+            ) : closeCtaRegister ? (
+              <Link
+                href={closeCtaRegister.href}
+                className="mh-btn mh-btn-on-dark mh-close-cta-primary"
+                title={`Register for ${closeCtaEvent.title}`}
+                aria-label={`Register for ${closeCtaEvent.title}`}
+                {...(closeCtaRegister.kind === 'external'
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
+              >
+                Register
+              </Link>
+            ) : (
+              <Link
+                href={eventHref(closeCtaEvent)}
+                className="mh-btn mh-btn-on-dark mh-close-cta-primary"
+                title={`View event for ${closeCtaEvent.title}`}
+                aria-label={`View event for ${closeCtaEvent.title}`}
+              >
+                View event
+              </Link>
+            )}
+            {closeCtaShowDonate && (
+              <GivebutterDonateButton className="mh-btn mh-btn-on-dark mh-close-cta-secondary">
+                Donate
+              </GivebutterDonateButton>
+            )}
           </div>
         </section>
       )}
