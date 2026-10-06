@@ -12,9 +12,6 @@ import {
 } from '@/lib/homepage/featuredEvents';
 import { normalizeEventMediasList } from '@/lib/homepage/homepageApiNormalize';
 import { parseExecutiveCommitteeTeamMembersResponse } from '@/lib/parseExecutiveCommitteeTeamMembersResponse';
-import GivebutterDonateButton from '@/components/GivebutterDonateButton';
-import UpcomingEventsSection from '@/components/UpcomingEventsSection';
-import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
 import { resolveRegisterTarget } from '@/lib/eventcube/utils';
 import ModernistPosterHero from '@/components/modernist/ModernistPosterHero';
 import { useTenantSettings } from '@/components/TenantSettingsProvider';
@@ -78,12 +75,6 @@ function isTicketedAdmission(event: EventDetailsDTO): boolean {
   return admissionLabel(event) === 'Ticketed';
 }
 
-function showsDonateCta(event: EventDetailsDTO): boolean {
-  if (isDonationBasedEvent(event) || isTicketedFundraiserEvent(event)) return true;
-  const raw = (event.admissionType || '').toUpperCase();
-  return raw.includes('DONAT') || raw.includes('FUNDRAIS') || raw.includes('CHARITY');
-}
-
 function isUpcomingStartDate(startDate?: string): boolean {
   if (!startDate) return false;
   const today = new Date();
@@ -93,24 +84,6 @@ function isUpcomingStartDate(startDate?: string): boolean {
   const start = new Date(year, month - 1, day);
   start.setHours(0, 0, 0, 0);
   return start >= today;
-}
-
-function plainTextFromHtml(value?: string | null, maxLength = 180): string {
-  if (!value) return '';
-  const text = value
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  const clipped = text.slice(0, maxLength).replace(/\s+\S*$/, '');
-  return `${clipped || text.slice(0, maxLength)}…`;
 }
 
 function parseSponsorList(data: unknown): EventSponsorsDTO[] {
@@ -758,7 +731,6 @@ export default function ModernistHomePage({
   initialLiveEvents: FeaturedEventWithMedia[];
 }) {
   const {
-    showEventsSection,
     showTeamSection,
     showSponsorsSection,
     loading: tenantSettingsLoading,
@@ -784,22 +756,7 @@ export default function ModernistHomePage({
       : initialFeaturedEvents.slice(0, MAX_FEATURED_EVENTS_HOMEPAGE);
   const upcomingFeaturedEvent =
     featuredItems.find((item) => isUpcomingStartDate(item.event.startDate))?.event ?? null;
-  // Join us / On sale — upcoming only; hide sections when nothing upcoming
-  const closeCtaEvent = upcomingFeaturedEvent ?? upcomingEvents[0] ?? null;
-  const closeCtaHeading = closeCtaEvent?.title?.trim() || '';
-  const closeCtaLede =
-    (closeCtaEvent &&
-      (plainTextFromHtml(closeCtaEvent.description) ||
-        closeCtaEvent.caption?.trim() ||
-        [closeCtaEvent.location, formatEventDate(closeCtaEvent.startDate, closeCtaEvent.timezone)]
-          .filter(Boolean)
-          .join(' · '))) ||
-    '';
-  const closeCtaIsTicketed = closeCtaEvent ? isTicketedAdmission(closeCtaEvent) : false;
-  const closeCtaRegister =
-    closeCtaEvent && !closeCtaIsTicketed ? resolveRegisterTarget(closeCtaEvent) : null;
-  const closeCtaShowDonate = closeCtaEvent ? showsDonateCta(closeCtaEvent) : false;
-
+  // On sale band — upcoming only; hide when nothing upcoming
   // Same preference as before (ticketed featured → any featured), but upcoming only;
   // then fall back to upcoming events list. Past events never appear here.
   const upcomingTicketed =
@@ -935,10 +892,6 @@ export default function ModernistHomePage({
       {/* Featured events — event.isFeaturedEvent checkbox from admin edit */}
       <FeaturedEventsModernist items={featuredItems} />
 
-      {!tenantSettingsLoading && showEventsSection && (
-        <UpcomingEventsSection variant="modernist" />
-      )}
-
       {/* 1a — What we do (interactive cards) */}
       <WhatWeDoSection />
 
@@ -1037,55 +990,6 @@ export default function ModernistHomePage({
               })}
             </div>
           )}
-        </section>
-      )}
-
-      {/* Close CTA — upcoming featured or next upcoming event only; hidden when none */}
-      {closeCtaEvent && (
-        <section className="mh-close" aria-label="Call to action">
-          <p className="mh-close-kicker">Join us</p>
-          <h3>
-            <span style={{ display: 'block' }}>{closeCtaHeading}</span>
-          </h3>
-          {closeCtaLede ? <p className="mh-close-lede">{closeCtaLede}</p> : null}
-          <div className="mh-cta-row">
-            {closeCtaIsTicketed ? (
-              <Link
-                href={eventHref(closeCtaEvent)}
-                className="mh-btn mh-btn-on-dark mh-close-cta-primary"
-                title={`Get tickets for ${closeCtaEvent.title}`}
-                aria-label={`Get tickets for ${closeCtaEvent.title}`}
-              >
-                Get tickets
-              </Link>
-            ) : closeCtaRegister ? (
-              <Link
-                href={closeCtaRegister.href}
-                className="mh-btn mh-btn-on-dark mh-close-cta-primary"
-                title={`Register for ${closeCtaEvent.title}`}
-                aria-label={`Register for ${closeCtaEvent.title}`}
-                {...(closeCtaRegister.kind === 'external'
-                  ? { target: '_blank', rel: 'noopener noreferrer' }
-                  : {})}
-              >
-                Register
-              </Link>
-            ) : (
-              <Link
-                href={eventHref(closeCtaEvent)}
-                className="mh-btn mh-btn-on-dark mh-close-cta-primary"
-                title={`View event for ${closeCtaEvent.title}`}
-                aria-label={`View event for ${closeCtaEvent.title}`}
-              >
-                View event
-              </Link>
-            )}
-            {closeCtaShowDonate && (
-              <GivebutterDonateButton className="mh-btn mh-btn-on-dark mh-close-cta-secondary">
-                Donate
-              </GivebutterDonateButton>
-            )}
-          </div>
         </section>
       )}
 
