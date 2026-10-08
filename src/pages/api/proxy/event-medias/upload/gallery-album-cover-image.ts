@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getCachedApiJwt, generateApiJwt } from '@/lib/api/jwt';
 import { getTenantId, getApiBaseUrl } from '@/lib/env';
-
-const API_BASE_URL = getApiBaseUrl();
+import { getRawBody } from '@/lib/getRawBody';
 
 export const config = {
   api: {
@@ -10,8 +9,16 @@ export const config = {
   },
 };
 
+/**
+ * Proxies multipart gallery album cover upload to Spring:
+ * POST /api/event-medias/upload/gallery-album-cover-image
+ *
+ * Buffers the body and uses native fetch. Streaming `req` through node-fetch
+ * closes the upload early and the cover never reaches the backend.
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    const API_BASE_URL = getApiBaseUrl();
     if (!API_BASE_URL) {
       res.status(500).json({ error: 'API base URL not configured' });
       return;
@@ -42,8 +49,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const isPublicValue = Array.isArray(isPublic) ? isPublic[0] : isPublic;
     const isPublicBoolean = String(isPublicValue) === 'true';
 
-    const apiUrl = `${API_BASE_URL}/api/event-medias/upload/gallery-album-cover-image`;
-
     const queryParams = new URLSearchParams({
       albumId: albumIdValue,
       tenantId: tenantIdValue,
@@ -52,52 +57,67 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       isPublic: isPublicBoolean.toString(),
     });
 
-    const apiUrlWithParams = `${apiUrl}?${queryParams.toString()}`;
-
-    const fetch = (await import('node-fetch')).default;
+    const apiUrlWithParams = `${API_BASE_URL}/api/event-medias/upload/gallery-album-cover-image?${queryParams.toString()}`;
 
     let token = await getCachedApiJwt();
     if (!token) {
       token = await generateApiJwt();
     }
 
+    const rawBody = await getRawBody(req);
+
     const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
       'X-Tenant-ID': tenantIdValue,
+      'content-length': String(rawBody.length),
     };
 
     if (req.headers['content-type']) {
-      headers['content-type'] = req.headers['content-type'];
+      headers['content-type'] = Array.isArray(req.headers['content-type'])
+        ? req.headers['content-type'][0]
+        : req.headers['content-type'];
     }
-    if (req.headers['content-length']) {
-      headers['content-length'] = req.headers['content-length'];
-    }
+
+    console.log('[gallery-album-cover-image] Uploading', {
+      albumId: albumIdValue,
+      tenantId: tenantIdValue,
+      bytes: rawBody.length,
+    });
 
     const apiRes = await fetch(apiUrlWithParams, {
       method: 'POST',
       headers,
-      body: req,
-      duplex: 'half',
+      body: rawBody,
     });
 
     if (apiRes.status >= 200 && apiRes.status < 300) {
+      const text = await apiRes.text();
       res.status(apiRes.status);
-
-      for (const [key, value] of Object.entries(apiRes.headers.raw())) {
-        if (key.toLowerCase() !== 'content-encoding' && key.toLowerCase() !== 'transfer-encoding') {
-          res.setHeader(key, value);
-        }
-      }
-
-      const data = await apiRes.json();
-      res.json(data);
-    } else {
-      const errorText = await apiRes.text();
-      res.status(apiRes.status).json({ error: errorText });
+      res.setHeader('Content-Type', apiRes.headers.get('content-type') || 'application/json');
+      res.send(text);
+      return;
     }
+
+    let backendDetail = '';
+    try {
+      backendDetail = await apiRes.text();
+    } catch {
+      /* ignore */
+    }
+
+    console.error('[gallery-album-cover-image] Backend upload failed', {
+      status: apiRes.status,
+      detail: backendDetail.slice(0, 1000),
+    });
+
+    res.status(apiRes.status >= 400 ? apiRes.status : 500).json({
+      error: backendDetail || 'Failed to upload gallery album cover image',
+      status: apiRes.status,
+      details: backendDetail || undefined,
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error('Gallery album cover image upload error:', error);
+    console.error('[gallery-album-cover-image] Proxy error:', error);
     res.status(500).json({ error: 'Failed to upload gallery album cover image', details: message });
   }
 }

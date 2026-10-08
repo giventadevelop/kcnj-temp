@@ -6,6 +6,16 @@ import Image from 'next/image';
 import type { GalleryAlbumDTO, EventMediaDTO } from '@/types';
 import { createAlbumYoutubeMediaServer, setAlbumCoverImageServer } from '../../ApiServerActions';
 import { Modal } from '@/components/Modal';
+import ErrorDialog from '@/components/ErrorDialog';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   isYoutubeGalleryMedia,
   looksLikeYoutubeUrl,
@@ -20,13 +30,74 @@ interface AlbumMediaClientPageProps {
   userProfileId: number | null;
 }
 
+const ACCEPTED_UPLOAD_NAME = /\.(jpe?g|png|gif|webp|bmp|svg|mp4|mov|webm|avi|mkv|pdf|doc|docx|ppt|pptx|xls|xlsx)$/i;
+
+function isAcceptedUploadFile(file: File): boolean {
+  if (file.type.startsWith('image/') || file.type.startsWith('video/')) return true;
+  return ACCEPTED_UPLOAD_NAME.test(file.name);
+}
+
+async function collectDirectoryFiles(directory: FileSystemDirectoryHandle): Promise<File[]> {
+  const collected: File[] = [];
+  for await (const entry of directory.values()) {
+    if (entry.kind === 'file') {
+      collected.push(await entry.getFile());
+    } else if (entry.kind === 'directory') {
+      collected.push(...(await collectDirectoryFiles(entry)));
+    }
+  }
+  return collected;
+}
+
+function fileFromEntry(entry: FileSystemFileEntry): Promise<File> {
+  return new Promise((resolve, reject) => entry.file(resolve, reject));
+}
+
+function filesFromDirectory(directory: FileSystemDirectoryEntry): Promise<File[]> {
+  const reader = directory.createReader();
+  const files: File[] = [];
+  const readBatch = (): Promise<void> =>
+    new Promise((resolve, reject) => {
+      reader.readEntries((entries) => {
+        if (entries.length === 0) {
+          resolve();
+          return;
+        }
+        Promise.all(
+          entries.map(async (entry) => {
+            if (entry.isFile) {
+              files.push(await fileFromEntry(entry as FileSystemFileEntry));
+            } else if (entry.isDirectory) {
+              files.push(...(await filesFromDirectory(entry as FileSystemDirectoryEntry)));
+            }
+          })
+        )
+          .then(() => readBatch())
+          .then(resolve)
+          .catch(reject);
+      }, reject);
+    });
+  return readBatch().then(() => files);
+}
+
+/** EventMediaDTO marks these @NotNull, and the PATCH endpoint still validates them. */
+function requiredMediaPatchFields(media: EventMediaDTO) {
+  return {
+    createdAt: media.createdAt || new Date().toISOString(),
+    isHomePageHeroImage: Boolean(media.isHomePageHeroImage ?? false),
+    isFeaturedEventImage: Boolean(media.isFeaturedEventImage ?? false),
+    isLiveEventImage: Boolean(media.isLiveEventImage ?? false),
+  };
+}
+
 export default function AlbumMediaClientPage({
   albumId,
   album,
   initialMediaList,
   userProfileId,
 }: AlbumMediaClientPageProps) {
-  const [files, setFiles] = useState<FileList | null>(null);
+  const [files, setFiles] = useState<File[] | null>(null);
+  const [pendingFolder, setPendingFolder] = useState<{ name: string; files: File[] } | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -46,8 +117,8 @@ export default function AlbumMediaClientPage({
   const [editLoading, setEditLoading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [uploadedCount, setUploadedCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const folderInputRef = useRef<HTMLInputElement>(null);
   const uploadFormDivRef = useRef<HTMLDivElement>(null);
   const [videoRows, setVideoRows] = useState<Array<{ key: string; youtubeUrl: string; title: string; description: string }>>([
     { key: 'video-1', youtubeUrl: '', title: '', description: '' },
@@ -56,6 +127,10 @@ export default function AlbumMediaClientPage({
   const [savingVideos, setSavingVideos] = useState(false);
   const [videoMessage, setVideoMessage] = useState<string | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'delete' | 'remove'; media: EventMediaDTO } | null>(null);
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [errorDialog, setErrorDialog] = useState<{ title: string; message: string } | null>(null);
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
@@ -185,15 +260,38 @@ export default function AlbumMediaClientPage({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFiles(e.target.files);
+  const queueSelectedFiles = (picked: File[], folderName = '') => {
+    const accepted = picked.filter(isAcceptedUploadFile);
+    if (accepted.length === 0) {
+      setErrorDialog({
+        title: 'No files to upload',
+        message: 'Choose images, videos, PDFs, or office files.',
+      });
+      return;
     }
+    setPendingFolder({ name: folderName, files: accepted });
   };
 
-  const handleFolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFiles(e.target.files);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const picked = e.target.files ? Array.from(e.target.files) : [];
+    e.target.value = '';
+    if (picked.length > 0) queueSelectedFiles(picked);
+  };
+
+  const handleUploadFolderClick = async () => {
+    const picker = window.showDirectoryPicker;
+    if (typeof picker !== 'function') {
+      fileInputRef.current?.click();
+      return;
+    }
+    try {
+      const directory = await picker.call(window, { mode: 'read' });
+      const picked = await collectDirectoryFiles(directory);
+      window.setTimeout(() => queueSelectedFiles(picked, directory.name), 0);
+    } catch (error: unknown) {
+      if (error instanceof DOMException && (error.name === 'AbortError' || error.name === 'NotAllowedError')) return;
+      const text = error instanceof Error ? error.message : 'The folder could not be read.';
+      setErrorDialog({ title: 'Could not read folder', message: text });
     }
   };
 
@@ -214,10 +312,30 @@ export default function AlbumMediaClientPage({
     e.stopPropagation();
     setIsDragOver(false);
 
-    const droppedFiles = e.dataTransfer.files;
-    if (droppedFiles && droppedFiles.length > 0) {
-      setFiles(droppedFiles);
+    const itemList = e.dataTransfer.items;
+    const entries: Array<FileSystemEntry | null> = [];
+    if (itemList) {
+      for (let i = 0; i < itemList.length; i++) {
+        entries.push(itemList[i].webkitGetAsEntry?.() ?? null);
+      }
     }
+    const fallbackFiles = Array.from(e.dataTransfer.files);
+
+    void (async () => {
+      const picked: File[] = [];
+      let folderName = '';
+      for (const entry of entries) {
+        if (!entry) continue;
+        if (entry.isFile) {
+          picked.push(await fileFromEntry(entry as FileSystemFileEntry));
+        } else if (entry.isDirectory) {
+          if (!folderName) folderName = entry.name;
+          picked.push(...(await filesFromDirectory(entry as FileSystemDirectoryEntry)));
+        }
+      }
+      const dropped = picked.length > 0 ? picked : fallbackFiles;
+      if (dropped.length > 0) queueSelectedFiles(dropped, folderName);
+    })();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -377,6 +495,7 @@ export default function AlbumMediaClientPage({
         }
       }
 
+      setUploadedCount(files.length);
       setShowSuccessDialog(true);
       setFiles(null);
       setTitle('');
@@ -385,7 +504,6 @@ export default function AlbumMediaClientPage({
       setDisplayOrder(undefined);
       setStartDisplayingFromDate('');
       if (fileInputRef.current) fileInputRef.current.value = '';
-      if (folderInputRef.current) folderInputRef.current.value = '';
 
       // Reset to page 0 to show the newly uploaded media (newest first)
       // The useEffect will trigger loadMedia() when page changes
@@ -396,11 +514,6 @@ export default function AlbumMediaClientPage({
       setTimeout(async () => {
         await loadMedia();
       }, 500);
-
-      // Auto-close success dialog after 3 seconds
-      setTimeout(() => {
-        setShowSuccessDialog(false);
-      }, 3000);
     } catch (err: any) {
       setMessage(`Upload error: ${err.message}`);
     } finally {
@@ -418,6 +531,7 @@ export default function AlbumMediaClientPage({
         id: editMedia.id,
         tenantId,
         updatedAt: new Date().toISOString(),
+        ...requiredMediaPatchFields(editMedia),
       };
 
       const res = await fetch(`/api/proxy/event-medias/${editMedia.id}`, {
@@ -434,14 +548,16 @@ export default function AlbumMediaClientPage({
       await loadMedia();
       setEditMedia(null);
     } catch (error: any) {
-      alert(`Error: ${error.message}`);
+      setErrorDialog({
+        title: 'Could not save changes',
+        message: error?.message || 'The media details could not be saved.',
+      });
     } finally {
       setEditLoading(false);
     }
   };
 
   const handleDelete = async (mediaId: number) => {
-    if (!confirm('Are you sure you want to delete this media?')) return;
     try {
       const tenantId = process.env.NEXT_PUBLIC_TENANT_ID;
       const res = await fetch(`/api/proxy/event-medias/${mediaId}?tenantId.equals=${tenantId}`, {
@@ -461,22 +577,25 @@ export default function AlbumMediaClientPage({
         setPage(page - 1);
       }
     } catch (error: any) {
-      alert(`Error: ${error.message}`);
+      throw new Error(error?.message || 'The media file could not be deleted.');
     }
   };
 
-  const handleRemoveFromAlbum = async (mediaId: number) => {
-    if (!confirm('Remove this media from the album? The media file will not be deleted.')) return;
+  const handleRemoveFromAlbum = async (media: EventMediaDTO) => {
+    if (!media.id) {
+      throw new Error('The media file could not be removed from this album.');
+    }
     try {
       const tenantId = process.env.NEXT_PUBLIC_TENANT_ID;
       const payload = {
-        id: mediaId,
+        id: media.id,
         albumId: null,
         tenantId,
         updatedAt: new Date().toISOString(),
+        ...requiredMediaPatchFields(media),
       };
 
-      const res = await fetch(`/api/proxy/event-medias/${mediaId}`, {
+      const res = await fetch(`/api/proxy/event-medias/${media.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/merge-patch+json' },
         body: JSON.stringify(payload),
@@ -495,17 +614,53 @@ export default function AlbumMediaClientPage({
         setPage(page - 1);
       }
     } catch (error: any) {
-      alert(`Error: ${error.message}`);
+      throw new Error(error?.message || 'The media file could not be removed from this album.');
+    }
+  };
+
+  const openMediaConfirm = (type: 'delete' | 'remove', media: EventMediaDTO) => {
+    setConfirmError(null);
+    setConfirmAction({ type, media });
+  };
+
+  const closeMediaConfirm = () => {
+    if (confirmBusy) return;
+    setConfirmAction(null);
+    setConfirmError(null);
+  };
+
+  const handleConfirmMediaAction = async () => {
+    if (!confirmAction?.media.id) return;
+    setConfirmBusy(true);
+    setConfirmError(null);
+    try {
+      if (confirmAction.type === 'delete') {
+        await handleDelete(confirmAction.media.id);
+      } else {
+        await handleRemoveFromAlbum(confirmAction.media);
+      }
+      setConfirmAction(null);
+    } catch (error: unknown) {
+      const text = error instanceof Error ? error.message : 'Something went wrong.';
+      setConfirmError(text);
+    } finally {
+      setConfirmBusy(false);
     }
   };
 
   const handleSetCoverImage = async (media: EventMediaDTO) => {
     if (!media.fileUrl) {
-      alert('Media does not have a file URL');
+      setErrorDialog({
+        title: 'Cannot set cover',
+        message: 'This item does not have an image file that can be used as the album cover.',
+      });
       return;
     }
     if (media.id == null) {
-      alert('Media does not have a valid ID');
+      setErrorDialog({
+        title: 'Cannot set cover',
+        message: 'This item does not have a valid id.',
+      });
       return;
     }
     setSettingCoverMediaId(media.id);
@@ -513,8 +668,8 @@ export default function AlbumMediaClientPage({
       await setAlbumCoverImageServer(albumId, media.fileUrl);
       setCoverImageUrl(media.fileUrl);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to set cover image';
-      alert(`Error: ${message}`);
+      const text = error instanceof Error ? error.message : 'Failed to set cover image';
+      setErrorDialog({ title: 'Could not set cover', message: text });
     } finally {
       setSettingCoverMediaId(null);
     }
@@ -681,14 +836,6 @@ export default function AlbumMediaClientPage({
               className="hidden"
               accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.svg"
             />
-            <input
-              type="file"
-              {...({ webkitdirectory: '' } as any)}
-              ref={folderInputRef}
-              onChange={handleFolderChange}
-              className="hidden"
-              accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.svg"
-            />
           </div>
 
           {/* File Selection Buttons */}
@@ -705,7 +852,7 @@ export default function AlbumMediaClientPage({
             </button>
             <button
               type="button"
-              onClick={() => folderInputRef.current?.click()}
+              onClick={() => void handleUploadFolderClick()}
               className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded shadow-sm border border-green-700 transition-colors inline-block text-center min-w-[160px] flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1009,7 +1156,7 @@ export default function AlbumMediaClientPage({
                       </svg>
                     </button>
                     <button
-                      onClick={() => handleRemoveFromAlbum(media.id!)}
+                      onClick={() => openMediaConfirm('remove', media)}
                       className="flex-shrink-0 w-14 h-14 rounded-xl bg-orange-100 hover:bg-orange-200 flex items-center justify-center transition-all duration-300 hover:scale-110"
                       title="Remove from Album"
                       aria-label="Remove from Album"
@@ -1020,7 +1167,7 @@ export default function AlbumMediaClientPage({
                       </svg>
                     </button>
                     <button
-                      onClick={() => handleDelete(media.id!)}
+                      onClick={() => openMediaConfirm('delete', media)}
                       className="flex-shrink-0 w-14 h-14 rounded-xl bg-red-100 hover:bg-red-200 flex items-center justify-center transition-all duration-300 hover:scale-110"
                       title="Delete Media"
                       aria-label="Delete Media"
@@ -1104,22 +1251,159 @@ export default function AlbumMediaClientPage({
         </div>
       )}
 
-      {/* Success Dialog */}
-      {showSuccessDialog && (
-        <Modal
-          open={showSuccessDialog}
-          onClose={() => setShowSuccessDialog(false)}
-          title="Upload Successful"
-        >
-          <div className="text-center py-4">
-            <svg className="w-16 h-16 text-green-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-lg font-semibold text-gray-900 mb-2">Media uploaded successfully!</p>
-            <p className="text-sm text-gray-600">The media files have been added to this album.</p>
-          </div>
-        </Modal>
-      )}
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Upload complete</AlertDialogTitle>
+            <AlertDialogDescription>
+              {uploadedCount === 1
+                ? '1 file was added to this album.'
+                : `${uploadedCount} files were added to this album.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-row gap-3 sm:gap-4">
+            <button
+              type="button"
+              onClick={() => setShowSuccessDialog(false)}
+              className="flex-1 flex-shrink-0 h-14 rounded-xl bg-green-100 hover:bg-green-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105"
+            >
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-200 flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span className="font-semibold text-green-700">OK</span>
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={pendingFolder != null}
+        onOpenChange={(open) => {
+          if (!open) setPendingFolder(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Upload folder</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingFolder ? (
+                pendingFolder.name ? (
+                  <>
+                    Upload {pendingFolder.files.length} file{pendingFolder.files.length === 1 ? '' : 's'} from{' '}
+                    <strong>&quot;{pendingFolder.name}&quot;</strong> to this album?
+                  </>
+                ) : (
+                  <>
+                    Upload {pendingFolder.files.length} file{pendingFolder.files.length === 1 ? '' : 's'} to this album?
+                  </>
+                )
+              ) : (
+                'Upload the selected files to this album?'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-row gap-3 sm:gap-4">
+            <AlertDialogCancel
+              onClick={() => setPendingFolder(null)}
+              className="flex-1 flex-shrink-0 h-14 rounded-xl bg-blue-100 hover:bg-blue-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105"
+            >
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-200 flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <span className="font-semibold text-blue-700">Cancel</span>
+            </AlertDialogCancel>
+            <button
+              type="button"
+              onClick={() => {
+                if (!pendingFolder) return;
+                setFiles(pendingFolder.files);
+                setPendingFolder(null);
+              }}
+              className="flex-1 flex-shrink-0 h-14 rounded-xl bg-green-100 hover:bg-green-200 flex items-center justify-center gap-3 transition-all duration-300 hover:scale-105"
+            >
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-200 flex items-center justify-center">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span className="font-semibold text-green-700">Upload files</span>
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={confirmAction != null}
+        onOpenChange={(open) => {
+          if (!open) closeMediaConfirm();
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.type === 'delete' ? 'Delete media' : 'Remove from album'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.type === 'delete' ? (
+                <>
+                  Delete <strong>&quot;{confirmAction.media.title || 'Untitled'}&quot;</strong> permanently?
+                  The file will be removed from the library and from this album.
+                </>
+              ) : confirmAction ? (
+                <>
+                  Remove <strong>&quot;{confirmAction.media.title || 'Untitled'}&quot;</strong> from this album?
+                  The media file will stay in the library.
+                </>
+              ) : (
+                'Confirm this action'
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {confirmError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <p className="text-sm font-medium text-red-800">{confirmError}</p>
+            </div>
+          )}
+          <AlertDialogFooter className="flex flex-row gap-3 sm:gap-4">
+            <AlertDialogCancel
+              onClick={closeMediaConfirm}
+              disabled={confirmBusy}
+              className="flex-1 h-14 rounded-xl bg-blue-100 hover:bg-blue-200 flex items-center justify-center gap-3 text-blue-700 font-semibold"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <button
+              type="button"
+              onClick={() => void handleConfirmMediaAction()}
+              disabled={confirmBusy}
+              className={`flex-1 h-14 rounded-xl flex items-center justify-center gap-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${
+                confirmAction?.type === 'delete'
+                  ? 'bg-red-100 hover:bg-red-200 text-red-700'
+                  : 'bg-orange-100 hover:bg-orange-200 text-orange-800'
+              }`}
+            >
+              {confirmBusy
+                ? confirmAction?.type === 'delete'
+                  ? 'Deleting...'
+                  : 'Removing...'
+                : confirmAction?.type === 'delete'
+                  ? 'Delete media'
+                  : 'Remove from album'}
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <ErrorDialog
+        isOpen={errorDialog != null}
+        onClose={() => setErrorDialog(null)}
+        title={errorDialog?.title || 'Something went wrong'}
+        message={errorDialog?.message || ''}
+      />
 
       {/* Edit Media Modal */}
       {editMedia && (
