@@ -587,17 +587,30 @@ export default function AlbumMediaClientPage({
     }
     try {
       const tenantId = process.env.NEXT_PUBLIC_TENANT_ID;
+
+      // Backend PATCH ignores null fields, so albumId:null never clears the album.
+      // PUT replaces the full record, which requires the complete current DTO.
+      const currentRes = await fetch(`/api/proxy/event-medias/${media.id}`, { cache: 'no-store' });
+      if (!currentRes.ok) {
+        throw new Error(await currentRes.text());
+      }
+      const current: EventMediaDTO = await currentRes.json();
+
       const payload = {
+        ...current,
         id: media.id,
         albumId: null,
-        tenantId,
+        tenantId: current.tenantId || tenantId,
+        title: current.title || current.fileUrl?.split('/').pop() || `Media ${media.id}`,
+        eventMediaType: current.eventMediaType || current.contentType || 'image/jpeg',
+        storageType: current.storageType || 'S3',
         updatedAt: new Date().toISOString(),
-        ...requiredMediaPatchFields(media),
+        ...requiredMediaPatchFields(current),
       };
 
       const res = await fetch(`/api/proxy/event-medias/${media.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/merge-patch+json' },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
