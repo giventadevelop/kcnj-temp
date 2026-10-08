@@ -6,16 +6,18 @@ import {
   fetchProfileAffiliationsServer,
   fetchProfileMediaAssetsServer,
   fetchProfileProjectsServer,
+  fetchProfileServicesServer,
 } from './ApiServerActions';
 
 export default async function ProfileSiteAdminPage() {
-  const [profile, writings, achievements, affiliations, assets, projects] = await Promise.all([
+  const [profile, writings, achievements, affiliations, assets, projects, services] = await Promise.all([
     fetchPublicProfileServer(),
     fetchProfileWritingsServer(false),
     fetchProfileAchievementsServer(),
     fetchProfileAffiliationsServer(),
     fetchProfileMediaAssetsServer(),
     fetchProfileProjectsServer(),
+    fetchProfileServicesServer(),
   ]);
 
   return (
@@ -26,6 +28,7 @@ export default async function ProfileSiteAdminPage() {
       initialAffiliations={affiliations}
       initialAssets={assets}
       initialProjects={projects}
+      initialServices={services}
     />
   );
 }

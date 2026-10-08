@@ -3,7 +3,15 @@
 import { fetchWithJwtRetry } from '@/lib/proxyHandler';
 import { getApiBaseUrl, getTenantId } from '@/lib/env';
 import { parseProfileSiteListResponse } from '@/lib/parseProfileSiteResponses';
-import type { PublicProfileDTO, ProfileWritingDTO, ProfileMediaAssetDTO, ProfileAffiliationDTO } from '@/types/profileSite';
+import type {
+  PublicProfileDTO,
+  ProfileWritingDTO,
+  ProfileMediaAssetDTO,
+  ProfileAffiliationDTO,
+  ProfileServiceDTO,
+  ProfileAchievementDTO,
+  ProfileProjectDTO,
+} from '@/types/profileSite';
 import type { TenantOrganizationDTO } from '@/types';
 
 function getApiBase() {
@@ -166,6 +174,35 @@ export async function fetchDownloadableProfileMediaAssetsServer(): Promise<Profi
   }
 }
 
+/** Active professional services for the current tenant (public listing). */
+export async function fetchActiveProfileServicesServer(): Promise<ProfileServiceDTO[]> {
+  try {
+    const params = new URLSearchParams({
+      'tenantId.equals': getTenantId(),
+      'isActive.equals': 'true',
+      sort: 'displayOrder,asc',
+      size: '100',
+    });
+    const res = await fetchWithJwtRetry(`${getApiBase()}/api/profile-services?${params}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const list = parseProfileSiteListResponse<ProfileServiceDTO>(data);
+    return list.filter((s) => s.isActive !== false);
+  } catch (error) {
+    console.error('[fetchActiveProfileServicesServer]', error);
+    return [];
+  }
+}
+
+export async function fetchProfileServiceBySlugServer(slug: string): Promise<ProfileServiceDTO | null> {
+  if (!slug?.trim()) return null;
+  const list = await fetchActiveProfileServicesServer();
+  const needle = slug.trim().toLowerCase();
+  return list.find((s) => s.slug?.trim().toLowerCase() === needle) ?? null;
+}
+
 /**
  * Profile affiliations for Links page (optional org URLs).
  */
@@ -187,3 +224,42 @@ export async function fetchProfileAffiliationsForLinksServer(): Promise<ProfileA
     return [];
   }
 }
+
+export async function fetchProfileAchievementsServer(): Promise<ProfileAchievementDTO[]> {
+  try {
+    const params = new URLSearchParams({
+      'tenantId.equals': getTenantId(),
+      sort: 'displayOrder,asc',
+      size: '100',
+    });
+    const res = await fetchWithJwtRetry(`${getApiBase()}/api/profile-achievements?${params}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return parseProfileSiteListResponse<ProfileAchievementDTO>(data);
+  } catch (error) {
+    console.error('[fetchProfileAchievementsServer]', error);
+    return [];
+  }
+}
+
+export async function fetchProfileProjectsServer(): Promise<ProfileProjectDTO[]> {
+  try {
+    const params = new URLSearchParams({
+      'tenantId.equals': getTenantId(),
+      sort: 'displayOrder,asc',
+      size: '100',
+    });
+    const res = await fetchWithJwtRetry(`${getApiBase()}/api/profile-projects?${params}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return parseProfileSiteListResponse<ProfileProjectDTO>(data);
+  } catch (error) {
+    console.error('[fetchProfileProjectsServer]', error);
+    return [];
+  }
+}
+

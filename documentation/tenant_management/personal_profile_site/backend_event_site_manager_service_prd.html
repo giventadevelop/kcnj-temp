@@ -267,6 +267,31 @@ fileType, fileSizeBytes, isDownloadable, requiresEmail</pre>
         <li>Re-test admin Profile site → Projects tab + Booking URL in mosc-temp.</li>
     </ol>
 
+    <h2>9.2 Phase C — professional services catalog</h2>
+    <div class="info-box">
+        <p><strong>Status (2026-10-08):</strong> Implemented. Frontend (kcnj-prod) plus admin (<code>event-site-manager</code>), Liquibase + REST in <code>event-site-manager-service</code>, and schema/TenantSettings mapping in <code>event-site-manager-batch-jobs</code>.</p>
+        <p><strong>Liquibase:</strong> <code>config/liquibase/changelog/20261008120000_profile_service.xml</code> (included from <code>master.xml</code>)</p>
+        <p><strong>Manual SQL:</strong> <code>migrations/004_profile_service.sql</code></p>
+        <p><strong>Canonical DDL:</strong> <code>Event_Site_Manager_Latest_Schema.sql</code> in the database repo, service <code>sqls</code> copy, batch-jobs <code>database</code> copy, and kcnj-prod <code>code_html_template</code>.</p>
+    </div>
+    <table>
+        <thead><tr><th>Change</th><th>API / field</th></tr></thead>
+        <tbody>
+            <tr><td><code>tenant_settings.show_profile_services_section</code></td><td><code>showProfileServicesSection</code> on <code>/api/tenant-settings</code></td></tr>
+            <tr><td>New table <code>profile_service</code></td><td>Full CRUD at <code>/api/profile-services</code> (clone of profile-projects stack)</td></tr>
+            <tr><td>Criteria</td><td><code>tenantId.equals</code>, optional <code>isActive.equals</code>, <code>category.equals</code>, <code>slug.equals</code>, sort <code>displayOrder,asc</code></td></tr>
+        </tbody>
+    </table>
+    <p>Enums: category <code>TAX|FINANCIAL|LEGAL|CONSULTING|COACHING|TECHNOLOGY|HEALTHCARE|EDUCATION|OTHER</code>; price unit <code>HOUR|SESSION|PROJECT|MONTH|YEAR|CUSTOM</code> (nullable). Sequence: <code>profile_service_id_seq</code>.</p>
+    <h3>9.3 Phase C deploy checklist</h3>
+    <ol>
+        <li>Deploy / restart <code>event-site-manager-service</code> so Liquibase applies <code>20261008120000_profile_service.xml</code>.</li>
+        <li>Restart <code>event-site-manager-batch-jobs</code> after the column exists (Hibernate validate on TenantSettings).</li>
+        <li>Confirm <code>GET /api/profile-services?tenantId.equals=…&amp;isActive.equals=true</code> returns 200 (empty list OK).</li>
+        <li>Re-test kcnj-prod admin Profile site → Services tab; public homepage + <code>/services</code>.</li>
+        <li>Re-test event-site-manager admin Profile site → Professional Services collection + tenant toggle.</li>
+    </ol>
+
     <h2>10. Out of scope (v1)</h2>
     <ul>
         <li>Batch jobs reading profile tables (see batch-jobs PRD — not required for Phase B content)</li>

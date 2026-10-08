@@ -13,6 +13,7 @@ export interface SiteTypePresetSettings {
   showProfileMediaDownloadsSection?: boolean;
   showProfileContactSection?: boolean;
   showProfileProjectsSection?: boolean;
+  showProfileServicesSection?: boolean;
   showHeaderHome?: boolean;
   showHeaderAbout?: boolean;
   showHeaderEvents?: boolean;
@@ -23,6 +24,10 @@ export interface SiteTypePresetSettings {
   showHeaderNews?: boolean;
   showHeaderDownloads?: boolean;
   showHeaderLinks?: boolean;
+  showHeaderServices?: boolean;
+  showHeaderAchievements?: boolean;
+  showHeaderAffiliations?: boolean;
+  showHeaderProjects?: boolean;
 }
 
 const EVENT_ORG_PRESET: SiteTypePresetSettings = {
@@ -37,6 +42,7 @@ const EVENT_ORG_PRESET: SiteTypePresetSettings = {
   showProfileMediaDownloadsSection: false,
   showProfileContactSection: false,
   showProfileProjectsSection: false,
+  showProfileServicesSection: false,
   showHeaderHome: true,
   showHeaderAbout: true,
   showHeaderEvents: true,
@@ -47,6 +53,10 @@ const EVENT_ORG_PRESET: SiteTypePresetSettings = {
   showHeaderNews: false,
   showHeaderDownloads: false,
   showHeaderLinks: false,
+  showHeaderServices: false,
+  showHeaderAchievements: false,
+  showHeaderAffiliations: false,
+  showHeaderProjects: false,
 };
 
 const SPORTS_PRESET: SiteTypePresetSettings = {
@@ -72,6 +82,7 @@ const PERSONAL_PROFILE_PRESET: SiteTypePresetSettings = {
   showProfileMediaDownloadsSection: true,
   showProfileContactSection: true,
   showProfileProjectsSection: true,
+  showProfileServicesSection: true,
   showHeaderHome: true,
   showHeaderAbout: true,
   showHeaderEvents: false,
@@ -82,6 +93,10 @@ const PERSONAL_PROFILE_PRESET: SiteTypePresetSettings = {
   showHeaderNews: true,
   showHeaderDownloads: true,
   showHeaderLinks: true,
+  showHeaderServices: true,
+  showHeaderAchievements: true,
+  showHeaderAffiliations: true,
+  showHeaderProjects: true,
 };
 
 const HYBRID_PRESET: SiteTypePresetSettings = {
@@ -106,6 +121,7 @@ const GAS_STATION_PRESET: SiteTypePresetSettings = {
   showProfileMediaDownloadsSection: false,
   showProfileContactSection: false,
   showProfileProjectsSection: false,
+  showProfileServicesSection: false,
   showHeaderHome: true,
   showHeaderAbout: false,
   showHeaderEvents: false,
@@ -116,6 +132,10 @@ const GAS_STATION_PRESET: SiteTypePresetSettings = {
   showHeaderNews: false,
   showHeaderDownloads: false,
   showHeaderLinks: false,
+  showHeaderServices: false,
+  showHeaderAchievements: false,
+  showHeaderAffiliations: false,
+  showHeaderProjects: false,
 };
 
 export function getSiteTypePresetSettings(siteType: TenantSiteType): SiteTypePresetSettings {

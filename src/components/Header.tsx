@@ -68,6 +68,30 @@ const navItemCatalog = [
     active: false,
   },
   {
+    key: 'services' as const,
+    name: 'Services',
+    href: '/services',
+    active: false,
+  },
+  {
+    key: 'achievements' as const,
+    name: 'Achievements',
+    href: '/achievements',
+    active: false,
+  },
+  {
+    key: 'affiliations' as const,
+    name: 'Affiliations',
+    href: '/affiliations',
+    active: false,
+  },
+  {
+    key: 'projects' as const,
+    name: 'Projects',
+    href: '/projects',
+    active: false,
+  },
+  {
     key: 'links' as const,
     name: 'Links',
     href: '/links',
@@ -637,6 +661,10 @@ export default function Header({ hideMenuItems = false, variant = 'charity', isT
     showProfileHero,
     showProfileWritings,
     showProfileContact,
+    showProfileServices,
+    showProfileAchievements,
+    showProfileAffiliations,
+    showProfileProjects,
     showHeaderHome,
     showHeaderAbout,
     showHeaderEvents,
@@ -647,6 +675,10 @@ export default function Header({ hideMenuItems = false, variant = 'charity', isT
     showHeaderNews,
     showHeaderDownloads,
     showHeaderLinks,
+    showHeaderServices,
+    showHeaderAchievements,
+    showHeaderAffiliations,
+    showHeaderProjects,
     loading: settingsLoading,
   } = useTenantSettings();
   const mounted = useMounted();
@@ -654,7 +686,13 @@ export default function Header({ hideMenuItems = false, variant = 'charity', isT
   const isProfileNav =
     mounted &&
     !settingsLoading &&
-    (showProfileHero || showProfileWritings || showProfileContact);
+    (showProfileHero ||
+      showProfileWritings ||
+      showProfileContact ||
+      showProfileServices ||
+      showProfileAchievements ||
+      showProfileAffiliations ||
+      showProfileProjects);
   const [isAdmin, setIsAdmin] = useState(!!isTenantAdmin);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -993,6 +1031,10 @@ export default function Header({ hideMenuItems = false, variant = 'charity', isT
     gallery: showHeaderGallery,
     news: showHeaderNews,
     downloads: showHeaderDownloads,
+    services: showHeaderServices,
+    achievements: showHeaderAchievements,
+    affiliations: showHeaderAffiliations,
+    projects: showHeaderProjects,
     links: showHeaderLinks,
     contact: showHeaderContact,
   };
@@ -1031,6 +1073,7 @@ export default function Header({ hideMenuItems = false, variant = 'charity', isT
       (item.href === '/contact' && pathname === '/contact') ||
       (item.href === '/news' && (pathname === '/news' || pathname?.startsWith('/writings'))) ||
       (item.href === '/downloads' && pathname?.startsWith('/downloads')) ||
+      (item.href === '/services' && pathname?.startsWith('/services')) ||
       (item.href === '/links' && pathname === '/links'),
   }));
 

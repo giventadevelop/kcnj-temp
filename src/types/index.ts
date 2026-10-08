@@ -757,7 +757,8 @@ export interface TenantSettingsDTO {
   showProfileMediaDownloadsSection?: boolean;
   showProfileContactSection?: boolean;
   showProfileProjectsSection?: boolean;
-  // Header menu visibility (null = app default: legacy items ON; news/downloads/links OFF)
+  showProfileServicesSection?: boolean;
+  // Header menu visibility (null = app default: legacy items ON; news/downloads/links/services OFF)
   showHeaderHome?: boolean | null;
   showHeaderAbout?: boolean | null;
   showHeaderEvents?: boolean | null;
@@ -768,6 +769,10 @@ export interface TenantSettingsDTO {
   showHeaderNews?: boolean | null;
   showHeaderDownloads?: boolean | null;
   showHeaderLinks?: boolean | null;
+  showHeaderServices?: boolean | null;
+  showHeaderAchievements?: boolean | null;
+  showHeaderAffiliations?: boolean | null;
+  showHeaderProjects?: boolean | null;
   // Gas station COO module (GAS_STATION site type)
   /** Master on/off for the gas station admin module for this tenant */
   enableGasStationModule?: boolean;

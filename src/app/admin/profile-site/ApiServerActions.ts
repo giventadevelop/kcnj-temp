@@ -14,6 +14,7 @@ import type {
   ProfileAffiliationDTO,
   ProfileMediaAssetDTO,
   ProfileProjectDTO,
+  ProfileServiceDTO,
   ProfileAudienceContactDTO,
   ProfileAudienceBulkImportResultDTO,
   TenantSiteType,
@@ -113,6 +114,10 @@ export async function fetchProfileProjectsServer() {
   return fetchProfileList<ProfileProjectDTO>('/api/profile-projects');
 }
 
+export async function fetchProfileServicesServer() {
+  return fetchProfileList<ProfileServiceDTO>('/api/profile-services');
+}
+
 export async function createProfileWritingServer(
   data: Omit<ProfileWritingDTO, 'id' | 'tenantId'>
 ): Promise<ProfileWritingDTO | null> {
@@ -201,6 +206,28 @@ export async function updateProfileProjectServer(
 
 export async function deleteProfileProjectServer(id: number): Promise<boolean> {
   return deleteProfileResource('/api/profile-projects', id);
+}
+
+export async function createProfileServiceServer(
+  data: Omit<ProfileServiceDTO, 'id' | 'tenantId'>
+): Promise<ProfileServiceDTO | null> {
+  const slug = ensureProfileWritingSlug(data.title, data.slug);
+  return createProfileResource('/api/profile-services', { ...data, slug });
+}
+
+export async function updateProfileServiceServer(
+  id: number,
+  data: Partial<ProfileServiceDTO>
+): Promise<ProfileServiceDTO | null> {
+  const payload = { ...data };
+  if (data.title && !data.slug?.trim()) {
+    payload.slug = ensureProfileWritingSlug(data.title, data.slug);
+  }
+  return patchProfileResource('/api/profile-services', id, payload);
+}
+
+export async function deleteProfileServiceServer(id: number): Promise<boolean> {
+  return deleteProfileResource('/api/profile-services', id);
 }
 
 async function createProfileResource<T extends { id?: number | null }>(

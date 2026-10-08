@@ -14,6 +14,59 @@ export type ProfileWritingType = 'ORIGINAL' | 'REPUBLISHED' | 'EXTERNAL_LINK';
 export type ProfileWritingStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 export type ProfileAchievementCategory = 'AWARD' | 'HONOR' | 'SPEAKING' | 'EDUCATION' | 'OTHER';
 export type ProfileMediaKind = 'DOCUMENT' | 'VIDEO' | 'PODCAST' | 'PRESS' | 'OTHER';
+export type ProfileServiceCategory =
+  | 'TAX'
+  | 'FINANCIAL'
+  | 'LEGAL'
+  | 'CONSULTING'
+  | 'COACHING'
+  | 'TECHNOLOGY'
+  | 'HEALTHCARE'
+  | 'EDUCATION'
+  | 'OTHER';
+export type ProfileServicePriceUnit = 'HOUR' | 'SESSION' | 'PROJECT' | 'MONTH' | 'YEAR' | 'CUSTOM';
+
+export const PROFILE_SERVICE_CATEGORIES: ProfileServiceCategory[] = [
+  'TAX',
+  'FINANCIAL',
+  'LEGAL',
+  'CONSULTING',
+  'COACHING',
+  'TECHNOLOGY',
+  'HEALTHCARE',
+  'EDUCATION',
+  'OTHER',
+];
+
+export const PROFILE_SERVICE_PRICE_UNITS: ProfileServicePriceUnit[] = [
+  'HOUR',
+  'SESSION',
+  'PROJECT',
+  'MONTH',
+  'YEAR',
+  'CUSTOM',
+];
+
+export const PROFILE_SERVICE_CATEGORY_LABELS: Record<ProfileServiceCategory, string> = {
+  TAX: 'Tax',
+  FINANCIAL: 'Financial consulting',
+  LEGAL: 'Legal',
+  CONSULTING: 'Consulting',
+  COACHING: 'Coaching',
+  TECHNOLOGY: 'Technology',
+  HEALTHCARE: 'Healthcare',
+  EDUCATION: 'Education',
+  OTHER: 'Other',
+};
+
+export const PROFILE_SERVICE_PRICE_UNIT_LABELS: Record<ProfileServicePriceUnit, string> = {
+  HOUR: 'per hour',
+  SESSION: 'per session',
+  PROJECT: 'per project',
+  MONTH: 'per month',
+  YEAR: 'per year',
+  CUSTOM: '',
+};
 
 export interface PublicProfileDTO {
   id?: number | null;
@@ -136,6 +189,28 @@ export interface ProfileProjectDTO {
 export interface ProfileOutcomeMetric {
   label: string;
   value: string;
+}
+
+/** Professional service offered by a PERSONAL_PROFILE / HYBRID individual */
+export interface ProfileServiceDTO {
+  id?: number | null;
+  tenantId: string;
+  title: string;
+  slug?: string;
+  summary?: string;
+  description?: string;
+  category?: ProfileServiceCategory;
+  coverImageUrl?: string;
+  priceFrom?: number | null;
+  priceUnit?: ProfileServicePriceUnit | null;
+  currency?: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  displayOrder?: number;
+  isFeatured?: boolean;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type ProfileAudienceContactSource =

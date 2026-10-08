@@ -1,6 +1,6 @@
 # Personal Profile Site — Documentation Index
 
-Hand this folder to backend, frontend, and ops teams. **Frontend (`mosc-temp`) Phase A/B and Audience CRM are implemented.** Backend Phase B (booking / projects / media_kind) is implemented in `event-site-manager-service` — **deploy so Liquibase 003 applies**.
+Hand this folder to backend, frontend, and ops teams. **Frontend (`mosc-temp` / kcnj-prod) Phase A/B/C and Audience CRM are implemented.** Backend Phase B (booking / projects / media_kind) and Phase C (`profile_service` / `/api/profile-services`) are implemented in `event-site-manager-service` — **deploy so Liquibase 003 and `20261008120000_profile_service.xml` apply**.
 
 ## Start here
 
@@ -10,7 +10,7 @@ Hand this folder to backend, frontend, and ops teams. **Frontend (`mosc-temp`) P
 | **Audience CRM v2** | [personal_profile_audience_crm_prd.html](./personal_profile_audience_crm_prd.html) — capture, import, bulk email |
 | **Backend API team** | [backend_event_site_manager_service_prd.html](./backend_event_site_manager_service_prd.html) — **primary implementation spec** |
 | **Batch jobs team** | [backend_event_site_manager_batch_jobs_prd.html](./backend_event_site_manager_batch_jobs_prd.html) — shared entities + `PROFILE_AUDIENCE` email batch |
-| **DBA / Liquibase** | [personal_profile_database_schema.html](./personal_profile_database_schema.html) + [migrations/001_personal_profile_site.sql](./migrations/001_personal_profile_site.sql) + [migrations/002_profile_audience_contact.sql](./migrations/002_profile_audience_contact.sql) + [migrations/003_profile_booking_projects_media_kind.sql](./migrations/003_profile_booking_projects_media_kind.sql) |
+| **DBA / Liquibase** | [personal_profile_database_schema.html](./personal_profile_database_schema.html) + [migrations/001_personal_profile_site.sql](./migrations/001_personal_profile_site.sql) + [migrations/002_profile_audience_contact.sql](./migrations/002_profile_audience_contact.sql) + [migrations/003_profile_booking_projects_media_kind.sql](./migrations/003_profile_booking_projects_media_kind.sql) + [migrations/004_profile_service.sql](./migrations/004_profile_service.sql) |
 | **Field reference** | [personal_profile_attribute_catalog.md](./personal_profile_attribute_catalog.md) |
 | **REST summary** | [personal_profile_backend_api.html](./personal_profile_backend_api.html) + [personal_profile_audience_backend_api.html](./personal_profile_audience_backend_api.html) |
 | **Frontend (done)** | [personal_profile_frontend.html](./personal_profile_frontend.html) + [personal_profile_audience_frontend.html](./personal_profile_audience_frontend.html) |
@@ -24,8 +24,8 @@ Hand this folder to backend, frontend, and ops teams. **Frontend (`mosc-temp`) P
 |------|------|------------------|
 | `mosc-temp` | Next.js app, proxies, admin CMS, public profile UI, Audience tab | Done |
 | `event-site-manager` | Multi-tenant admin; Audience tab parity | Done |
-| `event-site-manager-service` | Spring Boot REST API, Liquibase migrations, JPA entities | **Deploy Phase B Liquibase + `/api/profile-projects`** |
-| `event-site-manager-batch-jobs` | Spring Batch; `PROFILE_AUDIENCE` email; Phase B = SQL mirror only | **Yes for bulk send**; no Java for Phase B |
+| `event-site-manager-service` | Spring Boot REST API, Liquibase migrations, JPA entities | **Deploy Phase C** Liquibase `20261008120000_profile_service.xml` + `/api/profile-services` |
+| `event-site-manager-batch-jobs` | Spring Batch; `PROFILE_AUDIENCE` email; SQL + TenantSettings flags for projects/services | **Yes for bulk send**; restart after Liquibase so Hibernate validate sees new columns |
 
 Canonical SQL (all repos): `code_html_template/SQLS/Current_Sqls/Latest_Schema_Post__Blob_Claude_12.sql`
 

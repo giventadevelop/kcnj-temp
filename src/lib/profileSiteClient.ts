@@ -6,7 +6,10 @@ import type {
   ProfileAffiliationDTO,
   ProfileMediaAssetDTO,
   ProfileProjectDTO,
+  ProfileServiceDTO,
   ProfileOutcomeMetric,
+  ProfileServicePriceUnit,
+  PROFILE_SERVICE_PRICE_UNIT_LABELS,
 } from '@/types/profileSite';
 
 /**
@@ -16,12 +19,13 @@ import type {
 
 export async function fetchProfileProxyList<T>(
   path: string,
-  options?: { publishedOnly?: boolean; sort?: string }
+  options?: { publishedOnly?: boolean; sort?: string; isActive?: boolean }
 ): Promise<T[]> {
   const params = new URLSearchParams({
     sort: options?.sort ?? 'displayOrder,asc',
   });
   if (options?.publishedOnly) params.append('status.equals', 'PUBLISHED');
+  if (options?.isActive !== undefined) params.append('isActive.equals', String(options.isActive));
   try {
     const res = await fetch(`/api/proxy/${path}?${params}`, { cache: 'no-store' });
     if (!res.ok) return [];
@@ -66,6 +70,39 @@ export function fetchMediaAssetsClient() {
 
 export function fetchProjectsClient() {
   return fetchProfileProxyList<ProfileProjectDTO>('profile-projects');
+}
+
+/** Public listing uses isActive.equals; local filter remains a safety net. */
+export async function fetchActiveServicesClient(): Promise<ProfileServiceDTO[]> {
+  const list = await fetchProfileProxyList<ProfileServiceDTO>('profile-services', { isActive: true });
+  return list.filter((s) => s.isActive !== false);
+}
+
+export function formatProfileServicePrice(
+  priceFrom?: number | null,
+  currency = 'USD',
+  unit?: ProfileServicePriceUnit | null
+): string | null {
+  if (priceFrom == null || Number.isNaN(Number(priceFrom))) return null;
+  const formatted = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency || 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(priceFrom));
+  const unitLabel = unit ? PROFILE_SERVICE_PRICE_UNIT_LABELS[unit] : '';
+  if (unitLabel) return `From ${formatted} ${unitLabel}`;
+  return `From ${formatted}`;
+}
+
+export function resolveProfileServiceCtaUrl(
+  service: ProfileServiceDTO,
+  bookingUrl?: string | null
+): string | undefined {
+  const explicit = service.ctaUrl?.trim();
+  if (explicit) return explicit;
+  const fallback = bookingUrl?.trim();
+  return fallback || undefined;
 }
 
 const TALK_MEDIA_KINDS = new Set(['VIDEO', 'PODCAST', 'PRESS']);

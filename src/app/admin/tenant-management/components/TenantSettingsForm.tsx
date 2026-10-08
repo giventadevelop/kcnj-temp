@@ -162,6 +162,7 @@ export default function TenantSettingsForm({
       showProfileMediaDownloadsSection: initialData?.showProfileMediaDownloadsSection ?? false,
       showProfileContactSection: initialData?.showProfileContactSection ?? false,
       showProfileProjectsSection: initialData?.showProfileProjectsSection ?? false,
+      showProfileServicesSection: initialData?.showProfileServicesSection ?? false,
       // Header menu (null/undefined → form defaults match app null-safe defaults)
       showHeaderHome: initialData?.showHeaderHome ?? true,
       showHeaderAbout: initialData?.showHeaderAbout ?? true,
@@ -173,6 +174,10 @@ export default function TenantSettingsForm({
       showHeaderNews: initialData?.showHeaderNews ?? false,
       showHeaderDownloads: initialData?.showHeaderDownloads ?? false,
       showHeaderLinks: initialData?.showHeaderLinks ?? false,
+      showHeaderServices: initialData?.showHeaderServices ?? false,
+      showHeaderAchievements: initialData?.showHeaderAchievements ?? false,
+      showHeaderAffiliations: initialData?.showHeaderAffiliations ?? false,
+      showHeaderProjects: initialData?.showHeaderProjects ?? false,
       // Gas station COO module (GAS_STATION site type)
       enableGasStationModule: initialData?.enableGasStationModule ?? false,
       gasAiEngineBaseUrl: initialData?.gasAiEngineBaseUrl || '',
@@ -1159,7 +1164,7 @@ export default function TenantSettingsForm({
             <div className="space-y-4">
               <h4 className="text-md font-medium text-gray-900">Header Menu</h4>
               <p className="text-sm text-gray-600">
-                Choose which items appear in the top site header. News, Downloads, and Links reuse content managed under{' '}
+                Choose which items appear in the top site header. News, Downloads, Services, Achievements, Affiliations, Projects, and Links reuse content managed under{' '}
                 <a href="/admin/profile-site" className="text-blue-600 hover:underline font-medium">
                   Admin → Profile Site
                 </a>
@@ -1167,8 +1172,8 @@ export default function TenantSettingsForm({
               </p>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-                Manage News (writings), Downloads (media assets), and external-link writings under Profile Site. Social URLs on
-                the public profile also appear on the Links page.
+                Manage News (writings), Downloads (media assets), Services, Achievements, Affiliations, Projects, and
+                external-link writings under Profile Site. Social URLs on the public profile also appear on the Links page.
               </div>
 
               {(
@@ -1182,6 +1187,10 @@ export default function TenantSettingsForm({
                   ['showHeaderContact', 'Contact', 'Show Contact in the header'],
                   ['showHeaderNews', 'News', 'Show News / Perspectives (profile writings list)'],
                   ['showHeaderDownloads', 'Downloads', 'Show Downloads (profile media assets list)'],
+                  ['showHeaderServices', 'Services', 'Show Services (professional services catalog)'],
+                  ['showHeaderAchievements', 'Achievements', 'Show Achievements (awards, honors, speaking)'],
+                  ['showHeaderAffiliations', 'Affiliations', 'Show Affiliations (boards, communities, orgs)'],
+                  ['showHeaderProjects', 'Projects', 'Show Projects (case studies)'],
                   ['showHeaderLinks', 'Links', 'Show Links (social URLs + external-link writings)'],
                 ] as const
               ).map(([name, label, description]) => (
@@ -1271,6 +1280,16 @@ export default function TenantSettingsForm({
                   description="Display case-study / project cards on the homepage"
                   checked={watchedValues.showProfileProjectsSection || false}
                   onChange={(checked) => setValue('showProfileProjectsSection', checked)}
+                />
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <ToggleSwitch
+                  name="showProfileServicesSection"
+                  label="Show Profile Services Section"
+                  description="Display professional services (tax, financial consulting, etc.) on the homepage"
+                  checked={watchedValues.showProfileServicesSection || false}
+                  onChange={(checked) => setValue('showProfileServicesSection', checked)}
                 />
               </div>
             </div>

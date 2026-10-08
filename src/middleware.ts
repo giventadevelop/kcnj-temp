@@ -78,9 +78,13 @@ const isPublicRouteClerk = createRouteMatcher([
   // /membership/manage and /membership/subscribe redirect to same-origin /sign-in in page code.
   '/membership(.*)',
   '/writings(.*)',
+  '/services(.*)',
   '/downloads(.*)',
   '/news(.*)',
   '/links(.*)',
+  '/achievements(.*)',
+  '/affiliations(.*)',
+  '/projects(.*)',
 ]);
 
 // Clerk 6: default export MUST be clerkMiddleware() so auth() is detected in layout

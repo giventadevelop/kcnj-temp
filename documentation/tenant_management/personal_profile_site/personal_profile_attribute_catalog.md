@@ -99,6 +99,44 @@ Optional: `site_template_version` (varchar 32) — e.g. `profile-writer-v1`.
 | `is_downloadable` | boolean | Yes | Default true |
 | `requires_email` | boolean | No | Default false (future gate) |
 
+## `profile_project`
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `title` | varchar(255) | Yes | Case-study title |
+| `slug` | varchar(150) | No | Unique per tenant |
+| `summary` | varchar(2000) | No | Card summary |
+| `cover_image_url` | varchar(1024) | No | |
+| `role` | varchar(255) | No | Role on the project |
+| `outcome_metrics_json` | text | No | JSON array of `{label,value}` |
+| `project_url` | varchar(1024) | No | External case-study URL |
+| `display_order` | integer | No | |
+| `is_featured` | boolean | Yes | Default false |
+
+## `profile_service`
+
+Professional services catalog for PERSONAL_PROFILE / HYBRID individual sites (tax consulting, financial consulting, etc.). This is **not** `profile_project` — projects are case studies; services are offerings with optional price and CTA.
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `id` | bigint | Yes | PK; sequence `profile_service_id_seq` |
+| `tenant_id` | varchar(255) | Yes | FK → `tenant_organization` |
+| `title` | varchar(255) | Yes | |
+| `slug` | varchar(150) | No | Unique per tenant when present |
+| `summary` | varchar(2000) | No | Card summary |
+| `description` | text | No | Detail page body |
+| `category` | varchar(32) | Yes | `TAX`, `FINANCIAL`, `LEGAL`, `CONSULTING`, `COACHING`, `TECHNOLOGY`, `HEALTHCARE`, `EDUCATION`, `OTHER` |
+| `cover_image_url` | varchar(1024) | No | |
+| `price_from` | numeric(12,2) | No | Starting price; null = inquire |
+| `price_unit` | varchar(32) | No | `HOUR`, `SESSION`, `PROJECT`, `MONTH`, `YEAR`, `CUSTOM` |
+| `currency` | varchar(8) | No | Default `USD` |
+| `cta_label` | varchar(100) | No | e.g. Book a consult |
+| `cta_url` | varchar(1024) | No | Falls back to `public_profile.booking_url` on the public site |
+| `display_order` | integer | No | Sort asc |
+| `is_featured` | boolean | Yes | Default false |
+| `is_active` | boolean | Yes | Default true; public pages hide inactive rows |
+| `created_at`, `updated_at` | timestamptz | Yes | |
+
 ## `profile_audience_contact` (v2)
 
 | Field | Type | Required | Notes |
@@ -128,6 +166,8 @@ Optional: `site_template_version` (varchar 32) — e.g. `profile-writer-v1`.
 | `show_profile_affiliations_section` | false | true |
 | `show_profile_media_downloads_section` | false | true |
 | `show_profile_contact_section` | false | true |
+| `show_profile_projects_section` | false | true |
+| `show_profile_services_section` | false | true |
 
 ## Admin vs public visibility
 

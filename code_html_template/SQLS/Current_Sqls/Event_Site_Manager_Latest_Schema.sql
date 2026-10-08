@@ -210,6 +210,8 @@ DROP TABLE IF EXISTS public.gas_station_integration CASCADE;
 DROP TABLE IF EXISTS public.gas_station_user_station_assignment CASCADE;
 DROP TABLE IF EXISTS public.gas_station_location CASCADE;
 -- Personal profile site module
+DROP TABLE IF EXISTS public.profile_service CASCADE;
+DROP TABLE IF EXISTS public.profile_project CASCADE;
 DROP TABLE IF EXISTS public.profile_audience_contact CASCADE;
 DROP TABLE IF EXISTS public.profile_media_asset CASCADE;
 DROP TABLE IF EXISTS public.profile_affiliation CASCADE;
@@ -892,6 +894,13 @@ CREATE SEQUENCE IF NOT EXISTS public.profile_media_asset_id_seq
     CACHE 1;
 
 CREATE SEQUENCE IF NOT EXISTS public.profile_project_id_seq
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    START WITH 1
+    CACHE 1;
+
+CREATE SEQUENCE IF NOT EXISTS public.profile_service_id_seq
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
@@ -3130,6 +3139,7 @@ CREATE TABLE public.tenant_settings (
                                         show_profile_media_downloads_section boolean DEFAULT false NOT NULL,
                                         show_profile_contact_section boolean DEFAULT false NOT NULL,
                                         show_profile_projects_section boolean DEFAULT false NOT NULL,
+                                        show_profile_services_section boolean DEFAULT false NOT NULL,
                                         enable_gas_station_module boolean DEFAULT false NOT NULL,
                                         gas_ai_engine_base_url character varying(1024),
                                         gas_ai_engine_api_key_ref character varying(512),
@@ -3145,6 +3155,10 @@ CREATE TABLE public.tenant_settings (
                                         show_header_news boolean,
                                         show_header_downloads boolean,
                                         show_header_links boolean,
+                                        show_header_services boolean,
+                                        show_header_achievements boolean,
+                                        show_header_affiliations boolean,
+                                        show_header_projects boolean,
                                         created_at timestamp without time zone DEFAULT now() NOT NULL,
                                         updated_at timestamp without time zone DEFAULT now() NOT NULL,
                                         CONSTRAINT chk_tenant_settings__gas_brief_hour CHECK (((gas_daily_brief_hour_local IS NULL) OR ((gas_daily_brief_hour_local >= 0) AND (gas_daily_brief_hour_local <= 23)))),
@@ -3205,6 +3219,11 @@ COMMENT ON COLUMN public.tenant_settings.show_profile_affiliations_section IS 'W
 COMMENT ON COLUMN public.tenant_settings.show_profile_media_downloads_section IS 'When true, homepage shows the profile downloadable media section.';
 COMMENT ON COLUMN public.tenant_settings.show_profile_contact_section IS 'When true, homepage shows the profile contact section.';
 COMMENT ON COLUMN public.tenant_settings.show_profile_projects_section IS 'When true, homepage shows profile project / case-study cards.';
+COMMENT ON COLUMN public.tenant_settings.show_profile_services_section IS 'When true, homepage shows the professional services catalog (tax, financial consulting, etc.).';
+COMMENT ON COLUMN public.tenant_settings.show_header_services IS 'When true, public header shows Services (professional services catalog). Null uses app default OFF.';
+COMMENT ON COLUMN public.tenant_settings.show_header_achievements IS 'When true, public header shows Achievements. Null uses app default OFF.';
+COMMENT ON COLUMN public.tenant_settings.show_header_affiliations IS 'When true, public header shows Affiliations. Null uses app default OFF.';
+COMMENT ON COLUMN public.tenant_settings.show_header_projects IS 'When true, public header shows Projects. Null uses app default OFF.';
 COMMENT ON COLUMN public.tenant_settings.enable_gas_station_module IS 'Master on/off for the gas station COO admin module for this tenant (GAS_STATION site type).';
 COMMENT ON COLUMN public.tenant_settings.gas_ai_engine_base_url IS 'Base URL of the external AI engine deployment serving this tenant (invoked server-side only).';
 COMMENT ON COLUMN public.tenant_settings.gas_ai_engine_api_key_ref IS 'Secrets-manager reference to the API key for calling the AI engine. Never store the raw key.';
@@ -3397,6 +3416,45 @@ COMMENT ON TABLE public.profile_project IS 'Case-study / project cards for PERSO
 COMMENT ON COLUMN public.public_profile.booking_url IS 'Calendly or external booking URL shown on contact / hero CTAs.';
 COMMENT ON COLUMN public.profile_media_asset.media_kind IS 'Semantic kind for talks strip vs downloads: DOCUMENT, VIDEO, PODCAST, PRESS, OTHER.';
 COMMENT ON COLUMN public.profile_project.outcome_metrics_json IS 'JSON array of {label,value} metrics shown on project cards.';
+
+CREATE TABLE IF NOT EXISTS public.profile_service (
+  id bigint DEFAULT nextval('public.profile_service_id_seq'::regclass) NOT NULL,
+  tenant_id character varying(255) NOT NULL,
+  title character varying(255) NOT NULL,
+  slug character varying(150),
+  summary character varying(2000),
+  description text,
+  category character varying(32) NOT NULL DEFAULT 'CONSULTING',
+  cover_image_url character varying(1024),
+  price_from numeric(12,2),
+  price_unit character varying(32),
+  currency character varying(8) DEFAULT 'USD',
+  cta_label character varying(100),
+  cta_url character varying(1024),
+  display_order integer,
+  is_featured boolean DEFAULT false NOT NULL,
+  is_active boolean DEFAULT true NOT NULL,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  CONSTRAINT profile_service_pkey PRIMARY KEY (id),
+  CONSTRAINT chk_profile_service__category CHECK (
+    category IN ('TAX', 'FINANCIAL', 'LEGAL', 'CONSULTING', 'COACHING', 'TECHNOLOGY', 'HEALTHCARE', 'EDUCATION', 'OTHER')
+  ),
+  CONSTRAINT chk_profile_service__price_unit CHECK (
+    price_unit IS NULL OR price_unit IN ('HOUR', 'SESSION', 'PROJECT', 'MONTH', 'YEAR', 'CUSTOM')
+  ),
+  CONSTRAINT fk_profile_service__tenant_id FOREIGN KEY (tenant_id)
+    REFERENCES public.tenant_organization(tenant_id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_profile_service__tenant_slug
+  ON public.profile_service (tenant_id, slug) WHERE slug IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_profile_service_tenant ON public.profile_service (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_profile_service_tenant_active ON public.profile_service (tenant_id, is_active);
+
+COMMENT ON TABLE public.profile_service IS 'Professional services offered by a PERSONAL_PROFILE / HYBRID individual (e.g. tax consulting, financial consulting).';
+COMMENT ON COLUMN public.profile_service.price_from IS 'Optional starting price; null means inquire / contact for pricing.';
+COMMENT ON COLUMN public.profile_service.cta_url IS 'Book / inquire URL; public UI may fall back to public_profile.booking_url.';
 
 
 --
@@ -7201,6 +7259,12 @@ SELECT pg_catalog.setval(
 SELECT pg_catalog.setval(
     'public.profile_project_id_seq',
     GREATEST(COALESCE((SELECT MAX(id) FROM public.profile_project), 1), 1),
+    true
+);
+-- profile_service
+SELECT pg_catalog.setval(
+    'public.profile_service_id_seq',
+    GREATEST(COALESCE((SELECT MAX(id) FROM public.profile_service), 1), 1),
     true
 );
 -- gas_station_location

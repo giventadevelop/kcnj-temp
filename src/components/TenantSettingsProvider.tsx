@@ -38,6 +38,7 @@ interface TenantSettingsContextType {
   showProfileDownloads: boolean;
   showProfileContact: boolean;
   showProfileProjects: boolean;
+  showProfileServices: boolean;
   // Header menu visibility (null-safe defaults applied)
   showHeaderHome: boolean;
   showHeaderAbout: boolean;
@@ -49,6 +50,10 @@ interface TenantSettingsContextType {
   showHeaderNews: boolean;
   showHeaderDownloads: boolean;
   showHeaderLinks: boolean;
+  showHeaderServices: boolean;
+  showHeaderAchievements: boolean;
+  showHeaderAffiliations: boolean;
+  showHeaderProjects: boolean;
   /** When true and publisher ID is set, public pages may render AdSense regions */
   showGoogleAdsense: boolean;
   adsensePublisherId: string | null;
@@ -81,6 +86,7 @@ const TenantSettingsContext = React.createContext<TenantSettingsContextType>({
   showProfileDownloads: false,
   showProfileContact: false,
   showProfileProjects: false,
+  showProfileServices: false,
   showHeaderHome: true,
   showHeaderAbout: true,
   showHeaderEvents: true,
@@ -91,6 +97,10 @@ const TenantSettingsContext = React.createContext<TenantSettingsContextType>({
   showHeaderNews: false,
   showHeaderDownloads: false,
   showHeaderLinks: false,
+  showHeaderServices: false,
+  showHeaderAchievements: false,
+  showHeaderAffiliations: false,
+  showHeaderProjects: false,
   showGoogleAdsense: false,
   adsensePublisherId: null,
   adsensePlacements: {},
@@ -326,7 +336,8 @@ export const TenantSettingsProvider: React.FC<TenantSettingsProviderProps> = ({ 
   const showProfileDownloads = settings?.showProfileMediaDownloadsSection ?? false;
   const showProfileContact = settings?.showProfileContactSection ?? false;
   const showProfileProjects = settings?.showProfileProjectsSection ?? false;
-  // Header menu: legacy items default ON; news/downloads/links default OFF
+  const showProfileServices = settings?.showProfileServicesSection ?? false;
+  // Header menu: legacy items default ON; news/downloads/links/services default OFF
   const showHeaderHome = settings?.showHeaderHome ?? true;
   const showHeaderAbout = settings?.showHeaderAbout ?? true;
   const showHeaderEvents = settings?.showHeaderEvents ?? true;
@@ -337,6 +348,10 @@ export const TenantSettingsProvider: React.FC<TenantSettingsProviderProps> = ({ 
   const showHeaderNews = settings?.showHeaderNews ?? false;
   const showHeaderDownloads = settings?.showHeaderDownloads ?? false;
   const showHeaderLinks = settings?.showHeaderLinks ?? false;
+  const showHeaderServices = settings?.showHeaderServices ?? false;
+  const showHeaderAchievements = settings?.showHeaderAchievements ?? false;
+  const showHeaderAffiliations = settings?.showHeaderAffiliations ?? false;
+  const showHeaderProjects = settings?.showHeaderProjects ?? false;
   const showGoogleAdsense =
     settings?.enableGoogleAdsense === true && Boolean(settings?.googleAdsensePublisherId?.trim());
   const adsensePublisherId = settings?.googleAdsensePublisherId?.trim() || null;
@@ -361,6 +376,7 @@ export const TenantSettingsProvider: React.FC<TenantSettingsProviderProps> = ({ 
     showProfileDownloads,
     showProfileContact,
     showProfileProjects,
+    showProfileServices,
     showHeaderHome,
     showHeaderAbout,
     showHeaderEvents,
@@ -371,6 +387,10 @@ export const TenantSettingsProvider: React.FC<TenantSettingsProviderProps> = ({ 
     showHeaderNews,
     showHeaderDownloads,
     showHeaderLinks,
+    showHeaderServices,
+    showHeaderAchievements,
+    showHeaderAffiliations,
+    showHeaderProjects,
     showGoogleAdsense,
     adsensePublisherId,
     adsensePlacements,

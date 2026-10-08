@@ -15,6 +15,7 @@ import {
   fetchAffiliationsClient,
   fetchMediaAssetsClient,
   fetchProjectsClient,
+  fetchActiveServicesClient,
   isTalksMediaAsset,
   isDownloadDocumentAsset,
   parseOutcomeMetrics,
@@ -26,7 +27,9 @@ import type {
   ProfileAffiliationDTO,
   ProfileMediaAssetDTO,
   ProfileProjectDTO,
+  ProfileServiceDTO,
 } from '@/types/profileSite';
+import { ProfileServiceCard } from '@/components/profile/ProfileServiceCard';
 
 export function ProfileHeroSection({ profile }: { profile: PublicProfileDTO }) {
   return (
@@ -153,6 +156,47 @@ export function ProfileTalksSection({
             </article>
           ))}
         </div>
+      </HomeSectionRail>
+    </section>
+  );
+}
+
+export function ProfileServicesSection({
+  services,
+  bookingUrl,
+}: {
+  services: ProfileServiceDTO[];
+  bookingUrl?: string | null;
+}) {
+  if (services.length === 0) return null;
+  const featured = services.filter((s) => s.isFeatured).slice(0, 6);
+  const display = featured.length > 0 ? featured : services.slice(0, 6);
+
+  return (
+    <section id="profile-services" className="py-16 bg-card">
+      <HomeSectionRail eyebrow="Services" containerClassName="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <HomeSectionTitle className="text-3xl font-heading font-semibold text-center mb-4">
+          Services
+        </HomeSectionTitle>
+        <p className="font-body text-center text-muted-foreground mb-10 max-w-2xl mx-auto">
+          Professional services offered for this site — tax, financial consulting, and related work.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {display.map((service) => (
+            <ProfileServiceCard
+              key={service.id ?? service.slug ?? service.title}
+              service={service}
+              bookingUrl={bookingUrl}
+            />
+          ))}
+        </div>
+        {services.length > display.length && (
+          <p className="mt-8 text-center">
+            <Link href="/services" className="text-primary font-semibold hover:underline">
+              View all services →
+            </Link>
+          </p>
+        )}
       </HomeSectionRail>
     </section>
   );
@@ -538,6 +582,7 @@ export default function ProfileHomeSections() {
     showProfileDownloads,
     showProfileContact,
     showProfileProjects,
+    showProfileServices,
     loading: settingsLoading,
   } = useTenantSettings();
 
@@ -547,6 +592,7 @@ export default function ProfileHomeSections() {
   const [affiliations, setAffiliations] = useState<ProfileAffiliationDTO[]>([]);
   const [assets, setAssets] = useState<ProfileMediaAssetDTO[]>([]);
   const [projects, setProjects] = useState<ProfileProjectDTO[]>([]);
+  const [services, setServices] = useState<ProfileServiceDTO[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -554,15 +600,16 @@ export default function ProfileHomeSections() {
     async function load() {
       setLoading(true);
       try {
-        const needProfile = showProfileHero || showProfileContact;
+        const needProfile = showProfileHero || showProfileContact || showProfileServices;
         const needAchievementsOrTalks = showProfileAchievements || showProfileDownloads;
-        const [p, w, a, af, m, proj] = await Promise.all([
+        const [p, w, a, af, m, proj, svc] = await Promise.all([
           needProfile ? fetchPublishedPublicProfileClient() : Promise.resolve(null),
           showProfileWritings ? fetchPublishedWritingsClient() : Promise.resolve([]),
           needAchievementsOrTalks ? fetchAchievementsClient() : Promise.resolve([]),
           showProfileAffiliations ? fetchAffiliationsClient() : Promise.resolve([]),
           showProfileDownloads || showProfileAchievements ? fetchMediaAssetsClient() : Promise.resolve([]),
           showProfileProjects ? fetchProjectsClient() : Promise.resolve([]),
+          showProfileServices ? fetchActiveServicesClient() : Promise.resolve([]),
         ]);
         if (!cancelled) {
           setProfile(p);
@@ -571,6 +618,7 @@ export default function ProfileHomeSections() {
           setAffiliations(af);
           setAssets(m);
           setProjects(proj);
+          setServices(svc);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -587,10 +635,11 @@ export default function ProfileHomeSections() {
     showProfileDownloads,
     showProfileContact,
     showProfileProjects,
+    showProfileServices,
   ]);
 
   if (settingsLoading || loading) return null;
-  if (!profile && writings.length === 0 && achievements.length === 0 && projects.length === 0) return null;
+  if (!profile && writings.length === 0 && achievements.length === 0 && projects.length === 0 && services.length === 0) return null;
 
   const speaking = achievements.filter((a) => a.category === 'SPEAKING');
   const talksMedia = assets.filter(isTalksMediaAsset);
@@ -601,6 +650,9 @@ export default function ProfileHomeSections() {
       {profile && <ProfileAboutSection profile={profile} />}
       {showProfileWritings && <ProfileWritingsSection writings={writings} />}
       {showProfileProjects && <ProfileProjectsSection projects={projects} />}
+      {showProfileServices && (
+        <ProfileServicesSection services={services} bookingUrl={profile?.bookingUrl} />
+      )}
       {(showProfileAchievements || showProfileDownloads) && (
         <ProfileTalksSection speaking={speaking} media={talksMedia} />
       )}

@@ -9,10 +9,18 @@ import type {
   ProfileAffiliationDTO,
   ProfileMediaAssetDTO,
   ProfileProjectDTO,
+  ProfileServiceDTO,
   ProfileWritingType,
   ProfileWritingStatus,
   ProfileAchievementCategory,
   ProfileMediaKind,
+  ProfileServiceCategory,
+  ProfileServicePriceUnit,
+} from '@/types/profileSite';
+import {
+  PROFILE_SERVICE_CATEGORIES,
+  PROFILE_SERVICE_PRICE_UNITS,
+  PROFILE_SERVICE_CATEGORY_LABELS,
 } from '@/types/profileSite';
 import {
   upsertPublicProfileServer,
@@ -31,13 +39,16 @@ import {
   createProfileProjectServer,
   updateProfileProjectServer,
   deleteProfileProjectServer,
+  createProfileServiceServer,
+  updateProfileServiceServer,
+  deleteProfileServiceServer,
   applySiteTypePresetsForTenant,
 } from '@/app/admin/profile-site/ApiServerActions';
 import ProfileAudiencePanel from '@/app/admin/profile-site/ProfileAudiencePanel';
 import { getTenantId } from '@/lib/env';
 import { ensureProfileWritingSlug } from '@/lib/profileSlug';
 
-type Tab = 'profile' | 'writings' | 'achievements' | 'affiliations' | 'projects' | 'downloads' | 'audience' | 'presets';
+type Tab = 'profile' | 'writings' | 'achievements' | 'affiliations' | 'projects' | 'services' | 'downloads' | 'audience' | 'presets';
 
 interface Props {
   initialProfile: PublicProfileDTO | null;
@@ -46,6 +57,7 @@ interface Props {
   initialAffiliations: ProfileAffiliationDTO[];
   initialAssets: ProfileMediaAssetDTO[];
   initialProjects: ProfileProjectDTO[];
+  initialServices: ProfileServiceDTO[];
 }
 
 export default function ProfileSiteAdminClient({
@@ -55,6 +67,7 @@ export default function ProfileSiteAdminClient({
   initialAffiliations,
   initialAssets,
   initialProjects,
+  initialServices,
 }: Props) {
   const [tab, setTab] = useState<Tab>('profile');
   const [profile, setProfile] = useState<Partial<PublicProfileDTO>>(
@@ -65,6 +78,7 @@ export default function ProfileSiteAdminClient({
   const [affiliations, setAffiliations] = useState(initialAffiliations);
   const [assets, setAssets] = useState(initialAssets);
   const [projects, setProjects] = useState(initialProjects);
+  const [services, setServices] = useState(initialServices);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -72,6 +86,7 @@ export default function ProfileSiteAdminClient({
     { id: 'profile', label: 'Public profile' },
     { id: 'writings', label: 'Writings' },
     { id: 'projects', label: 'Projects' },
+    { id: 'services', label: 'Services' },
     { id: 'achievements', label: 'Achievements' },
     { id: 'affiliations', label: 'Affiliations' },
     { id: 'downloads', label: 'Downloads' },
@@ -215,6 +230,9 @@ export default function ProfileSiteAdminClient({
       )}
       {tab === 'projects' && (
         <ProjectsAdmin items={projects} setItems={setProjects} setMessage={setMessage} />
+      )}
+      {tab === 'services' && (
+        <ServicesAdmin items={services} setItems={setServices} setMessage={setMessage} />
       )}
       {tab === 'achievements' && (
         <AchievementsAdmin items={achievements} setItems={setAchievements} setMessage={setMessage} />
@@ -688,6 +706,184 @@ function ProjectsAdmin({
           <div className="flex gap-2">
             <button type="button" className="text-blue-600 text-sm" onClick={() => { setEditingId(a.id!); setForm(a); }}>Edit</button>
             <button type="button" className="text-red-600 text-sm" onClick={async () => { if (a.id && await deleteProfileProjectServer(a.id)) setItems((p) => p.filter((x) => x.id !== a.id)); }}>Delete</button>
+          </div>
+        </li>
+      ))}</ul>
+    </AdminListShell>
+  );
+}
+
+function ServicesAdmin({
+  items,
+  setItems,
+  setMessage,
+}: {
+  items: ProfileServiceDTO[];
+  setItems: React.Dispatch<React.SetStateAction<ProfileServiceDTO[]>>;
+  setMessage: (m: string | null) => void;
+}) {
+  const [form, setForm] = useState<Partial<ProfileServiceDTO>>({
+    title: '',
+    category: 'CONSULTING',
+    currency: 'USD',
+    isFeatured: false,
+    isActive: true,
+    displayOrder: items.length,
+  });
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [displayPrice, setDisplayPrice] = useState('');
+
+  async function save() {
+    if (!form.title?.trim()) return;
+    const payload: Partial<ProfileServiceDTO> = {
+      title: form.title.trim(),
+      slug: form.slug ? ensureProfileWritingSlug(form.title, form.slug) : ensureProfileWritingSlug(form.title),
+      summary: form.summary ?? '',
+      description: form.description ?? '',
+      category: form.category ?? 'CONSULTING',
+      coverImageUrl: form.coverImageUrl ?? '',
+      priceFrom: form.priceFrom ?? null,
+      priceUnit: form.priceUnit ?? null,
+      currency: form.currency || 'USD',
+      ctaLabel: form.ctaLabel ?? '',
+      ctaUrl: form.ctaUrl ?? '',
+      displayOrder: form.displayOrder,
+      isFeatured: form.isFeatured ?? false,
+      isActive: form.isActive ?? true,
+    };
+    const result = editingId
+      ? await updateProfileServiceServer(editingId, payload)
+      : await createProfileServiceServer(payload as Omit<ProfileServiceDTO, 'id' | 'tenantId'>);
+    if (!result) { setMessage('Failed to save service. Ensure backend API supports profile-services.'); return; }
+    if (editingId) setItems((p) => p.map((a) => (a.id === editingId ? result : a)));
+    else setItems((p) => [...p, result]);
+    setForm({ title: '', category: 'CONSULTING', currency: 'USD', isFeatured: false, isActive: true });
+    setDisplayPrice('');
+    setEditingId(null);
+    setMessage('Service saved.');
+  }
+
+  return (
+    <AdminListShell title="Professional services">
+      <p className="text-sm text-gray-600 mb-4">
+        List services this individual offers (tax consulting, financial consulting, etc.). Inactive rows stay in admin but are hidden on the public site.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+        <ProfileField label="Title *" value={form.title ?? ''} onChange={(v) => setForm((f) => ({ ...f, title: v }))} />
+        <ProfileField label="Slug" value={form.slug ?? ''} onChange={(v) => setForm((f) => ({ ...f, slug: v }))} />
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">Category</span>
+          <select
+            value={form.category ?? 'CONSULTING'}
+            onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as ProfileServiceCategory }))}
+            className="mt-1 block w-full border border-gray-400 rounded-xl px-4 py-3"
+          >
+            {PROFILE_SERVICE_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{PROFILE_SERVICE_CATEGORY_LABELS[c]}</option>
+            ))}
+          </select>
+        </label>
+        <ProfileField label="Cover image URL" value={form.coverImageUrl ?? ''} onChange={(v) => setForm((f) => ({ ...f, coverImageUrl: v }))} />
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">Starting price</span>
+          <input
+            type="text"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={displayPrice}
+            onChange={(e) => {
+              let inputValue = e.target.value;
+              if (inputValue.startsWith('.')) inputValue = '0' + inputValue;
+              setDisplayPrice(inputValue);
+              if (inputValue === '' || inputValue === '.') {
+                setForm((f) => ({ ...f, priceFrom: null }));
+                return;
+              }
+              const numValue = parseFloat(inputValue);
+              setForm((f) => ({ ...f, priceFrom: Number.isNaN(numValue) ? null : numValue }));
+            }}
+            onBlur={() => {
+              if (form.priceFrom == null) {
+                setDisplayPrice('');
+                return;
+              }
+              setDisplayPrice(Number(form.priceFrom).toFixed(2));
+            }}
+            className="mt-1 block w-full border border-gray-400 rounded-xl px-4 py-3 text-base"
+          />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">Price unit</span>
+          <select
+            value={form.priceUnit ?? ''}
+            onChange={(e) => setForm((f) => ({
+              ...f,
+              priceUnit: (e.target.value || null) as ProfileServicePriceUnit | null,
+            }))}
+            className="mt-1 block w-full border border-gray-400 rounded-xl px-4 py-3"
+          >
+            <option value="">None (inquire)</option>
+            {PROFILE_SERVICE_PRICE_UNITS.map((u) => (
+              <option key={u} value={u}>{u}</option>
+            ))}
+          </select>
+        </label>
+        <ProfileField label="Currency" value={form.currency ?? 'USD'} onChange={(v) => setForm((f) => ({ ...f, currency: v }))} />
+        <ProfileField label="CTA label" value={form.ctaLabel ?? ''} onChange={(v) => setForm((f) => ({ ...f, ctaLabel: v }))} />
+        <ProfileField label="CTA URL (book / inquire)" value={form.ctaUrl ?? ''} onChange={(v) => setForm((f) => ({ ...f, ctaUrl: v }))} />
+        <ProfileTextArea
+          label="Summary"
+          value={form.summary ?? ''}
+          onChange={(v) => setForm((f) => ({ ...f, summary: v }))}
+          rows={3}
+          className="md:col-span-2"
+        />
+        <ProfileTextArea
+          label="Description"
+          value={form.description ?? ''}
+          onChange={(v) => setForm((f) => ({ ...f, description: v }))}
+          rows={4}
+          className="md:col-span-2"
+        />
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={form.isFeatured ?? false}
+            onChange={(e) => setForm((f) => ({ ...f, isFeatured: e.target.checked }))}
+          />
+          <span className="text-sm font-medium">Featured on homepage</span>
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={form.isActive ?? true}
+            onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+          />
+          <span className="text-sm font-medium">Active (visible on public site)</span>
+        </label>
+      </div>
+      <button type="button" onClick={save} className="mb-4 px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold">{editingId ? 'Update' : 'Add'}</button>
+      <ul className="space-y-2">{items.map((a) => (
+        <li key={a.id} className="flex justify-between border rounded-lg px-4 py-3">
+          <span>
+            {a.title}
+            {a.category ? ` · ${PROFILE_SERVICE_CATEGORY_LABELS[a.category] ?? a.category}` : ''}
+            {a.isFeatured ? ' · featured' : ''}
+            {a.isActive === false ? ' · inactive' : ''}
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="text-blue-600 text-sm"
+              onClick={() => {
+                setEditingId(a.id!);
+                setForm(a);
+                setDisplayPrice(a.priceFrom != null ? Number(a.priceFrom).toFixed(2) : '');
+              }}
+            >
+              Edit
+            </button>
+            <button type="button" className="text-red-600 text-sm" onClick={async () => { if (a.id && await deleteProfileServiceServer(a.id)) setItems((p) => p.filter((x) => x.id !== a.id)); }}>Delete</button>
           </div>
         </li>
       ))}</ul>
