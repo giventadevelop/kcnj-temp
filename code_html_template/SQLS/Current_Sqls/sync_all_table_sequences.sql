@@ -101,6 +101,7 @@ DECLARE
         'profile_media_asset',
         'profile_project',
         'profile_service',
+        'profile_family_member',
         'profile_audience_contact',
         'gas_station_location',
         'gas_station_integration',

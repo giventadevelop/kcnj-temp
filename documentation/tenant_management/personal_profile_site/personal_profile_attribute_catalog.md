@@ -137,6 +137,25 @@ Professional services catalog for PERSONAL_PROFILE / HYBRID individual sites (ta
 | `is_active` | boolean | Yes | Default true; public pages hide inactive rows |
 | `created_at`, `updated_at` | timestamptz | Yes | |
 
+## `profile_family_member`
+
+Family catalog for PERSONAL_PROFILE / HYBRID sites (spouse, children, parents, siblings). This is **not** bio — bio stays on `public_profile.bio_markdown` / About.
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `id` | bigint | Yes | PK; sequence `profile_family_member_id_seq` |
+| `tenant_id` | varchar(255) | Yes | FK → `tenant_organization` |
+| `display_name` | varchar(255) | Yes | |
+| `relationship` | varchar(32) | Yes | `SPOUSE`, `CHILD`, `PARENT`, `SIBLING`, `OTHER` |
+| `role_title` | varchar(255) | No | e.g. Partner, Daughter |
+| `description` | varchar(2000) | No | |
+| `photo_url` | varchar(1024) | No | |
+| `url` | varchar(500) | No | Optional personal / social link |
+| `display_order` | integer | No | Sort asc |
+| `created_at`, `updated_at` | timestamptz | Yes | |
+
+No slug. Public list is `/family` only (no detail route).
+
 ## `profile_audience_contact` (v2)
 
 | Field | Type | Required | Notes |
@@ -168,6 +187,8 @@ Professional services catalog for PERSONAL_PROFILE / HYBRID individual sites (ta
 | `show_profile_contact_section` | false | true |
 | `show_profile_projects_section` | false | true |
 | `show_profile_services_section` | false | true |
+| `show_profile_family_section` | false | true |
+| `show_header_family` | null / OFF | true |
 
 ## Admin vs public visibility
 

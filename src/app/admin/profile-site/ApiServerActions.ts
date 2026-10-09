@@ -15,6 +15,7 @@ import type {
   ProfileMediaAssetDTO,
   ProfileProjectDTO,
   ProfileServiceDTO,
+  ProfileFamilyMemberDTO,
   ProfileAudienceContactDTO,
   ProfileAudienceBulkImportResultDTO,
   TenantSiteType,
@@ -116,6 +117,10 @@ export async function fetchProfileProjectsServer() {
 
 export async function fetchProfileServicesServer() {
   return fetchProfileList<ProfileServiceDTO>('/api/profile-services');
+}
+
+export async function fetchProfileFamilyMembersServer() {
+  return fetchProfileList<ProfileFamilyMemberDTO>('/api/profile-family-members');
 }
 
 export async function createProfileWritingServer(
@@ -228,6 +233,23 @@ export async function updateProfileServiceServer(
 
 export async function deleteProfileServiceServer(id: number): Promise<boolean> {
   return deleteProfileResource('/api/profile-services', id);
+}
+
+export async function createProfileFamilyMemberServer(
+  data: Omit<ProfileFamilyMemberDTO, 'id' | 'tenantId'>
+): Promise<ProfileFamilyMemberDTO | null> {
+  return createProfileResource('/api/profile-family-members', data);
+}
+
+export async function updateProfileFamilyMemberServer(
+  id: number,
+  data: Partial<ProfileFamilyMemberDTO>
+): Promise<ProfileFamilyMemberDTO | null> {
+  return patchProfileResource('/api/profile-family-members', id, data);
+}
+
+export async function deleteProfileFamilyMemberServer(id: number): Promise<boolean> {
+  return deleteProfileResource('/api/profile-family-members', id);
 }
 
 async function createProfileResource<T extends { id?: number | null }>(

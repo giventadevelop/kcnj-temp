@@ -163,6 +163,7 @@ export default function TenantSettingsForm({
       showProfileContactSection: initialData?.showProfileContactSection ?? false,
       showProfileProjectsSection: initialData?.showProfileProjectsSection ?? false,
       showProfileServicesSection: initialData?.showProfileServicesSection ?? false,
+      showProfileFamilySection: initialData?.showProfileFamilySection ?? false,
       // Header menu (null/undefined → form defaults match app null-safe defaults)
       showHeaderHome: initialData?.showHeaderHome ?? true,
       showHeaderAbout: initialData?.showHeaderAbout ?? true,
@@ -178,6 +179,7 @@ export default function TenantSettingsForm({
       showHeaderAchievements: initialData?.showHeaderAchievements ?? false,
       showHeaderAffiliations: initialData?.showHeaderAffiliations ?? false,
       showHeaderProjects: initialData?.showHeaderProjects ?? false,
+      showHeaderFamily: initialData?.showHeaderFamily ?? false,
       // Gas station COO module (GAS_STATION site type)
       enableGasStationModule: initialData?.enableGasStationModule ?? false,
       gasAiEngineBaseUrl: initialData?.gasAiEngineBaseUrl || '',
@@ -1191,6 +1193,7 @@ export default function TenantSettingsForm({
                   ['showHeaderAchievements', 'Achievements', 'Show Achievements (awards, honors, speaking)'],
                   ['showHeaderAffiliations', 'Affiliations', 'Show Affiliations (boards, communities, orgs)'],
                   ['showHeaderProjects', 'Projects', 'Show Projects (case studies)'],
+                  ['showHeaderFamily', 'Family', 'Show Family (spouse, children, parents, siblings)'],
                   ['showHeaderLinks', 'Links', 'Show Links (social URLs + external-link writings)'],
                 ] as const
               ).map(([name, label, description]) => (
@@ -1290,6 +1293,16 @@ export default function TenantSettingsForm({
                   description="Display professional services (tax, financial consulting, etc.) on the homepage"
                   checked={watchedValues.showProfileServicesSection || false}
                   onChange={(checked) => setValue('showProfileServicesSection', checked)}
+                />
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <ToggleSwitch
+                  name="showProfileFamilySection"
+                  label="Show Family Section"
+                  description="Display family members (spouse, children, parents, siblings) on the homepage"
+                  checked={watchedValues.showProfileFamilySection || false}
+                  onChange={(checked) => setValue('showProfileFamilySection', checked)}
                 />
               </div>
             </div>

@@ -16,6 +16,7 @@ import {
   fetchMediaAssetsClient,
   fetchProjectsClient,
   fetchActiveServicesClient,
+  fetchFamilyMembersClient,
   isTalksMediaAsset,
   isDownloadDocumentAsset,
   parseOutcomeMetrics,
@@ -28,7 +29,9 @@ import type {
   ProfileMediaAssetDTO,
   ProfileProjectDTO,
   ProfileServiceDTO,
+  ProfileFamilyMemberDTO,
 } from '@/types/profileSite';
+import { PROFILE_FAMILY_RELATIONSHIP_LABELS } from '@/types/profileSite';
 import { ProfileServiceCard } from '@/components/profile/ProfileServiceCard';
 
 export function ProfileHeroSection({ profile }: { profile: PublicProfileDTO }) {
@@ -326,6 +329,36 @@ export function ProfileAffiliationsSection({ items }: { items: ProfileAffiliatio
   );
 }
 
+export function ProfileFamilySection({ items }: { items: ProfileFamilyMemberDTO[] }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="py-16 bg-muted">
+      <HomeSectionRail eyebrow="Family" containerClassName="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <HomeSectionTitle className="text-3xl font-heading font-semibold text-center mb-10">Family</HomeSectionTitle>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {items.map((m) => (
+            <div key={m.id ?? m.displayName} className="flex gap-4 bg-card rounded-lg sacred-shadow p-5">
+              {m.photoUrl && (
+                <div className="relative w-16 h-16 flex-shrink-0 rounded-full overflow-hidden bg-muted">
+                  <Image src={m.photoUrl} alt={m.displayName} fill className="object-cover" unoptimized />
+                </div>
+              )}
+              <div className="min-w-0">
+                <h3 className="font-heading font-semibold">{m.displayName}</h3>
+                <p className="text-sm text-primary">
+                  {PROFILE_FAMILY_RELATIONSHIP_LABELS[m.relationship] ?? m.relationship}
+                  {m.roleTitle ? ` · ${m.roleTitle}` : ''}
+                </p>
+                {m.description && <p className="text-sm text-muted-foreground mt-1">{m.description}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </HomeSectionRail>
+    </section>
+  );
+}
+
 export function ProfileDownloadsSection({ assets }: { assets: ProfileMediaAssetDTO[] }) {
   const downloadable = assets.filter(isDownloadDocumentAsset);
   if (downloadable.length === 0) return null;
@@ -583,6 +616,7 @@ export default function ProfileHomeSections() {
     showProfileContact,
     showProfileProjects,
     showProfileServices,
+    showProfileFamily,
     loading: settingsLoading,
   } = useTenantSettings();
 
@@ -593,6 +627,7 @@ export default function ProfileHomeSections() {
   const [assets, setAssets] = useState<ProfileMediaAssetDTO[]>([]);
   const [projects, setProjects] = useState<ProfileProjectDTO[]>([]);
   const [services, setServices] = useState<ProfileServiceDTO[]>([]);
+  const [family, setFamily] = useState<ProfileFamilyMemberDTO[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -602,7 +637,7 @@ export default function ProfileHomeSections() {
       try {
         const needProfile = showProfileHero || showProfileContact || showProfileServices;
         const needAchievementsOrTalks = showProfileAchievements || showProfileDownloads;
-        const [p, w, a, af, m, proj, svc] = await Promise.all([
+        const [p, w, a, af, m, proj, svc, fam] = await Promise.all([
           needProfile ? fetchPublishedPublicProfileClient() : Promise.resolve(null),
           showProfileWritings ? fetchPublishedWritingsClient() : Promise.resolve([]),
           needAchievementsOrTalks ? fetchAchievementsClient() : Promise.resolve([]),
@@ -610,6 +645,7 @@ export default function ProfileHomeSections() {
           showProfileDownloads || showProfileAchievements ? fetchMediaAssetsClient() : Promise.resolve([]),
           showProfileProjects ? fetchProjectsClient() : Promise.resolve([]),
           showProfileServices ? fetchActiveServicesClient() : Promise.resolve([]),
+          showProfileFamily ? fetchFamilyMembersClient() : Promise.resolve([]),
         ]);
         if (!cancelled) {
           setProfile(p);
@@ -619,6 +655,7 @@ export default function ProfileHomeSections() {
           setAssets(m);
           setProjects(proj);
           setServices(svc);
+          setFamily(fam);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -636,10 +673,11 @@ export default function ProfileHomeSections() {
     showProfileContact,
     showProfileProjects,
     showProfileServices,
+    showProfileFamily,
   ]);
 
   if (settingsLoading || loading) return null;
-  if (!profile && writings.length === 0 && achievements.length === 0 && projects.length === 0 && services.length === 0) return null;
+  if (!profile && writings.length === 0 && achievements.length === 0 && projects.length === 0 && services.length === 0 && family.length === 0) return null;
 
   const speaking = achievements.filter((a) => a.category === 'SPEAKING');
   const talksMedia = assets.filter(isTalksMediaAsset);
@@ -658,6 +696,7 @@ export default function ProfileHomeSections() {
       )}
       {showProfileAchievements && <ProfileAchievementsSection items={achievements} />}
       {showProfileAffiliations && <ProfileAffiliationsSection items={affiliations} />}
+      {showProfileFamily && <ProfileFamilySection items={family} />}
       {showProfileDownloads && <ProfileDownloadsSection assets={assets} />}
       {showProfileContact && profile && <ProfileContactSection profile={profile} />}
     </>

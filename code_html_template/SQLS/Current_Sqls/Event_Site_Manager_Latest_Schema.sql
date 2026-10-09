@@ -210,6 +210,7 @@ DROP TABLE IF EXISTS public.gas_station_integration CASCADE;
 DROP TABLE IF EXISTS public.gas_station_user_station_assignment CASCADE;
 DROP TABLE IF EXISTS public.gas_station_location CASCADE;
 -- Personal profile site module
+DROP TABLE IF EXISTS public.profile_family_member CASCADE;
 DROP TABLE IF EXISTS public.profile_service CASCADE;
 DROP TABLE IF EXISTS public.profile_project CASCADE;
 DROP TABLE IF EXISTS public.profile_audience_contact CASCADE;
@@ -901,6 +902,13 @@ CREATE SEQUENCE IF NOT EXISTS public.profile_project_id_seq
     CACHE 1;
 
 CREATE SEQUENCE IF NOT EXISTS public.profile_service_id_seq
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    START WITH 1
+    CACHE 1;
+
+CREATE SEQUENCE IF NOT EXISTS public.profile_family_member_id_seq
     INCREMENT BY 1
     NO MINVALUE
     NO MAXVALUE
@@ -3140,6 +3148,7 @@ CREATE TABLE public.tenant_settings (
                                         show_profile_contact_section boolean DEFAULT false NOT NULL,
                                         show_profile_projects_section boolean DEFAULT false NOT NULL,
                                         show_profile_services_section boolean DEFAULT false NOT NULL,
+                                        show_profile_family_section boolean DEFAULT false NOT NULL,
                                         enable_gas_station_module boolean DEFAULT false NOT NULL,
                                         gas_ai_engine_base_url character varying(1024),
                                         gas_ai_engine_api_key_ref character varying(512),
@@ -3159,6 +3168,7 @@ CREATE TABLE public.tenant_settings (
                                         show_header_achievements boolean,
                                         show_header_affiliations boolean,
                                         show_header_projects boolean,
+                                        show_header_family boolean,
                                         created_at timestamp without time zone DEFAULT now() NOT NULL,
                                         updated_at timestamp without time zone DEFAULT now() NOT NULL,
                                         CONSTRAINT chk_tenant_settings__gas_brief_hour CHECK (((gas_daily_brief_hour_local IS NULL) OR ((gas_daily_brief_hour_local >= 0) AND (gas_daily_brief_hour_local <= 23)))),
@@ -3220,10 +3230,12 @@ COMMENT ON COLUMN public.tenant_settings.show_profile_media_downloads_section IS
 COMMENT ON COLUMN public.tenant_settings.show_profile_contact_section IS 'When true, homepage shows the profile contact section.';
 COMMENT ON COLUMN public.tenant_settings.show_profile_projects_section IS 'When true, homepage shows profile project / case-study cards.';
 COMMENT ON COLUMN public.tenant_settings.show_profile_services_section IS 'When true, homepage shows the professional services catalog (tax, financial consulting, etc.).';
+COMMENT ON COLUMN public.tenant_settings.show_profile_family_section IS 'When true, homepage shows the family catalog (spouse, children, parents, siblings).';
 COMMENT ON COLUMN public.tenant_settings.show_header_services IS 'When true, public header shows Services (professional services catalog). Null uses app default OFF.';
 COMMENT ON COLUMN public.tenant_settings.show_header_achievements IS 'When true, public header shows Achievements. Null uses app default OFF.';
 COMMENT ON COLUMN public.tenant_settings.show_header_affiliations IS 'When true, public header shows Affiliations. Null uses app default OFF.';
 COMMENT ON COLUMN public.tenant_settings.show_header_projects IS 'When true, public header shows Projects. Null uses app default OFF.';
+COMMENT ON COLUMN public.tenant_settings.show_header_family IS 'When true, public header shows Family. Null uses app default OFF.';
 COMMENT ON COLUMN public.tenant_settings.enable_gas_station_module IS 'Master on/off for the gas station COO admin module for this tenant (GAS_STATION site type).';
 COMMENT ON COLUMN public.tenant_settings.gas_ai_engine_base_url IS 'Base URL of the external AI engine deployment serving this tenant (invoked server-side only).';
 COMMENT ON COLUMN public.tenant_settings.gas_ai_engine_api_key_ref IS 'Secrets-manager reference to the API key for calling the AI engine. Never store the raw key.';
@@ -3455,6 +3467,30 @@ CREATE INDEX IF NOT EXISTS idx_profile_service_tenant_active ON public.profile_s
 COMMENT ON TABLE public.profile_service IS 'Professional services offered by a PERSONAL_PROFILE / HYBRID individual (e.g. tax consulting, financial consulting).';
 COMMENT ON COLUMN public.profile_service.price_from IS 'Optional starting price; null means inquire / contact for pricing.';
 COMMENT ON COLUMN public.profile_service.cta_url IS 'Book / inquire URL; public UI may fall back to public_profile.booking_url.';
+
+CREATE TABLE IF NOT EXISTS public.profile_family_member (
+  id bigint DEFAULT nextval('public.profile_family_member_id_seq'::regclass) NOT NULL,
+  tenant_id character varying(255) NOT NULL,
+  display_name character varying(255) NOT NULL,
+  relationship character varying(32) NOT NULL,
+  role_title character varying(255),
+  description character varying(2000),
+  photo_url character varying(1024),
+  url character varying(500),
+  display_order integer,
+  created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  CONSTRAINT profile_family_member_pkey PRIMARY KEY (id),
+  CONSTRAINT chk_profile_family_member__relationship CHECK (
+    relationship IN ('SPOUSE', 'CHILD', 'PARENT', 'SIBLING', 'OTHER')
+  ),
+  CONSTRAINT fk_profile_family_member__tenant_id FOREIGN KEY (tenant_id)
+    REFERENCES public.tenant_organization(tenant_id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_profile_family_member_tenant ON public.profile_family_member (tenant_id);
+
+COMMENT ON TABLE public.profile_family_member IS 'Family members shown on a PERSONAL_PROFILE / HYBRID site (spouse, children, parents, siblings).';
 
 
 --
@@ -7265,6 +7301,12 @@ SELECT pg_catalog.setval(
 SELECT pg_catalog.setval(
     'public.profile_service_id_seq',
     GREATEST(COALESCE((SELECT MAX(id) FROM public.profile_service), 1), 1),
+    true
+);
+-- profile_family_member
+SELECT pg_catalog.setval(
+    'public.profile_family_member_id_seq',
+    GREATEST(COALESCE((SELECT MAX(id) FROM public.profile_family_member), 1), 1),
     true
 );
 -- gas_station_location

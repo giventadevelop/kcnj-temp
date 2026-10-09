@@ -85,6 +85,7 @@ const isPublicRouteClerk = createRouteMatcher([
   '/achievements(.*)',
   '/affiliations(.*)',
   '/projects(.*)',
+  '/family(.*)',
 ]);
 
 // Clerk 6: default export MUST be clerkMiddleware() so auth() is detected in layout

@@ -7,6 +7,7 @@ import type {
   ProfileMediaAssetDTO,
   ProfileProjectDTO,
   ProfileServiceDTO,
+  ProfileFamilyMemberDTO,
   ProfileOutcomeMetric,
   ProfileServicePriceUnit,
   PROFILE_SERVICE_PRICE_UNIT_LABELS,
@@ -70,6 +71,10 @@ export function fetchMediaAssetsClient() {
 
 export function fetchProjectsClient() {
   return fetchProfileProxyList<ProfileProjectDTO>('profile-projects');
+}
+
+export function fetchFamilyMembersClient() {
+  return fetchProfileProxyList<ProfileFamilyMemberDTO>('profile-family-members');
 }
 
 /** Public listing uses isActive.equals; local filter remains a safety net. */

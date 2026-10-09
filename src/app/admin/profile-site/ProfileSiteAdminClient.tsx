@@ -16,11 +16,15 @@ import type {
   ProfileMediaKind,
   ProfileServiceCategory,
   ProfileServicePriceUnit,
+  ProfileFamilyMemberDTO,
+  ProfileFamilyRelationship,
 } from '@/types/profileSite';
 import {
   PROFILE_SERVICE_CATEGORIES,
   PROFILE_SERVICE_PRICE_UNITS,
   PROFILE_SERVICE_CATEGORY_LABELS,
+  PROFILE_FAMILY_RELATIONSHIPS,
+  PROFILE_FAMILY_RELATIONSHIP_LABELS,
 } from '@/types/profileSite';
 import {
   upsertPublicProfileServer,
@@ -42,13 +46,16 @@ import {
   createProfileServiceServer,
   updateProfileServiceServer,
   deleteProfileServiceServer,
+  createProfileFamilyMemberServer,
+  updateProfileFamilyMemberServer,
+  deleteProfileFamilyMemberServer,
   applySiteTypePresetsForTenant,
 } from '@/app/admin/profile-site/ApiServerActions';
 import ProfileAudiencePanel from '@/app/admin/profile-site/ProfileAudiencePanel';
 import { getTenantId } from '@/lib/env';
 import { ensureProfileWritingSlug } from '@/lib/profileSlug';
 
-type Tab = 'profile' | 'writings' | 'achievements' | 'affiliations' | 'projects' | 'services' | 'downloads' | 'audience' | 'presets';
+type Tab = 'profile' | 'writings' | 'achievements' | 'affiliations' | 'projects' | 'services' | 'family' | 'downloads' | 'audience' | 'presets';
 
 interface Props {
   initialProfile: PublicProfileDTO | null;
@@ -58,6 +65,7 @@ interface Props {
   initialAssets: ProfileMediaAssetDTO[];
   initialProjects: ProfileProjectDTO[];
   initialServices: ProfileServiceDTO[];
+  initialFamily: ProfileFamilyMemberDTO[];
 }
 
 export default function ProfileSiteAdminClient({
@@ -68,6 +76,7 @@ export default function ProfileSiteAdminClient({
   initialAssets,
   initialProjects,
   initialServices,
+  initialFamily,
 }: Props) {
   const [tab, setTab] = useState<Tab>('profile');
   const [profile, setProfile] = useState<Partial<PublicProfileDTO>>(
@@ -79,6 +88,7 @@ export default function ProfileSiteAdminClient({
   const [assets, setAssets] = useState(initialAssets);
   const [projects, setProjects] = useState(initialProjects);
   const [services, setServices] = useState(initialServices);
+  const [family, setFamily] = useState(initialFamily);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -89,6 +99,7 @@ export default function ProfileSiteAdminClient({
     { id: 'services', label: 'Services' },
     { id: 'achievements', label: 'Achievements' },
     { id: 'affiliations', label: 'Affiliations' },
+    { id: 'family', label: 'Family' },
     { id: 'downloads', label: 'Downloads' },
     { id: 'audience', label: 'Audience' },
     { id: 'presets', label: 'Site presets' },
@@ -239,6 +250,9 @@ export default function ProfileSiteAdminClient({
       )}
       {tab === 'affiliations' && (
         <AffiliationsAdmin items={affiliations} setItems={setAffiliations} setMessage={setMessage} />
+      )}
+      {tab === 'family' && (
+        <FamilyAdmin items={family} setItems={setFamily} setMessage={setMessage} />
       )}
       {tab === 'downloads' && (
         <DownloadsAdmin items={assets} setItems={setAssets} setMessage={setMessage} />
@@ -539,6 +553,85 @@ function AffiliationsAdmin({
           <div className="flex gap-2">
             <button type="button" className="text-blue-600 text-sm" onClick={() => { setEditingId(a.id!); setForm(a); }}>Edit</button>
             <button type="button" className="text-red-600 text-sm" onClick={async () => { if (a.id && await deleteProfileAffiliationServer(a.id)) setItems((p) => p.filter((x) => x.id !== a.id)); }}>Delete</button>
+          </div>
+        </li>
+      ))}</ul>
+    </AdminListShell>
+  );
+}
+
+function FamilyAdmin({
+  items,
+  setItems,
+  setMessage,
+}: {
+  items: ProfileFamilyMemberDTO[];
+  setItems: React.Dispatch<React.SetStateAction<ProfileFamilyMemberDTO[]>>;
+  setMessage: (m: string | null) => void;
+}) {
+  const [form, setForm] = useState<Partial<ProfileFamilyMemberDTO>>({
+    displayName: '',
+    relationship: 'SPOUSE',
+    displayOrder: items.length,
+  });
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  async function save() {
+    if (!form.displayName?.trim() || !form.relationship) return;
+    const payload: Partial<ProfileFamilyMemberDTO> = {
+      displayName: form.displayName.trim(),
+      relationship: form.relationship,
+      roleTitle: form.roleTitle ?? '',
+      description: form.description ?? '',
+      photoUrl: form.photoUrl ?? '',
+      url: form.url ?? '',
+      displayOrder: form.displayOrder,
+    };
+    const result = editingId
+      ? await updateProfileFamilyMemberServer(editingId, payload)
+      : await createProfileFamilyMemberServer(payload as Omit<ProfileFamilyMemberDTO, 'id' | 'tenantId'>);
+    if (!result) { setMessage('Failed to save family member.'); return; }
+    if (editingId) setItems((p) => p.map((a) => (a.id === editingId ? result : a)));
+    else setItems((p) => [...p, result]);
+    setForm({ displayName: '', relationship: 'SPOUSE' });
+    setEditingId(null);
+    setMessage('Family member saved.');
+  }
+
+  return (
+    <AdminListShell title="Family">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+        <ProfileField label="Display name *" value={form.displayName ?? ''} onChange={(v) => setForm((f) => ({ ...f, displayName: v }))} />
+        <label className="block">
+          <span className="text-sm font-medium text-gray-700">Relationship *</span>
+          <select
+            value={form.relationship ?? 'SPOUSE'}
+            onChange={(e) => setForm((f) => ({ ...f, relationship: e.target.value as ProfileFamilyRelationship }))}
+            className="mt-1 block w-full border border-gray-400 rounded-xl px-4 py-3"
+          >
+            {PROFILE_FAMILY_RELATIONSHIPS.map((r) => (
+              <option key={r} value={r}>{PROFILE_FAMILY_RELATIONSHIP_LABELS[r]}</option>
+            ))}
+          </select>
+        </label>
+        <ProfileField label="Role / title" value={form.roleTitle ?? ''} onChange={(v) => setForm((f) => ({ ...f, roleTitle: v }))} />
+        <ProfileField label="Photo URL" value={form.photoUrl ?? ''} onChange={(v) => setForm((f) => ({ ...f, photoUrl: v }))} />
+        <ProfileField label="URL" value={form.url ?? ''} onChange={(v) => setForm((f) => ({ ...f, url: v }))} />
+        <ProfileTextArea
+          label="Description"
+          value={form.description ?? ''}
+          onChange={(v) => setForm((f) => ({ ...f, description: v }))}
+          rows={3}
+          className="md:col-span-2"
+        />
+      </div>
+      <button type="button" onClick={save} className="mb-4 px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold">{editingId ? 'Update' : 'Add'}</button>
+      <ul className="space-y-2">{items.map((a) => (
+        <li key={a.id} className="flex justify-between border rounded-lg px-4 py-3">
+          <span>{a.displayName}{a.relationship ? ` · ${PROFILE_FAMILY_RELATIONSHIP_LABELS[a.relationship] ?? a.relationship}` : ''}</span>
+          <div className="flex gap-2">
+            <button type="button" className="text-blue-600 text-sm" onClick={() => { setEditingId(a.id!); setForm(a); }}>Edit</button>
+            <button type="button" className="text-red-600 text-sm" onClick={async () => { if (a.id && await deleteProfileFamilyMemberServer(a.id)) setItems((p) => p.filter((x) => x.id !== a.id)); }}>Delete</button>
           </div>
         </li>
       ))}</ul>

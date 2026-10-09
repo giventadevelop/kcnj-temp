@@ -25,6 +25,23 @@ export type ProfileServiceCategory =
   | 'EDUCATION'
   | 'OTHER';
 export type ProfileServicePriceUnit = 'HOUR' | 'SESSION' | 'PROJECT' | 'MONTH' | 'YEAR' | 'CUSTOM';
+export type ProfileFamilyRelationship = 'SPOUSE' | 'CHILD' | 'PARENT' | 'SIBLING' | 'OTHER';
+
+export const PROFILE_FAMILY_RELATIONSHIPS: ProfileFamilyRelationship[] = [
+  'SPOUSE',
+  'CHILD',
+  'PARENT',
+  'SIBLING',
+  'OTHER',
+];
+
+export const PROFILE_FAMILY_RELATIONSHIP_LABELS: Record<ProfileFamilyRelationship, string> = {
+  SPOUSE: 'Spouse',
+  CHILD: 'Child',
+  PARENT: 'Parent',
+  SIBLING: 'Sibling',
+  OTHER: 'Family',
+};
 
 export const PROFILE_SERVICE_CATEGORIES: ProfileServiceCategory[] = [
   'TAX',
@@ -130,6 +147,20 @@ export interface ProfileAchievementDTO {
   imageUrl?: string;
   displayOrder?: number;
   isFeatured?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProfileFamilyMemberDTO {
+  id?: number | null;
+  tenantId: string;
+  displayName: string;
+  relationship: ProfileFamilyRelationship;
+  roleTitle?: string;
+  description?: string;
+  photoUrl?: string;
+  url?: string;
+  displayOrder?: number;
   createdAt?: string;
   updatedAt?: string;
 }

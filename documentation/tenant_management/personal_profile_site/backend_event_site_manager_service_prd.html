@@ -278,6 +278,9 @@ fileType, fileSizeBytes, isDownloadable, requiresEmail</pre>
         <thead><tr><th>Change</th><th>API / field</th></tr></thead>
         <tbody>
             <tr><td><code>tenant_settings.show_profile_services_section</code></td><td><code>showProfileServicesSection</code> on <code>/api/tenant-settings</code></td></tr>
+            <tr><td><code>tenant_settings.show_profile_family_section</code></td><td><code>showProfileFamilySection</code> on <code>/api/tenant-settings</code></td></tr>
+            <tr><td><code>tenant_settings.show_header_family</code></td><td><code>showHeaderFamily</code> on <code>/api/tenant-settings</code> (null = OFF)</td></tr>
+            <tr><td>New table <code>profile_family_member</code></td><td>Full CRUD at <code>/api/profile-family-members</code> (clone of profile-affiliations stack)</td></tr>
             <tr><td>New table <code>profile_service</code></td><td>Full CRUD at <code>/api/profile-services</code> (clone of profile-projects stack)</td></tr>
             <tr><td>Criteria</td><td><code>tenantId.equals</code>, optional <code>isActive.equals</code>, <code>category.equals</code>, <code>slug.equals</code>, sort <code>displayOrder,asc</code></td></tr>
         </tbody>

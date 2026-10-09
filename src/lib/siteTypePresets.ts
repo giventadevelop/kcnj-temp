@@ -14,6 +14,7 @@ export interface SiteTypePresetSettings {
   showProfileContactSection?: boolean;
   showProfileProjectsSection?: boolean;
   showProfileServicesSection?: boolean;
+  showProfileFamilySection?: boolean;
   showHeaderHome?: boolean;
   showHeaderAbout?: boolean;
   showHeaderEvents?: boolean;
@@ -28,6 +29,7 @@ export interface SiteTypePresetSettings {
   showHeaderAchievements?: boolean;
   showHeaderAffiliations?: boolean;
   showHeaderProjects?: boolean;
+  showHeaderFamily?: boolean;
 }
 
 const EVENT_ORG_PRESET: SiteTypePresetSettings = {
@@ -43,6 +45,7 @@ const EVENT_ORG_PRESET: SiteTypePresetSettings = {
   showProfileContactSection: false,
   showProfileProjectsSection: false,
   showProfileServicesSection: false,
+  showProfileFamilySection: false,
   showHeaderHome: true,
   showHeaderAbout: true,
   showHeaderEvents: true,
@@ -57,6 +60,7 @@ const EVENT_ORG_PRESET: SiteTypePresetSettings = {
   showHeaderAchievements: false,
   showHeaderAffiliations: false,
   showHeaderProjects: false,
+  showHeaderFamily: false,
 };
 
 const SPORTS_PRESET: SiteTypePresetSettings = {
@@ -83,6 +87,7 @@ const PERSONAL_PROFILE_PRESET: SiteTypePresetSettings = {
   showProfileContactSection: true,
   showProfileProjectsSection: true,
   showProfileServicesSection: true,
+  showProfileFamilySection: true,
   showHeaderHome: true,
   showHeaderAbout: true,
   showHeaderEvents: false,
@@ -97,6 +102,7 @@ const PERSONAL_PROFILE_PRESET: SiteTypePresetSettings = {
   showHeaderAchievements: true,
   showHeaderAffiliations: true,
   showHeaderProjects: true,
+  showHeaderFamily: true,
 };
 
 const HYBRID_PRESET: SiteTypePresetSettings = {
@@ -122,6 +128,7 @@ const GAS_STATION_PRESET: SiteTypePresetSettings = {
   showProfileContactSection: false,
   showProfileProjectsSection: false,
   showProfileServicesSection: false,
+  showProfileFamilySection: false,
   showHeaderHome: true,
   showHeaderAbout: false,
   showHeaderEvents: false,
@@ -136,6 +143,7 @@ const GAS_STATION_PRESET: SiteTypePresetSettings = {
   showHeaderAchievements: false,
   showHeaderAffiliations: false,
   showHeaderProjects: false,
+  showHeaderFamily: false,
 };
 
 export function getSiteTypePresetSettings(siteType: TenantSiteType): SiteTypePresetSettings {

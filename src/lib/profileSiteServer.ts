@@ -11,6 +11,7 @@ import type {
   ProfileServiceDTO,
   ProfileAchievementDTO,
   ProfileProjectDTO,
+  ProfileFamilyMemberDTO,
 } from '@/types/profileSite';
 import type { TenantOrganizationDTO } from '@/types';
 
@@ -221,6 +222,25 @@ export async function fetchProfileAffiliationsForLinksServer(): Promise<ProfileA
     return parseProfileSiteListResponse<ProfileAffiliationDTO>(data);
   } catch (error) {
     console.error('[fetchProfileAffiliationsForLinksServer]', error);
+    return [];
+  }
+}
+
+export async function fetchProfileFamilyMembersServer(): Promise<ProfileFamilyMemberDTO[]> {
+  try {
+    const params = new URLSearchParams({
+      'tenantId.equals': getTenantId(),
+      sort: 'displayOrder,asc',
+      size: '100',
+    });
+    const res = await fetchWithJwtRetry(`${getApiBase()}/api/profile-family-members?${params}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return parseProfileSiteListResponse<ProfileFamilyMemberDTO>(data);
+  } catch (error) {
+    console.error('[fetchProfileFamilyMembersServer]', error);
     return [];
   }
 }
