@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSilentListingRefresh } from '@/hooks/useSilentListingRefresh';
 import type { EventDetailsDTO, EventMediaDTO } from '@/types';
 import { getTenantId } from '@/lib/env';
 import { proxyApiPath } from '@/lib/proxyApiPath';
@@ -44,13 +45,13 @@ export const useEventsData = (enabled: boolean = true) => {
     return eventStartDate >= today && eventStartDate <= oneYearFromNow;
   };
 
-  useEffect(() => {
-    // Defer API calls until enabled (after page ready + delay)
+  const fetchEventsData = useCallback(async (silent: boolean, signal?: AbortSignal) => {
     if (!enabled) return;
 
-    const fetchEventsData = async () => {
-      try {
+    try {
+      if (!silent) {
         setData(prev => ({ ...prev, isLoading: true, error: null }));
+      }
 
         const tenantId = getTenantId();
 
@@ -59,7 +60,7 @@ export const useEventsData = (enabled: boolean = true) => {
           proxyApiPath(
             `/api/proxy/event-details?tenantId.equals=${encodeURIComponent(tenantId)}&sort=startDate,asc`
           ),
-          { cache: 'no-store' }
+          { cache: 'no-store', signal }
         );
 
         if (!eventsResponse.ok) {
@@ -70,11 +71,11 @@ export const useEventsData = (enabled: boolean = true) => {
               proxyApiPath(
                 `/api/proxy/event-details?tenantId.equals=${encodeURIComponent(tenantId)}&sort=startDate,desc`
               ),
-              { cache: 'no-store' }
+              { cache: 'no-store', signal }
             );
             if (!eventsResponse.ok) {
               console.log('Backend unavailable - events not loaded, status:', eventsResponse.status);
-              // Set empty data instead of throwing
+              if (silent) return;
               setData({
                 events: [],
                 eventsWithMedia: [],
@@ -85,8 +86,9 @@ export const useEventsData = (enabled: boolean = true) => {
               return;
             }
           } catch (fallbackErr) {
+            if (signal?.aborted) return;
             console.log('Backend unavailable - events not loaded:', fallbackErr);
-            // Set empty data instead of throwing
+            if (silent) return;
             setData({
               events: [],
               eventsWithMedia: [],
@@ -126,7 +128,7 @@ export const useEventsData = (enabled: boolean = true) => {
               proxyApiPath(
                 `/api/proxy/event-medias?tenantId.equals=${encodeURIComponent(tenantId)}&eventId.equals=${event.id}`
               ),
-              { cache: 'no-store' }
+              { cache: 'no-store', signal }
             );
 
             if (mediaResponse.ok) {
@@ -155,6 +157,8 @@ export const useEventsData = (enabled: boolean = true) => {
 
         console.log('Successfully processed events with media:', eventsWithMedia.length);
 
+        if (signal?.aborted) return;
+
         setData({
           events,
           eventsWithMedia,
@@ -164,7 +168,9 @@ export const useEventsData = (enabled: boolean = true) => {
         });
 
       } catch (error) {
+        if (signal?.aborted) return;
         console.log('Backend connection error - events data not loaded:', error);
+        if (silent) return;
         setData({
           events: [],
           eventsWithMedia: [],
@@ -173,10 +179,14 @@ export const useEventsData = (enabled: boolean = true) => {
           error: null, // Don't set error state, just log it
         });
       }
-    };
-
-    fetchEventsData();
   }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    void fetchEventsData(false);
+  }, [enabled, fetchEventsData]);
+
+  useSilentListingRefresh((signal) => fetchEventsData(true, signal), enabled);
 
   return data;
 };

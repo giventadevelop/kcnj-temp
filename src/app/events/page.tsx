@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useSilentListingRefresh } from '@/hooks/useSilentListingRefresh';
 import Image from "next/image";
 import Link from "next/link";
 import type { EventWithMedia, EventDetailsDTO } from "@/types";
@@ -63,6 +64,18 @@ export default function EventsPage() {
   const [isAutoSwitching, setIsAutoSwitching] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<number, boolean>>({});
   const [expandedResults, setExpandedResults] = useState<Record<number, boolean>>({});
+  const [listingRefreshNonce, setListingRefreshNonce] = useState(0);
+  const hasCompletedInitialLoadRef = useRef(false);
+
+  useEffect(() => {
+    if (!loading) {
+      hasCompletedInitialLoadRef.current = true;
+    }
+  }, [loading]);
+
+  useSilentListingRefresh(() => {
+    setListingRefreshNonce((n) => n + 1);
+  });
 
   // Apply the homepage organic design system (also set globally by PublicOrganicDesignBody).
   useLayoutEffect(() => {
@@ -80,8 +93,11 @@ export default function EventsPage() {
     }
 
     async function fetchEvents() {
-      setLoading(true);
-      setFetchError(false);
+      const silent = listingRefreshNonce > 0 && hasCompletedInitialLoadRef.current;
+      if (!silent) {
+        setLoading(true);
+        setFetchError(false);
+      }
       try {
         // Build query parameters based on date filter
         // Fetch more events from backend to account for recurring event filtering
@@ -92,7 +108,7 @@ export default function EventsPage() {
         let loadingPastEvents = showPastEvents;
 
         // On initial load, check both future and past event counts
-        if (!hasCheckedInitialLoad && page === 0 && !searchTitle && !searchDateFrom && !searchDateTo) {
+        if (!silent && !hasCheckedInitialLoad && page === 0 && !searchTitle && !searchDateFrom && !searchDateTo) {
           // Check future events count
           const futureQueryParams = new URLSearchParams({
             sort: 'startDate,asc',
@@ -101,7 +117,7 @@ export default function EventsPage() {
             'isActive.equals': 'true',
             'startDate.greaterThanOrEqual': today
           });
-          const futureRes = await fetch(`/api/proxy/event-details?${futureQueryParams.toString()}`);
+          const futureRes = await fetch(`/api/proxy/event-details?${futureQueryParams.toString()}`, { cache: 'no-store' });
           const finalFutureCount = futureRes.ok ? parseInt(futureRes.headers.get('x-total-count') || '0', 10) : 0;
           setFutureEventCount(finalFutureCount);
 
@@ -113,7 +129,7 @@ export default function EventsPage() {
             'isActive.equals': 'true',
             'endDate.lessThan': today
           });
-          const pastRes = await fetch(`/api/proxy/event-details?${pastQueryParams.toString()}`);
+          const pastRes = await fetch(`/api/proxy/event-details?${pastQueryParams.toString()}`, { cache: 'no-store' });
           const finalPastCount = pastRes.ok ? parseInt(pastRes.headers.get('x-total-count') || '0', 10) : 0;
           setPastEventCount(finalPastCount);
 
@@ -160,7 +176,7 @@ export default function EventsPage() {
         }
 
         // Fetch paginated events with date filtering
-        const eventsRes = await fetch(`/api/proxy/event-details?${queryParams.toString()}`);
+        const eventsRes = await fetch(`/api/proxy/event-details?${queryParams.toString()}`, { cache: 'no-store' });
         if (!eventsRes.ok) throw new Error('Failed to fetch events');
 
         // Get total count from response header (as per UI style guide)
@@ -271,12 +287,12 @@ export default function EventsPage() {
           limitedProcessedEvents.map(async (event: EventDetailsDTO) => {
             try {
               // First try to find homepage hero image
-              let mediaRes = await fetch(`/api/proxy/event-medias?eventId.equals=${event.id}&isHomePageHeroImage.equals=true`);
+              let mediaRes = await fetch(`/api/proxy/event-medias?eventId.equals=${event.id}&isHomePageHeroImage.equals=true`, { cache: 'no-store' });
               let mediaData = await mediaRes.json();
 
               // If no homepage hero image found, try regular hero image
               if (!mediaData || mediaData.length === 0) {
-                mediaRes = await fetch(`/api/proxy/event-medias?eventId.equals=${event.id}&isHeroImage.equals=true`);
+                mediaRes = await fetch(`/api/proxy/event-medias?eventId.equals=${event.id}&isHeroImage.equals=true`, { cache: 'no-store' });
                 mediaData = await mediaRes.json();
               }
 
@@ -291,15 +307,21 @@ export default function EventsPage() {
         );
         setEvents(eventsWithMedia);
       } catch (err) {
+        if (silent) {
+          console.warn('[EventsPage] Silent refresh failed; keeping current listings');
+          return;
+        }
         setFetchError(true);
         setEvents([]);
       } finally {
-        setLoading(false);
+        if (!silent) {
+          setLoading(false);
+        }
       }
     }
     fetchEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, showPastEvents, searchTitle, searchDateFrom, searchDateTo]);
+  }, [page, showPastEvents, searchTitle, searchDateFrom, searchDateTo, listingRefreshNonce]);
 
   // Helper to generate Google Calendar URL
   function toGoogleCalendarDate(date: string, time: string) {
@@ -534,7 +556,7 @@ export default function EventsPage() {
         {/* Info box when showing future events but there are no future events */}
         {!loading && hasCheckedInitialLoad && !showPastEvents && futureEventCount === 0 && events.length === 0 && !fetchError && (
           <div className="mh-events-banner mh-events-banner--info">
-            <h3>No future events created.</h3>
+            <h3>No future events created yet. Please check back later</h3>
             <p>Please use the future / past events switch above.</p>
           </div>
         )}

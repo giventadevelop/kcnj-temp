@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { useTenantSettings } from '@/components/TenantSettingsProvider';
 import { useDeferredFetch } from '@/hooks/usePageReady';
+import { useSilentListingRefresh } from '@/hooks/useSilentListingRefresh';
 import { getTenantId } from '@/lib/env';
 import { BUNDLED_EMERGENCY_HERO_IMAGE, resolveHeroImages } from '@/lib/hero/defaultHeroImages';
 import {
@@ -160,6 +161,14 @@ export default function ModernistPosterHero() {
   const [isPaused, setIsPaused] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [heroDataVersion, setHeroDataVersion] = useState(0);
+  useSilentListingRefresh(() => {
+    try {
+      sessionStorage.removeItem(cacheKey);
+    } catch {
+      /* ignore */
+    }
+    setHeroDataVersion((v) => v + 1);
+  });
   /** Event details keyed by id — used for Buy Tickets overlay (hero_section_image_rotation.mdc). */
   const [eventsById, setEventsById] = useState<Record<number, EventDetailsDTO>>({});
   /**

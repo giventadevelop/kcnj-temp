@@ -591,18 +591,23 @@ body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-poster {
   will-change: transform;
 }
 
-/* Slow Ken Burns zoom while the slide layer is on screen. */
-@keyframes mh-poster-hero-ken-burns {
+/*
+ * Settle-into-frame, not Ken Burns zoom-in.
+ * Scale never exceeds 1, so object-fit:contain keeps every edge inside the panel.
+ */
+@keyframes mh-poster-hero-settle {
   from {
-    transform: scale(1);
+    transform: scale(0.96);
+    opacity: 0.88;
   }
   to {
-    transform: scale(1.08);
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
 body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-poster.is-zooming {
-  animation: mh-poster-hero-ken-burns 9s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  animation: mh-poster-hero-settle 8s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -613,6 +618,7 @@ body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-poster.is-zoomi
   body.modernist-home .mh-poster-hero-media img.mh-poster-hero-img-poster.is-zooming {
     animation: none;
     transform: none;
+    opacity: 1;
   }
 }
 

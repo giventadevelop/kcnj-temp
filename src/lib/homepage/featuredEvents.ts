@@ -16,6 +16,7 @@ export interface FeaturedEventWithMedia {
   imageUrl: string | null;
 }
 
+/** Featured cards on the homepage. Hard cap for upcoming or past. No pagination. */
 export const MAX_FEATURED_EVENTS_HOMEPAGE = 3;
 
 type MediaRow = EventMediaDTO & Record<string, unknown>;
@@ -146,6 +147,74 @@ export function computeFeaturedEventsFromMedia(eventsWithMedia: EventWithMedia[]
     (a, b) =>
       (a.event.featuredEventPriorityRanking ?? 0) - (b.event.featuredEventPriorityRanking ?? 0)
   );
+}
+
+
+function eventLocalDate(dateValue?: string | null): Date | null {
+  if (!dateValue) return null;
+  const [year, month, day] = dateValue.split('-').map(Number);
+  if (!year || !month || !day) return null;
+  const date = new Date(year, month - 1, day);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+export function isPastHomepageEvent(event: Pick<EventDetailsDTO, 'startDate' | 'endDate'>): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const end = eventLocalDate(event.endDate || event.startDate);
+  return !!end && end < today;
+}
+
+/**
+ * Homepage Featured Events: past featured only, newest first, hard cap (no pagination).
+ */
+export function selectPastFeaturedEvents(
+  items: FeaturedEventWithMedia[],
+  limit: number = MAX_FEATURED_EVENTS_HOMEPAGE
+): FeaturedEventWithMedia[] {
+  return items
+    .filter((item) => isPastHomepageEvent(item.event))
+    .sort((a, b) => {
+      const aDate = a.event.endDate || a.event.startDate || '';
+      const bDate = b.event.endDate || b.event.startDate || '';
+      return bDate.localeCompare(aDate);
+    })
+    .slice(0, limit);
+}
+
+export function selectUpcomingFeaturedEvents(
+  items: FeaturedEventWithMedia[],
+  limit: number = MAX_FEATURED_EVENTS_HOMEPAGE
+): FeaturedEventWithMedia[] {
+  return items
+    .filter((item) => !isPastHomepageEvent(item.event))
+    .sort((a, b) => {
+      const rank =
+        (a.event.featuredEventPriorityRanking ?? 0) - (b.event.featuredEventPriorityRanking ?? 0);
+      if (rank !== 0) return rank;
+      const aDate = a.event.startDate || '';
+      const bDate = b.event.startDate || '';
+      return aDate.localeCompare(bDate);
+    })
+    .slice(0, limit);
+}
+
+/**
+ * Featured strip:
+ * - Upcoming events exist → only featured upcoming (hide if none of them are featured)
+ * - No upcoming events → past featured only
+ * Always capped at {@link MAX_FEATURED_EVENTS_HOMEPAGE}.
+ */
+export function selectHomepageFeaturedEvents(
+  items: FeaturedEventWithMedia[],
+  hasUpcomingEvents: boolean,
+  limit: number = MAX_FEATURED_EVENTS_HOMEPAGE
+): FeaturedEventWithMedia[] {
+  if (hasUpcomingEvents) {
+    return selectUpcomingFeaturedEvents(items, limit);
+  }
+  return selectPastFeaturedEvents(items, limit);
 }
 
 export function getFeaturedEventImageUrl(item: FeaturedEventWithMedia): string | null {

@@ -12,6 +12,7 @@ import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/
 import { resolveBuyTicketsTarget, resolveRegisterTarget } from '@/lib/eventcube/utils';
 import { getTenantId } from '@/lib/env';
 import { useDeferredFetch } from '@/hooks/usePageReady';
+import { useSilentListingRefresh } from '@/hooks/useSilentListingRefresh';
 import { getHomepageCacheKey } from '@/lib/homepageCacheKeys';
 
 export type UpcomingEventsSectionVariant = 'default' | 'modernist';
@@ -479,8 +480,13 @@ function UpcomingEventGlassCard({
   );
 }
 
-const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }> = ({
+const UpcomingEventsSection: React.FC<{
+  variant?: UpcomingEventsSectionVariant;
+  /** When false, hide the section if there are no upcoming events (homepage uses Featured instead). */
+  fallbackToPast?: boolean;
+}> = ({
   variant = 'default',
+  fallbackToPast = true,
 }) => {
   const isModernist = variant === 'modernist';
   const [events, setEvents] = useState<EventWithMedia[]>([]);
@@ -493,8 +499,25 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
   const shouldFetch = useDeferredFetch(300);
 
   // Bump version when event hero media is reseeded so cards pick up new image URLs
-  const CACHE_KEY = getHomepageCacheKey('homepage_events_cache', 3);
+  const CACHE_KEY = getHomepageCacheKey('homepage_events_cache', 6);
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  const [listingRefreshNonce, setListingRefreshNonce] = useState(0);
+  const hasCompletedInitialLoadRef = useRef(false);
+
+  useEffect(() => {
+    if (!loading) {
+      hasCompletedInitialLoadRef.current = true;
+    }
+  }, [loading]);
+
+  useSilentListingRefresh(() => {
+    try {
+      sessionStorage.removeItem(CACHE_KEY);
+    } catch {
+      /* ignore quota / private mode */
+    }
+    setListingRefreshNonce((n) => n + 1);
+  });
 
   // Run cache read before paint so cached data shows immediately (no delay on refresh)
   useLayoutEffect(() => {
@@ -503,13 +526,19 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
       if (cachedData) {
         const { data, timestamp, isUpcoming } = JSON.parse(cachedData);
         if (Date.now() - timestamp < CACHE_DURATION) {
-          setEvents(data ?? []);
-          setIsUpcomingEvents(isUpcoming !== false);
-          setLoading(false);
+          if (!fallbackToPast && isUpcoming === false) {
+            setEvents([]);
+            setIsUpcomingEvents(true);
+            setLoading(false);
+          } else {
+            setEvents(data ?? []);
+            setIsUpcomingEvents(isUpcoming !== false);
+            setLoading(false);
+          }
         }
       }
     } catch (_) { /* ignore */ }
-  }, [CACHE_KEY, CACHE_DURATION]);
+  }, [CACHE_KEY, CACHE_DURATION, fallbackToPast]);
 
   // Array of modern background colors (same as events page)
   const cardBackgrounds = [
@@ -532,28 +561,40 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
 
   useEffect(() => {
     async function fetchEvents() {
-      // Check cache first (instant, no deferral needed for cached data)
-      try {
-        const cachedData = sessionStorage.getItem(CACHE_KEY);
-        if (cachedData) {
-          const { data, timestamp, isUpcoming } = JSON.parse(cachedData);
-          if (Date.now() - timestamp < CACHE_DURATION) {
-            console.log('✅ Using cached events data');
-            setEvents(data);
-            setIsUpcomingEvents(isUpcoming);
-            setLoading(false);
-            return;
+      const silent = listingRefreshNonce > 0 && hasCompletedInitialLoadRef.current;
+
+      if (!silent) {
+        // Check cache first (instant, no deferral needed for cached data)
+        try {
+          const cachedData = sessionStorage.getItem(CACHE_KEY);
+          if (cachedData) {
+            const { data, timestamp, isUpcoming } = JSON.parse(cachedData);
+            if (Date.now() - timestamp < CACHE_DURATION) {
+              if (!fallbackToPast && isUpcoming === false) {
+                setEvents([]);
+                setIsUpcomingEvents(true);
+                setLoading(false);
+                return;
+              }
+              console.log('✅ Using cached events data');
+              setEvents(data);
+              setIsUpcomingEvents(isUpcoming);
+              setLoading(false);
+              return;
+            }
           }
+        } catch (error) {
+          console.warn('Failed to read events cache:', error);
         }
-      } catch (error) {
-        console.warn('Failed to read events cache:', error);
       }
 
       // Defer network request until page is ready + delay
       if (!shouldFetch) return;
 
-      setLoading(true);
-      setFetchError(false);
+      if (!silent) {
+        setLoading(true);
+        setFetchError(false);
+      }
       try {
         // First try to get upcoming events
         // Fetch more events (15) to account for recurring events being grouped into single occurrences
@@ -569,7 +610,7 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
           'isActive.equals': 'true' // Only show active events
         });
 
-        const upcomingRes = await fetch(`/api/proxy/event-details?${upcomingParams.toString()}`);
+        const upcomingRes = await fetch(`/api/proxy/event-details?${upcomingParams.toString()}`, { cache: 'no-store' });
         if (!upcomingRes.ok) throw new Error('Failed to fetch upcoming events');
         const upcomingEvents: EventDetailsDTO[] = await upcomingRes.json();
         let upcomingEventList = Array.isArray(upcomingEvents) ? upcomingEvents : [upcomingEvents];
@@ -657,12 +698,12 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
             limitedEvents.map(async (event: EventDetailsDTO) => {
               try {
                 // First try to find homepage hero image (tenant-scoped)
-                let mediaRes = await fetch(`/api/proxy/event-medias?tenantId.equals=${encodeURIComponent(tenantId)}&eventId.equals=${event.id}&isHomePageHeroImage.equals=true`);
+                let mediaRes = await fetch(`/api/proxy/event-medias?tenantId.equals=${encodeURIComponent(tenantId)}&eventId.equals=${event.id}&isHomePageHeroImage.equals=true`, { cache: 'no-store' });
                 let mediaData = await mediaRes.json();
 
                 // If no homepage hero image found, try regular hero image
                 if (!mediaData || mediaData.length === 0) {
-                  mediaRes = await fetch(`/api/proxy/event-medias?tenantId.equals=${encodeURIComponent(tenantId)}&eventId.equals=${event.id}&isHeroImage.equals=true`);
+                  mediaRes = await fetch(`/api/proxy/event-medias?tenantId.equals=${encodeURIComponent(tenantId)}&eventId.equals=${event.id}&isHeroImage.equals=true`, { cache: 'no-store' });
                   mediaData = await mediaRes.json();
                 }
 
@@ -690,6 +731,12 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
           setEvents(eventsWithMedia);
           setIsUpcomingEvents(true);
         } else {
+          if (!fallbackToPast) {
+            setEvents([]);
+            setIsUpcomingEvents(true);
+            return;
+          }
+
           // No upcoming events, try to get past events
           // Fetch more events (15) to account for recurring events being grouped into single occurrences
           // After processing, we'll limit to 6 events for display
@@ -702,7 +749,7 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
             'isActive.equals': 'true' // Only show active events
           });
 
-          const pastRes = await fetch(`/api/proxy/event-details?${pastParams.toString()}`);
+          const pastRes = await fetch(`/api/proxy/event-details?${pastParams.toString()}`, { cache: 'no-store' });
           if (!pastRes.ok) throw new Error('Failed to fetch past events');
           const pastEvents: EventDetailsDTO[] = await pastRes.json();
           let pastEventList = Array.isArray(pastEvents) ? pastEvents : [pastEvents];
@@ -788,12 +835,12 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
             limitedPastEvents.map(async (event: EventDetailsDTO) => {
               try {
                 // First try to find homepage hero image (tenant-scoped)
-                let mediaRes = await fetch(`/api/proxy/event-medias?tenantId.equals=${encodeURIComponent(tenantId)}&eventId.equals=${event.id}&isHomePageHeroImage.equals=true`);
+                let mediaRes = await fetch(`/api/proxy/event-medias?tenantId.equals=${encodeURIComponent(tenantId)}&eventId.equals=${event.id}&isHomePageHeroImage.equals=true`, { cache: 'no-store' });
                 let mediaData = await mediaRes.json();
 
                 // If no homepage hero image found, try regular hero image
                 if (!mediaData || mediaData.length === 0) {
-                  mediaRes = await fetch(`/api/proxy/event-medias?tenantId.equals=${encodeURIComponent(tenantId)}&eventId.equals=${event.id}&isHeroImage.equals=true`);
+                  mediaRes = await fetch(`/api/proxy/event-medias?tenantId.equals=${encodeURIComponent(tenantId)}&eventId.equals=${event.id}&isHeroImage.equals=true`, { cache: 'no-store' });
                   mediaData = await mediaRes.json();
                 }
 
@@ -822,14 +869,20 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
           setIsUpcomingEvents(false);
         }
       } catch (err) {
+        if (silent) {
+          console.warn('[UpcomingEventsSection] Silent refresh failed; keeping current listings');
+          return;
+        }
         setFetchError(true);
         setEvents([]);
       } finally {
-        setLoading(false);
+        if (!silent) {
+          setLoading(false);
+        }
       }
     }
     fetchEvents();
-  }, [shouldFetch, CACHE_KEY, CACHE_DURATION]);
+  }, [shouldFetch, CACHE_KEY, CACHE_DURATION, listingRefreshNonce, fallbackToPast]);
 
   // Helper to format time with AM/PM
   function formatTime(time: string): string {
@@ -896,6 +949,11 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
     );
   }
 
+  // Homepage: no upcoming listings — Featured Events covers past featured cards instead.
+  if (events.length === 0 && !fallbackToPast) {
+    return null;
+  }
+
   // Handle no events state - return complete section with header
   if (events.length === 0) {
     if (isModernist) {
@@ -938,7 +996,7 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
 
   // Normal render with events
   if (isModernist) {
-    const title = isUpcomingEvents ? 'Upcoming Events' : 'Recent Events';
+    const title = isUpcomingEvents ? 'Upcoming Events' : 'Past Events';
     const lede = isUpcomingEvents
       ? 'Join cultural celebrations and community gatherings — up to six events.'
       : 'Recent cultural celebrations and community gatherings — up to six events.';
@@ -985,7 +1043,7 @@ const UpcomingEventsSection: React.FC<{ variant?: UpcomingEventsSectionVariant }
         <div className="text-center mb-12">
           <HomeSectionTitle
             className="text-3xl md:text-4xl font-bold mb-4"
-            text={isUpcomingEvents ? 'Upcoming Events' : 'Recent Events'}
+            text={isUpcomingEvents ? 'Upcoming Events' : 'Past Events'}
           />
           <p className="home-section-body-text text-lg text-gray-600 max-w-2xl mx-auto">
             {isUpcomingEvents
