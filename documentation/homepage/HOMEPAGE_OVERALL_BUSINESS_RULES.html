@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plain-English business rules for the homepage hero, Featured, Upcoming and Past Events, Team, Sponsors, Live Events, and tenant-settings on/off switches.">
+    <title>Homepage Overall Business Rules</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+        h1 {
+            font-size: 2.5em;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #1a1a2e;
+        }
+        h2 {
+            font-size: 1.8em;
+            border-left: 4px solid #0066cc;
+            padding-left: 15px;
+            margin-top: 40px;
+            color: #1a1a2e;
+        }
+        h3 { font-size: 1.4em; color: #333; margin-top: 25px; }
+        h4 { font-size: 1.2em; color: #555; }
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border: 1px solid #b8d4e3;
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px 25px;
+            margin: 25px 0;
+        }
+        .toc h2 { border-left: none; padding-left: 0; margin-top: 0; font-size: 1.4em; color: #0066cc; }
+        .toc ol { margin: 0; padding-left: 20px; }
+        .toc li { margin: 8px 0; }
+        .toc a { color: #0066cc; text-decoration: none; font-weight: 500; }
+        .toc a:hover { text-decoration: underline; }
+        code {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .code-highlight {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+        }
+        .script-name {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+        .section-container {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+        }
+        .section-container.usage {
+            background: linear-gradient(135deg, #f0e6ff 0%, #e6ccff 100%);
+            border-left-color: #9c27b0;
+        }
+        .section-container.parameters {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe6cc 100%);
+            border-left-color: #ff9800;
+        }
+        .section-container.output {
+            background: linear-gradient(135deg, #e6ffe6 0%, #ccffcc 100%);
+            border-left-color: #28a745;
+        }
+        .section-header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 12px 20px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 8px 8px 0 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .section-header.usage { background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); }
+        .section-header.parameters { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+        .section-header.output { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
+        .section-intro {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e7f0 100%);
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+        }
+        .parameters-list {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe6cc 100%);
+            border-left: 4px solid #ff9800;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+        .parameters-list strong { color: #c05600; }
+        .parameters-list code,
+        .section-intro code,
+        .info code,
+        .warning code,
+        .success code,
+        .error code,
+        .info .code-highlight,
+        .warning .code-highlight,
+        .success .code-highlight,
+        .error .code-highlight {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+        }
+        .info {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            border-radius: 4px;
+            padding: 14px 16px;
+            margin: 16px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+            padding: 14px 16px;
+            margin: 16px 0;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+            padding: 14px 16px;
+            margin: 16px 0;
+        }
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            border-radius: 4px;
+            padding: 14px 16px;
+            margin: 16px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+        tr:nth-child(even) { background-color: #f0f7ff; }
+        tr:hover { background-color: #e3f2fd; }
+        td code {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+        }
+        ul.rules {
+            margin: 8px 0 0 0;
+            padding-left: 22px;
+        }
+        ul.rules li { margin: 8px 0; }
+        .prompt-block {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border: 1px solid #b8d4e3;
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+        }
+        .prompt-header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-weight: bold;
+        }
+        .prompt-body {
+            padding: 16px;
+            background: #e8f4f8;
+            color: #0d3b66;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+            margin: 0;
+            max-height: 420px;
+            overflow-y: auto;
+            border-top: 1px solid #b8d4e3;
+        }
+        .copy-button {
+            background-color: #ffffff;
+            color: #0066cc;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .copy-button:hover {
+            background-color: #e8f4f8;
+            transform: translateY(-1px);
+        }
+        .copy-button.copied {
+            background-color: #28a745;
+            color: white;
+        }
+        .meta {
+            color: #555;
+            font-size: 0.95em;
+            margin-bottom: 12px;
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Homepage Overall Business Rules</h1>
+    <p class="meta">
+        Plain-language rules for the public homepage. These describe what visitors see, not how the code is written.
+        Last aligned with the modernist homepage in this project.
+    </p>
+
+    <div class="section-intro">
+        <p>
+            The homepage is a stack of independent blocks. Event posters, featured cards, the calendar list,
+            live events, the team, and sponsors each have their own rules. Some blocks are always considered
+            (they hide themselves when empty). Others are turned on or off in
+            <strong>Admin → Tenant Management → Settings → Homepage Display Settings</strong>.
+        </p>
+        <p>
+            Marking an event as featured does not automatically put it in the hero.
+            Putting a picture in the hero does not automatically make the event featured.
+            Turning off the events list does not hide Featured or the hero.
+        </p>
+        <p>
+            To test these rules with dummy data cloned from the current tenant, use
+            <a href="HOMEPAGE_RULES_TEST_AUTOMATION.html">Homepage Rules — Test Automation</a>
+            (<code class="script-name">homepage-rules-test.mjs</code>).
+            Pass <code class="code-highlight">--tenant-id</code> so the same script works per project.
+        </p>
+    </div>
+
+    <nav class="toc" aria-label="Table of contents">
+        <h2>Table of Contents</h2>
+        <ol>
+            <li><a href="#how-they-fit">How the homepage blocks fit together</a></li>
+            <li><a href="#tenant-on-off">What tenant settings turn on and off</a></li>
+            <li><a href="#hero">Hero rotation rules</a></li>
+            <li><a href="#featured">Featured Events rules</a></li>
+            <li><a href="#live-onsale">Live Events and the On sale / Register band</a></li>
+            <li><a href="#upcoming-past">Upcoming and Past Events rules</a></li>
+            <li><a href="#team">Team (executive committee) rules</a></li>
+            <li><a href="#sponsors">Sponsors rules</a></li>
+            <li><a href="#always-on">Always-on About and What we do</a></li>
+            <li><a href="#header-menu">Header menu (not the homepage body)</a></li>
+            <li><a href="#events-page">Related rules on the Events calendar page</a></li>
+            <li><a href="#refresh">Silent refresh (no full page reload)</a></li>
+            <li><a href="#admin-flags">Admin switches that control this</a></li>
+            <li><a href="#examples">What visitors see in common situations</a></li>
+            <li><a href="#tester-copy">Copyable tester checklist</a></li>
+            <li><a href="HOMEPAGE_RULES_TEST_AUTOMATION.html">Test automation (dummy data + tenant-id)</a></li>
+        </ol>
+    </nav>
+
+    <div class="section-container" id="how-they-fit">
+        <div class="section-header">How the homepage blocks fit together</div>
+        <ul class="rules">
+            <li>The <strong>hero</strong> is the large rotating poster at the top of the home page.</li>
+            <li><strong>Live Events</strong> appears only when an active event is happening today (start date through end date includes today).</li>
+            <li>The <strong>On sale / Register now</strong> band appears only when there is at least one upcoming event.</li>
+            <li><strong>Featured Events</strong> is a short spotlight strip (at most three cards). It is not a full calendar.</li>
+            <li><strong>Upcoming Events</strong> is a list of up to six coming events. If there are no coming events, the same block becomes <strong>Past Events</strong> and shows up to six recent events.</li>
+            <li><strong>What we do</strong> and <strong>About Us</strong> are always on the modernist homepage. They are not tenant toggles.</li>
+            <li><strong>Team</strong> shows executive committee / volunteer members. It is turned on or off in tenant settings.</li>
+            <li><strong>Our Sponsors</strong> shows active sponsors. It is turned on or off in tenant settings.</li>
+            <li>Event blocks are <strong>independent</strong>. An event can appear in the hero, Featured, Live, and the list, depending on dates and checkboxes — not because it appeared in another block.</li>
+            <li>Featured is <strong>not hidden just because upcoming events exist</strong>. If a coming event is marked featured, Featured still shows.</li>
+            <li>Past featured events appear in Featured <strong>only when there are no future events at all</strong>.</li>
+            <li>The Upcoming / Past list can show past events even while Featured also shows past featured cards. That is on purpose: Featured is a spotlight, the list is the recent calendar.</li>
+        </ul>
+    </div>
+
+    <div class="section-container parameters" id="tenant-on-off">
+        <div class="section-header parameters">What tenant settings turn on and off</div>
+        <p>
+            Editors change these under <strong>Homepage Display Settings</strong> on the tenant settings form.
+            The site waits until those settings have loaded before showing the gated blocks, so they do not flash on and then disappear.
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Homepage block</th>
+                    <th>Admin switch (plain label)</th>
+                    <th>If the switch is off</th>
+                    <th>If settings cannot be loaded</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Hero</td>
+                    <td>Always shown. Event posters can be blocked with <strong>Show event hero images</strong></td>
+                    <td>Hero still shows tenant default pictures or the emergency picture</td>
+                    <td>Event posters stay allowed (on by default)</td>
+                </tr>
+                <tr>
+                    <td>Live Events</td>
+                    <td>No tenant switch</td>
+                    <td>—</td>
+                    <td>Shows if any event is live today; hides if none</td>
+                </tr>
+                <tr>
+                    <td>On sale / Register band</td>
+                    <td>No tenant switch</td>
+                    <td>—</td>
+                    <td>Shows only when there is an upcoming event</td>
+                </tr>
+                <tr>
+                    <td>Featured Events</td>
+                    <td>No tenant switch (uses the event Featured checkbox)</td>
+                    <td>—</td>
+                    <td>Follows Featured date rules; hides if there is nothing to spotlight</td>
+                </tr>
+                <tr>
+                    <td>Upcoming / Past Events list</td>
+                    <td><strong>Show Events Section</strong></td>
+                    <td>The whole list is hidden. Hero, Featured, and Live are unchanged</td>
+                    <td>The list is shown (default on)</td>
+                </tr>
+                <tr>
+                    <td>Team</td>
+                    <td><strong>Show Team Members Section</strong></td>
+                    <td>The Team block is hidden and team data is not fetched. The header About menu also drops the Team link</td>
+                    <td>Team is shown (default on)</td>
+                </tr>
+                <tr>
+                    <td>Our Sponsors</td>
+                    <td><strong>Show Sponsors Section</strong></td>
+                    <td>The homepage sponsor strip is hidden and sponsor data is not fetched</td>
+                    <td>Sponsors are shown (default on)</td>
+                </tr>
+                <tr>
+                    <td>What we do / About Us</td>
+                    <td>No tenant switch</td>
+                    <td>—</td>
+                    <td>Always shown on this homepage</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="info">
+            <strong>How the Team switch is read:</strong>
+            The admin form label is <em>Show Team Members Section</em>.
+            The homepage Team block uses that switch.
+            If a more specific “show executive committee on the homepage” value exists, that one wins; otherwise the Team Members switch is used.
+            A sports “squad / roster” block, if the site type uses one, also follows the Team Members switch and defaults to off.
+        </div>
+        <div class="warning">
+            <strong>Cache note:</strong> Tenant settings are remembered in the browser for about five minutes.
+            After you flip a switch in admin, reload the homepage, or wait for that cache to expire, to see the change.
+            A hard refresh is enough; you do not need to wait for the 30-minute listing refresh.
+        </div>
+        <h3>Site-type starting points (when a new tenant is created)</h3>
+        <ul class="rules">
+            <li><strong>Event organization</strong> — events and sponsors on; team off.</li>
+            <li><strong>Sports</strong> — same as event organization, plus the team / squad switch on.</li>
+            <li><strong>Church</strong> — executive team on; sponsors off.</li>
+            <li><strong>Personal profile</strong> — events, team, and sponsors off; profile sections (writings, achievements, family, and so on) on.</li>
+            <li><strong>Hybrid</strong> — profile sections plus events and sponsors on.</li>
+            <li><strong>Gas station / dashboard</strong> — public homepage sections off.</li>
+            <li>These are only starting values. An admin can still flip each switch later.</li>
+        </ul>
+    </div>
+
+    <div class="section-container usage" id="hero">
+        <div class="section-header usage">Hero rotation rules</div>
+        <p>The hero shows pictures, then slowly moves to the next picture. Visitors can also pause or step through the pictures.</p>
+
+        <h3>Which event pictures can appear</h3>
+        <ul class="rules">
+            <li>The picture must be marked as a <strong>homepage hero</strong> picture or a <strong>hero</strong> picture.</li>
+            <li>If the picture has a “start showing from” date, that date must be <strong>today or earlier</strong>. A future show-from date keeps the picture hidden.</li>
+            <li>The event attached to the picture must still be <strong>coming up or still going</strong> (its end date is today or later). Past events do not rotate in the hero.</li>
+            <li>For a repeating event, the hero uses the <strong>next occurrence</strong>. If there is no next date, that event is skipped.</li>
+            <li>A picture with no event attached is not used as an event slide.</li>
+            <li>If the tenant setting “show event hero images” is turned off, event pictures are skipped and the hero uses tenant default pictures (or the emergency fallback).</li>
+            <li>An event that is marked inactive can still appear in the hero <strong>if an admin explicitly marked its picture as hero / homepage hero</strong>. That is an opt-in for the slider, not for the event list.</li>
+        </ul>
+
+        <h3>Tenant default pictures and fallback</h3>
+        <ul class="rules">
+            <li>After event pictures, the site can add the tenant’s <strong>default hero pictures</strong> (uploaded in tenant settings), if “include default pictures with event pictures” is on (this is on by default).</li>
+            <li>Only <strong>active</strong> default pictures are used.</li>
+            <li>How many defaults appear depends on the tenant’s display mode:
+                <ul>
+                    <li><strong>Slideshow</strong> — use the active defaults, up to the max display count.</li>
+                    <li><strong>Random</strong> — pick a few active defaults at random.</li>
+                    <li><strong>Single</strong> — use one active default.</li>
+                </ul>
+            </li>
+            <li>If there is at least one event picture but the combined slideshow would be only <strong>one</strong> picture, the site adds the emergency default picture so the hero can still rotate (event picture, then default).</li>
+            <li>If there are no event pictures, the hero uses tenant defaults only.</li>
+            <li>If there are no event pictures and no tenant defaults, the hero shows the bundled emergency picture so the top of the page is never blank.</li>
+        </ul>
+
+        <h3>How rotation behaves</h3>
+        <ul class="rules">
+            <li>Each picture stays on screen for the seconds set on that media row. If none is set, it stays for <strong>8 seconds</strong>.</li>
+            <li>Pictures change with a smooth crossfade. The current picture is not cropped to fill the frame; the whole poster stays visible.</li>
+            <li>If there are two or more pictures, Previous, Next, and Pause / Play appear on hover (desktop) or tap (phone). On a phone the controls hide again after a few seconds.</li>
+            <li>Pause stops the automatic change. Play starts it again from the picture you are on.</li>
+            <li>If a later refresh finds the same set of pictures, the current picture keeps rotating. The slider does not jump back to the first picture.</li>
+        </ul>
+
+        <h3>Buy Tickets / Register overlay on the hero</h3>
+        <ul class="rules">
+            <li>The overlay appears only for an <strong>upcoming</strong> event (today or a future start date).</li>
+            <li>Ticketed events (including Event Cube, an outside ticket link, or a ticketed fundraiser) show a Buy Tickets overlay. A ticketed fundraiser uses the fundraiser artwork.</li>
+            <li>If the event is not ticketed but requires registration, the overlay is Register Here.</li>
+            <li>Past events and events with no ticket or registration path get <strong>no overlay</strong>.</li>
+            <li>The overlay sits on the poster corner. It stays readable even when the poster panel is wider than the picture.</li>
+        </ul>
+
+        <div class="info">
+            <strong>Tip:</strong> Hero membership is a <em>picture</em> checkbox (homepage hero / hero). Featured membership is an <em>event</em> checkbox. They are not the same switch.
+        </div>
+    </div>
+
+    <div class="section-container parameters" id="featured">
+        <div class="section-header parameters">Featured Events rules</div>
+        <p>Featured is a short spotlight. It never paginates. Visitors either see up to three cards, or they see no Featured strip at all.</p>
+
+        <h3>What makes an event featured</h3>
+        <ul class="rules">
+            <li>The event itself must have the <strong>Featured Event</strong> checkbox turned on.</li>
+            <li>A featured picture is preferred, but the card can still show if another usable picture exists (see image order below).</li>
+            <li>Priority ranking is a number. <strong>Lower number means higher place</strong> (1 appears before 10).</li>
+        </ul>
+
+        <h3>Which featured events show on the homepage</h3>
+        <ul class="rules">
+            <li>First the site asks: <strong>are there any upcoming events at all</strong> (active events whose start date is today or later, within about a year)?</li>
+            <li><strong>If yes, there are upcoming events:</strong>
+                <ul>
+                    <li>Featured shows <strong>only upcoming featured events</strong>.</li>
+                    <li>Past featured events are hidden, even if they are still marked featured.</li>
+                    <li>If none of the upcoming events are marked featured, the Featured strip is <strong>hidden</strong>.</li>
+                    <li>Upcoming featured cards are ordered by priority (lowest number first), then by start date (soonest first).</li>
+                </ul>
+            </li>
+            <li><strong>If no, there are no upcoming events:</strong>
+                <ul>
+                    <li>Featured shows <strong>past featured events only</strong>.</li>
+                    <li>They are ordered newest first (latest end date, or start date if there is no end date).</li>
+                </ul>
+            </li>
+            <li>In both cases the hard cap is <strong>3 cards</strong>. There is no “next page” on Featured.</li>
+        </ul>
+
+        <h3>Which picture each featured card uses</h3>
+        <ul class="rules">
+            <li>Prefer a picture marked <strong>featured event image</strong>.</li>
+            <li>If none, use a homepage hero, hero, or flyer picture.</li>
+            <li>If none of those, use any picture that still has a working image address.</li>
+            <li>If a picture has a “start showing from” date in the future, it is skipped until that date.</li>
+            <li>If the preferred address has expired, the site tries a stable file address, then a thumbnail.</li>
+        </ul>
+
+        <div class="warning">
+            <strong>Common mix-up:</strong> Having upcoming events does <em>not</em> hide Featured. Featured hides only when upcoming events exist <em>and none of those upcoming events are marked featured</em>.
+        </div>
+        <div class="info">
+            Featured is <strong>not</strong> turned off by the “Show Events Section” tenant switch. That switch only hides the Upcoming / Past list.
+        </div>
+    </div>
+
+    <div class="section-container usage" id="live-onsale">
+        <div class="section-header usage">Live Events and the On sale / Register band</div>
+        <p>These sit under the hero. They have no on/off switch in tenant settings. They hide themselves when there is nothing to show.</p>
+
+        <h3>Live Events</h3>
+        <ul class="rules">
+            <li>An event is “live today” when it is <strong>active</strong>, it has a start date, and <strong>today falls on or between the start date and the end date</strong> (if there is no end date, the start date is used as the end date too).</li>
+            <li>At most <strong>three</strong> live events are shown.</li>
+            <li>The preferred picture is one marked as a <strong>live event image</strong>. If that is missing, any picture on the event is used.</li>
+            <li>If nothing is live today, the Live Events block is <strong>not shown at all</strong> (no empty heading).</li>
+            <li>A Live badge sits on the picture. “All events” goes to the calendar page.</li>
+        </ul>
+
+        <h3>On sale / Register now band</h3>
+        <ul class="rules">
+            <li>This band is shown only when there is at least one <strong>upcoming</strong> event. Past events never appear here.</li>
+            <li>Which event is picked, in order:
+                <ul>
+                    <li>An upcoming featured event that is ticketed</li>
+                    <li>Any upcoming featured event</li>
+                    <li>The first upcoming ticketed event</li>
+                    <li>The first upcoming event</li>
+                </ul>
+            </li>
+            <li>If that event is ticketed, the heading is <strong>On sale now</strong> and the button is <strong>Get tickets</strong>.</li>
+            <li>If it is not ticketed but has a registration link, the heading is <strong>Register now</strong> and the button is <strong>Register</strong> (opens an outside site when the registration is external).</li>
+            <li>Otherwise the button is <strong>View event</strong>.</li>
+        </ul>
+    </div>
+
+    <div class="section-container output" id="upcoming-past">
+        <div class="section-header output">Upcoming and Past Events rules</div>
+        <p>This is the homepage card list under Featured. On the modernist home it is titled Upcoming Events or Past Events. It shows at most six cards.</p>
+
+        <h3>When the section appears</h3>
+        <ul class="rules">
+            <li>The tenant setting “show events section on the home page” must be on. It is on by default.</li>
+            <li>If that setting is off, the list is hidden. The hero and Featured are not affected by this setting.</li>
+        </ul>
+
+        <h3>Upcoming Events (the normal case)</h3>
+        <ul class="rules">
+            <li>Only <strong>active</strong> events are considered.</li>
+            <li>An upcoming event has a start date of <strong>today or later</strong>.</li>
+            <li>They are shown soonest first.</li>
+            <li>The site may fetch more than six (it asks for 15) so repeating events can be grouped. After grouping, visitors see at most <strong>six</strong>.</li>
+            <li>A repeating series shows <strong>one card</strong>: the next occurrence. Later repeats from the same series are not listed separately.</li>
+            <li>If the next occurrence is more than one year away, or there is no next date, that series is skipped.</li>
+            <li>Child rows that belong to a series but are not the series itself are skipped.</li>
+            <li>Buy Tickets, Register, and Donate actions appear on upcoming cards when the event supports them.</li>
+        </ul>
+
+        <h3>Past Events (only when there are no upcoming events)</h3>
+        <ul class="rules">
+            <li>If the upcoming list is empty after grouping, the same section switches to <strong>Past Events</strong>.</li>
+            <li>Past means the event’s <strong>end date is before today</strong> (or the start date, if there is no end date).</li>
+            <li>They are shown newest first.</li>
+            <li>Visitors still see at most <strong>six</strong>.</li>
+            <li>Each card gets a <strong>Past Event</strong> badge.</li>
+            <li>Ticket and register buttons are hidden on past cards.</li>
+            <li>This past fallback is on for the homepage. If it were turned off, the section would stay empty instead of showing history.</li>
+        </ul>
+
+        <h3>Empty and “see more” behavior</h3>
+        <ul class="rules">
+            <li>If there are no upcoming events and no past events, the section explains that events are temporarily unavailable or empty. It does not invent cards.</li>
+            <li>If more than six events exist after grouping, visitors get a path to the full calendar (<strong>View calendar</strong> / See more events) at <code class="code-highlight">/events</code>.</li>
+            <li>The homepage list never paginates inside the section. Six is the cap; the rest live on the Events page.</li>
+        </ul>
+    </div>
+
+    <div class="section-container usage" id="team">
+        <div class="section-header usage">Team (executive committee) rules</div>
+        <p>
+            The homepage Team block is the executive committee / volunteer list.
+            Turn it on or off in tenant settings with <strong>Show Team Members Section</strong>.
+        </p>
+
+        <h3>How it is enabled and disabled</h3>
+        <ul class="rules">
+            <li>The switch lives under <strong>Admin → Tenant Management → Settings → Homepage Display Settings → Show Team Members Section</strong>.</li>
+            <li>When the switch is <strong>on</strong>, the homepage fetches team members and shows the Team block (after settings have finished loading).</li>
+            <li>When the switch is <strong>off</strong>, the Team block is not rendered and the site does not call the team API.</li>
+            <li>If tenant settings cannot be loaded, Team stays <strong>on</strong> so the page does not go blank for a missing setting.</li>
+            <li>The header About menu adds a <strong>Team</strong> link to the full team page only when this switch is on (and only on event / church style sites, not personal-profile navigation).</li>
+        </ul>
+
+        <h3>Who appears on the homepage</h3>
+        <ul class="rules">
+            <li>People come from the executive committee / team members list (Admin → Executive Committee), not from the event calendar.</li>
+            <li>Only members marked <strong>Active</strong> are listed.</li>
+            <li>They are ordered by <strong>priority order</strong>, lowest number first (0 appears before 10). That is rank, not a date.</li>
+            <li>The homepage shows at most <strong>six</strong> people. The rest belong on the full Team page.</li>
+            <li>If the switch is on but nobody is active, visitors still see the Team heading and the line “Team members will appear here when available.”</li>
+        </ul>
+
+        <h3>What each card shows</h3>
+        <ul class="rules">
+            <li>Photo from the member’s profile image. If there is no photo, a plain placeholder is used.</li>
+            <li>Name is first name plus last name. If those are empty, the member title is used.</li>
+            <li>Role line is designation, or title if designation is empty.</li>
+            <li>Short text is expertise if present, otherwise bio.</li>
+        </ul>
+    </div>
+
+    <div class="section-container parameters" id="sponsors">
+        <div class="section-header parameters">Sponsors rules</div>
+        <p>
+            The homepage sponsor strip is turned on or off with <strong>Show Sponsors Section</strong>.
+            It is a thank-you strip, not the full sponsors directory.
+        </p>
+
+        <h3>How it is enabled and disabled</h3>
+        <ul class="rules">
+            <li>The switch lives under <strong>Admin → Tenant Management → Settings → Homepage Display Settings → Show Sponsors Section</strong>.</li>
+            <li>When <strong>on</strong>, the homepage fetches sponsors after settings have loaded and shows <strong>Our Sponsors</strong>.</li>
+            <li>When <strong>off</strong>, the homepage strip is hidden and sponsor data is not fetched.</li>
+            <li>If tenant settings cannot be loaded, sponsors stay <strong>on</strong>.</li>
+            <li>The header About menu still offers a <strong>Sponsors</strong> link to the sponsors page on event-style sites, even if the homepage strip is off. Turning off the homepage strip does not hide that menu item.</li>
+        </ul>
+
+        <h3>Who appears on the homepage</h3>
+        <ul class="rules">
+            <li>Sponsors come from the event sponsors list (Admin → Event Sponsors).</li>
+            <li>Only sponsors marked <strong>Active</strong> are listed.</li>
+            <li>They are ordered by <strong>priority ranking</strong>, lowest number first.</li>
+            <li>The site may fetch up to 12 and then shows at most <strong>eight</strong> on the homepage.</li>
+            <li>If the switch is on but there are no active sponsors, visitors still see the heading and “Sponsors will appear here when available.”</li>
+            <li><strong>See all sponsors</strong> goes to the full sponsors page.</li>
+        </ul>
+
+        <h3>What each card shows</h3>
+        <ul class="rules">
+            <li>Picture order: a sponsor banner picture if one exists, then a hero picture, then a logo, then a generic placeholder.</li>
+            <li>The sponsor type (if set) appears as a badge and as a small label.</li>
+            <li>The main title is company name, or the sponsor name if there is no company name.</li>
+            <li>If both a person name and a company name exist, the person name is shown as a secondary line.</li>
+            <li>A website button appears when a website address is stored.</li>
+        </ul>
+    </div>
+
+    <div class="section-container output" id="always-on">
+        <div class="section-header output">Always-on About and What we do</div>
+        <ul class="rules">
+            <li><strong>What we do</strong> is always on this homepage. It is not a tenant toggle.</li>
+            <li><strong>About Us</strong> is always on this homepage. It is not a tenant toggle.</li>
+            <li>About copy on this site is the organization story (mission, legal name, phone, email). It does not come from the event list.</li>
+            <li>Hiding Team or Sponsors does not hide About Us.</li>
+        </ul>
+    </div>
+
+    <div class="section-container" id="header-menu">
+        <div class="section-header">Header menu (not the homepage body)</div>
+        <p>
+            The top navigation is a separate set of tenant switches under <strong>Header Menu</strong>.
+            Turning a header item off hides it from the menu. It does not, by itself, hide the matching homepage block.
+        </p>
+        <ul class="rules">
+            <li>These default <strong>on</strong>: Home, About, Events, Features, Calendar, Gallery, Contact.</li>
+            <li>These default <strong>off</strong>: News, Downloads, Links, Services, Achievements, Affiliations, Projects, Family.</li>
+            <li>The extra items reuse content from Admin → Profile Site when the tenant is a profile or hybrid site.</li>
+            <li>On event / church style sites, the About dropdown includes About Us, Team (only if the Team homepage switch is on), and Sponsors.</li>
+        </ul>
+    </div>
+
+    <div class="section-container" id="events-page">
+        <div class="section-header">Related rules on the Events calendar page</div>
+        <p>The Events page is the full calendar. It is not the homepage strip, but visitors land there from “View calendar.”</p>
+        <ul class="rules">
+            <li>Visitors can switch between <strong>future</strong> and <strong>past</strong> events.</li>
+            <li>If they are looking at future events and none exist, the page says: <strong>No future events created yet. Please check back later</strong>, and still points them at the future / past switch.</li>
+            <li>The page can silently pick up new events in the background (see silent refresh below) without a full reload.</li>
+        </ul>
+    </div>
+
+    <div class="section-container usage" id="refresh">
+        <div class="section-header usage">Silent refresh (no full page reload)</div>
+        <ul class="rules">
+            <li>While the homepage or Events page stays open, the site refreshes listings about every <strong>30 minutes</strong>.</li>
+            <li>Existing cards stay on screen. There is no flash of a loading spinner that wipes the page.</li>
+            <li>If the browser tab is hidden, the refresh waits. When the visitor comes back, it refreshes if 30 minutes have passed.</li>
+            <li>Using the browser Back button into a cached page also triggers a refresh when needed.</li>
+            <li>If the quiet refresh fails, the current cards stay. The page does not go blank.</li>
+            <li>This applies to the hero pictures, Featured, Upcoming / Past, Team, Sponsors, and the Events calendar list.</li>
+            <li>A normal reload still shows the latest data immediately. You do not have to wait 30 minutes after adding a test event.</li>
+        </ul>
+    </div>
+
+    <div class="parameters-list" id="admin-flags">
+        <p><strong>Admin switches that control this (plain names):</strong></p>
+        <ul class="rules">
+            <li><code>Featured Event</code> on the event — required for the Featured strip.</li>
+            <li><code>Featured priority</code> — lower number shows first among upcoming featured events.</li>
+            <li><code>Homepage hero</code> / <code>Hero image</code> on a picture — required for that picture to enter the hero rotation.</li>
+            <li><code>Featured event image</code> on a picture — preferred picture for a Featured card.</li>
+            <li><code>Start showing from</code> on a picture — hides the picture until that date.</li>
+            <li><code>Hero display seconds</code> — how long that hero picture stays before the next one.</li>
+            <li><code>Active</code> on the event — required for Upcoming / Past cards. Hero can still show an inactive event if its picture is hero-flagged.</li>
+            <li><code>Show Events Section</code> (tenant setting) — shows or hides the Upcoming / Past list only. Does not hide Featured, Live, or the hero.</li>
+            <li><code>Show Team Members Section</code> (tenant setting) — shows or hides the homepage Team block and the header Team link.</li>
+            <li><code>Show Sponsors Section</code> (tenant setting) — shows or hides the homepage Our Sponsors strip. The header Sponsors link still appears on event-style sites.</li>
+            <li><code>Show event hero images</code> (tenant setting) — allows or blocks event pictures in the hero.</li>
+            <li><code>Include default hero pictures with events</code> — whether tenant defaults follow event slides.</li>
+            <li><code>Default hero display mode</code> — slideshow, random, or single for tenant defaults.</li>
+            <li><code>Active</code> on a team member — required for that person to appear in Team.</li>
+            <li><code>Priority order</code> on a team member — lower number appears first.</li>
+            <li><code>Active</code> on a sponsor — required for that sponsor to appear in Our Sponsors.</li>
+            <li><code>Priority ranking</code> on a sponsor — lower number appears first.</li>
+            <li><code>Live event image</code> on a picture — preferred picture for the Live Events block.</li>
+            <li>Header Menu switches — Home, About, Events, and the rest control the top navigation only, not the homepage body.</li>
+            <li><code>Enable Membership Subscription</code> sits next to the homepage display switches but does not show or hide a homepage events block.</li>
+        </ul>
+    </div>
+
+    <h2 id="examples">What visitors see in common situations</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Situation</th>
+                <th>Hero</th>
+                <th>Featured</th>
+                <th>Event list</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Two coming events, and one of them is marked featured</td>
+                <td>Rotates homepage-hero pictures from coming events (plus defaults if enabled)</td>
+                <td>Shows that one upcoming featured event (up to three if more are featured)</td>
+                <td>Upcoming Events — both coming events, max six</td>
+            </tr>
+            <tr>
+                <td>Coming events exist, but none are marked featured</td>
+                <td>Still rotates coming hero pictures</td>
+                <td>Hidden</td>
+                <td>Upcoming Events — the coming events, max six</td>
+            </tr>
+            <tr>
+                <td>No coming events, but past featured events exist</td>
+                <td>Tenant defaults or emergency picture (past event posters do not rotate)</td>
+                <td>Past featured events, newest first, max three</td>
+                <td>Past Events — recent events, max six, with Past Event badges</td>
+            </tr>
+            <tr>
+                <td>No coming events and no past events</td>
+                <td>Defaults or emergency picture</td>
+                <td>Hidden</td>
+                <td>Empty / unavailable message</td>
+            </tr>
+            <tr>
+                <td>An event is featured but its date is still in the past, and a new future event exists</td>
+                <td>Uses the future event’s hero pictures if flagged</td>
+                <td>Does not show the old featured event. Shows a future featured event only if one is marked featured</td>
+                <td>Upcoming Events — the future event(s)</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Team and sponsors on/off</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Situation</th>
+                <th>Team block</th>
+                <th>Sponsors block</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Show Team Members on, and at least one active member exists</td>
+                <td>Shows up to six members, lowest priority number first</td>
+                <td>Depends on the Sponsors switch</td>
+            </tr>
+            <tr>
+                <td>Show Team Members on, but no active members</td>
+                <td>Heading stays; “Team members will appear here when available.”</td>
+                <td>Depends on the Sponsors switch</td>
+            </tr>
+            <tr>
+                <td>Show Team Members off</td>
+                <td>Hidden. Header Team link is also hidden</td>
+                <td>Depends on the Sponsors switch</td>
+            </tr>
+            <tr>
+                <td>Show Sponsors on, and at least one active sponsor exists</td>
+                <td>Depends on the Team switch</td>
+                <td>Shows up to eight sponsors, lowest ranking first</td>
+            </tr>
+            <tr>
+                <td>Show Sponsors on, but no active sponsors</td>
+                <td>Depends on the Team switch</td>
+                <td>Heading stays; “Sponsors will appear here when available.”</td>
+            </tr>
+            <tr>
+                <td>Show Sponsors off</td>
+                <td>Depends on the Team switch</td>
+                <td>Homepage strip hidden. Header Sponsors link can still appear</td>
+            </tr>
+            <tr>
+                <td>Show Events Section off</td>
+                <td>Unchanged</td>
+                <td>Unchanged. Upcoming / Past list is hidden; Featured and Live still follow their own rules</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="success">
+        <strong>Remember:</strong> Featured answers “which events should we spotlight?” Upcoming / Past answers “what is on the calendar right now?” The hero answers “which posters should rotate at the top?” Team and Sponsors answer “who runs this organization, and who supports it?” — and those last two are simple on/off tenant switches.
+    </div>
+
+    <div class="prompt-block" id="tester-copy">
+        <div class="prompt-header">
+            <span>Copyable tester checklist</span>
+            <button type="button" class="copy-button" onclick="copyPromptText(this, 'homepage-rules-tester-prompt')" title="Copy checklist" aria-label="Copy tester checklist to clipboard">Copy</button>
+        </div>
+        <div class="prompt-body" id="homepage-rules-tester-prompt">Homepage business-rule tester checklist
+
+Hero
+- Only homepage-hero / hero pictures from coming or still-going events rotate.
+- A picture with a future “start showing from” date stays hidden.
+- Repeating events use the next occurrence only.
+- If event hero pictures are turned off in tenant settings, only tenant defaults (or the emergency picture) show.
+- If there is only one event picture, a default picture is added so rotation can still happen.
+- Overlay (Buy Tickets / Register) appears only for upcoming ticketed or registration events.
+
+Featured
+- Requires the event Featured checkbox.
+- Cap is 3. No pagination.
+- If any upcoming events exist: show only upcoming featured. Hide Featured if none of those upcoming events are featured.
+- If no upcoming events exist: show past featured, newest first, max 3.
+
+Upcoming / Past list
+- Tenant “Show Events Section” must be on.
+- Prefer upcoming (today or later), max 6, soonest first.
+- Repeating series = one card (next date within one year).
+- If no upcoming: title becomes Past Events, max 6, newest first, Past Event badge, no ticket buttons.
+
+Live Events / On sale band
+- Live: active event whose dates include today, max 3, hides if none.
+- On sale / Register: upcoming only. Ticketed featured first, then featured, then ticketed, then first upcoming.
+
+Team
+- Tenant “Show Team Members Section” must be on.
+- Active executive committee members only, sort by priority order (low number first), max 6.
+- Empty copy if none. Header Team link follows the same switch.
+
+Sponsors
+- Tenant “Show Sponsors Section” must be on.
+- Active sponsors only, sort by priority ranking (low number first), max 8.
+- Picture: banner, then hero, then logo. Empty copy if none.
+- Header Sponsors link is not removed by this switch.
+
+Silent refresh
+- About every 30 minutes, in place, no full reload.
+- Hidden tabs wait. Failed refresh keeps the current cards.
+- After adding a test event or flipping a tenant switch, reload once if you do not want to wait.</div>
+    </div>
+
+    <div class="info">
+        <strong>Test automation:</strong>
+        Page-load suites (TestSprite, MOSC public sanity) do not insert or delete dummy rows.
+        Use
+        <a href="HOMEPAGE_RULES_TEST_AUTOMATION.html">HOMEPAGE_RULES_TEST_AUTOMATION.html</a>
+        and
+        <code class="code-highlight">node scripts/homepage-rules-test/homepage-rules-test.mjs</code>
+        to clone current tenant data, flip dummy dates, toggle section flags, verify, and clean up.
+        Always pass <code class="code-highlight">--tenant-id</code>.
+    </div>
+
+    <div class="info">
+        <strong>Where this lives in the product:</strong>
+        modernist homepage blocks, the
+        <code class="code-highlight">/events</code> calendar,
+        <code class="code-highlight">/team</code>, and
+        <code class="code-highlight">/sponsors</code>.
+        Tenant switches: Admin → Tenant Management → Settings → Homepage Display Settings
+        and Header Menu.
+        Developer files:
+        <code class="code-highlight">ModernistHomePage.tsx</code>,
+        <code class="code-highlight">ModernistPosterHero.tsx</code>,
+        <code class="code-highlight">TenantSettingsProvider.tsx</code>,
+        <code class="code-highlight">featuredEvents.ts</code>,
+        <code class="code-highlight">UpcomingEventsSection.tsx</code>.
+    </div>
+
+    <script>
+        function fallbackCopy(text, button, resetLabel) {
+            const area = document.createElement('textarea');
+            area.value = text;
+            area.setAttribute('readonly', '');
+            area.style.position = 'absolute';
+            area.style.left = '-9999px';
+            document.body.appendChild(area);
+            area.select();
+            try {
+                document.execCommand('copy');
+                button.classList.add('copied');
+                button.textContent = 'Copied';
+                setTimeout(function () {
+                    button.classList.remove('copied');
+                    button.textContent = resetLabel;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+            document.body.removeChild(area);
+        }
+
+        function copyPromptText(button, id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const text = el.textContent.trim();
+            const resetLabel = 'Copy';
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    button.classList.add('copied');
+                    button.textContent = 'Copied';
+                    setTimeout(function () {
+                        button.classList.remove('copied');
+                        button.textContent = resetLabel;
+                    }, 2000);
+                }).catch(function () {
+                    fallbackCopy(text, button, resetLabel);
+                });
+            } else {
+                fallbackCopy(text, button, resetLabel);
+            }
+        }
+    </script>
+</body>
+</html>

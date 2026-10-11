@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Test automation for homepage business rules: clone current tenant data, insert dummy future/past events and sponsors, toggle dates and section flags, verify, then clean up.">
+    <title>Homepage Rules — Test Automation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+        }
+        h1 {
+            font-size: 2.5em;
+            border-bottom: 3px solid #0066cc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #1a1a2e;
+        }
+        h2 {
+            font-size: 1.8em;
+            border-left: 4px solid #0066cc;
+            padding-left: 15px;
+            margin-top: 40px;
+            color: #1a1a2e;
+        }
+        h3 { font-size: 1.4em; color: #333; margin-top: 25px; }
+        .toc {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border: 1px solid #b8d4e3;
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px 25px;
+            margin: 25px 0;
+        }
+        .toc h2 { border-left: none; padding-left: 0; margin-top: 0; font-size: 1.4em; color: #0066cc; }
+        .toc ol { margin: 0; padding-left: 20px; }
+        .toc li { margin: 8px 0; }
+        .toc a { color: #0066cc; text-decoration: none; font-weight: 500; }
+        .toc a:hover { text-decoration: underline; }
+        code {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .code-highlight {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+        }
+        .script-name {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+        .section-container {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+        }
+        .section-container.usage {
+            background: linear-gradient(135deg, #f0e6ff 0%, #e6ccff 100%);
+            border-left-color: #9c27b0;
+        }
+        .section-container.parameters {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe6cc 100%);
+            border-left-color: #ff9800;
+        }
+        .section-container.output {
+            background: linear-gradient(135deg, #e6ffe6 0%, #ccffcc 100%);
+            border-left-color: #28a745;
+        }
+        .section-header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 12px 20px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 8px 8px 0 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .section-header.usage { background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); }
+        .section-header.parameters { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+        .section-header.output { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); }
+        .section-intro {
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e7f0 100%);
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.1);
+        }
+        .parameters-list {
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe6cc 100%);
+            border-left: 4px solid #ff9800;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 15px 0;
+        }
+        .info, .warning, .success, .error {
+            border-radius: 4px;
+            padding: 14px 16px;
+            margin: 16px 0;
+        }
+        .info { background: #d1ecf1; border-left: 4px solid #0c5460; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; }
+        .success { background: #d4edda; border-left: 4px solid #28a745; }
+        .error { background: #f8d7da; border-left: 4px solid #dc3545; }
+        .info code, .warning code, .success code, .error code, .parameters-list code, .section-intro code {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+        tr:nth-child(even) { background-color: #f0f7ff; }
+        tr:hover { background-color: #e3f2fd; }
+        td code {
+            background-color: #e8f4f8;
+            color: #0d3b66;
+            padding: 3px 8px;
+            border-radius: 3px;
+            border: 1px solid #b8d4e3;
+            font-family: 'Courier New', monospace;
+        }
+        ul.rules { margin: 8px 0 0 0; padding-left: 22px; }
+        ul.rules li { margin: 8px 0; }
+        .command-block {
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 102, 204, 0.12);
+        }
+        .command-block.setup { background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-color: #2196f3; }
+        .command-block.expedite { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); border-color: #9c27b0; }
+        .command-block.advance { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-color: #ff9800; }
+        .command-block.verify { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-color: #4caf50; }
+        .command-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            font-weight: bold;
+            color: #0d3b66;
+        }
+        .command-header-buttons { display: flex; gap: 8px; }
+        .command-parameters {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(0,0,0,0.08);
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        .command-parameters h5 { margin: 0 0 12px 0; font-size: 0.9em; color: #333; }
+        .parameter-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .parameter-group.single { grid-template-columns: 1fr; }
+        .parameter-input { display: flex; flex-direction: column; gap: 4px; }
+        .parameter-input label { font-size: 0.8em; color: #555; font-weight: 600; }
+        .parameter-input input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .parameter-input input:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        .command-content {
+            padding: 12px 15px;
+            font-family: 'Courier New', monospace;
+            color: #0d3b66;
+            background: #e8f4f8;
+            border-top: 1px solid #b8d4e3;
+        }
+        .command-single-line {
+            padding: 12px 15px;
+            background: #e8f4f8;
+            color: #0d3b66;
+            border-top: 1px solid #b8d4e3;
+        }
+        .command-single-line-label { font-size: 0.8em; color: #555; margin-bottom: 6px; }
+        .copy-button {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .copy-button-template {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .copy-button.copied, .copy-button-template.copied { background-color: #28a745; }
+        .meta { color: #555; font-size: 0.95em; margin-bottom: 12px; }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            h1 { font-size: 1.8em; }
+            .parameter-group { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Homepage Rules — Test Automation</h1>
+    <p class="meta">
+        Companion to
+        <a href="HOMEPAGE_OVERALL_BUSINESS_RULES.html">HOMEPAGE_OVERALL_BUSINESS_RULES.html</a>.
+        This page is for development databases only.
+    </p>
+
+    <div class="section-intro">
+        <p>
+            <strong>Do we already have this?</strong> No. TestSprite public tests and the MOSC / kcnj page-load suites
+            only check that the homepage <em>renders</em>. They do not clone live rows, insert dummy future events,
+            flip dates to past, seed dummy sponsors, or toggle tenant section flags per tenant.
+            The Playwright hero checklist is a skeleton and does not seed the database.
+        </p>
+        <p>
+            The harness is <code class="script-name">homepage-rules-test.mjs</code>.
+            It copies <strong>current tenant data</strong> into marked dummy rows, changes only those dummies,
+            verifies the SQL rules, and deletes only those dummies. Pass <code class="code-highlight">--tenant-id</code>
+            so the same script works for kcnj-prod, mosc-temp, or any other project sharing this database.
+        </p>
+    </div>
+
+    <nav class="toc" aria-label="Table of contents">
+        <h2>Table of Contents</h2>
+        <ol>
+            <li><a href="#gap">What existed before, and what was missing</a></li>
+            <li><a href="#how">How the new harness works</a></li>
+            <li><a href="#safety">Safety and tenant isolation</a></li>
+            <li><a href="#params">Parameters</a></li>
+            <li><a href="#usage">Commands you can run</a></li>
+            <li><a href="#scenarios">Feature scenarios vs homepage rules</a></li>
+            <li><a href="#browser">What you still verify in the browser</a></li>
+            <li><a href="#cleanup">Cleanup</a></li>
+        </ol>
+    </nav>
+
+    <div class="section-container" id="gap">
+        <div class="section-header">What existed before, and what was missing</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Existing test</th>
+                    <th>What it does</th>
+                    <th>Covers these homepage rules?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>TestSprite <code>PUBLIC-001</code> / public sanity plans</td>
+                    <td>Opens <code>/</code> and checks that the page loads</td>
+                    <td>No. Does not insert, date-shift, or assert Featured vs Past</td>
+                </tr>
+                <tr>
+                    <td>MOSC-temp TestSprite / admin suites</td>
+                    <td>Page-load and admin CRUD smoke</td>
+                    <td>No. Not tenant-parameterized dummy data for homepage rules</td>
+                </tr>
+                <tr>
+                    <td><code>tests/e2e/hero-slider-conditions.spec.ts</code></td>
+                    <td>Playwright skeleton for hero console logs</td>
+                    <td>Partial hero only. No DB seed, no Featured / Past / Team / Sponsors</td>
+                </tr>
+                <tr>
+                    <td><code>scripts/seed-*.mjs</code> one-off seeds</td>
+                    <td>Load real content (flyers, team avatars, sponsors)</td>
+                    <td>No. Not reversible dummy scenarios and not rule assertions</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="warning">
+            <strong>Use this harness on local Docker Postgres only.</strong>
+            Do not point it at production. Dummy rows are marked <code class="code-highlight">[HPTEST]</code>
+            so cleanup cannot delete real events, sponsors, or team members.
+        </div>
+    </div>
+
+    <div class="section-container usage" id="how">
+        <div class="section-header usage">How the new harness works</div>
+        <ul class="rules">
+            <li>Talks to local Docker Postgres (<code class="code-highlight">event_site_manager_db-postgresql-1</code> by default).</li>
+            <li>Always scopes writes with <code class="code-highlight">--tenant-id</code>.</li>
+            <li>Clones the newest real rows for that tenant (featured events first, then others).</li>
+            <li>New event titles start with <code class="code-highlight">[HPTEST]</code>. Sponsors and team first names use the same mark.</li>
+            <li>Copies one picture onto each dummy event and marks it homepage-hero (and live-image when the mode is live).</li>
+            <li><code class="code-highlight">verify</code> prints the SQL snapshot the homepage rules would use: upcoming count, featured upcoming vs past, live today, hero media, sponsor/team counts, section flags.</li>
+            <li>After you run a seed or shift, reload the homepage (or wait out the five-minute settings cache) and look at the UI.</li>
+        </ul>
+    </div>
+
+    <div class="section-container parameters" id="safety">
+        <div class="section-header parameters">Safety and tenant isolation</div>
+        <ul class="rules">
+            <li>Delete commands only remove rows whose title, sponsor name, or team first name starts with <code class="code-highlight">[HPTEST]</code>.</li>
+            <li>Real Onam / volunteer / sponsor rows are left alone.</li>
+            <li>The same script is reusable: pass a different tenant for mosc-temp, mcefee-temp, or kcnj-temp if they share this database.</li>
+            <li>If <code class="code-highlight">--tenant-id</code> is omitted, the script reads <code class="code-highlight">NEXT_PUBLIC_TENANT_ID</code> from <code class="code-highlight">.env.local</code>.</li>
+        </ul>
+    </div>
+
+    <div class="parameters-list" id="params">
+        <p><strong>Parameters:</strong></p>
+        <ul class="rules">
+            <li><code>--tenant-id</code> — required unless set in the environment</li>
+            <li><code>--mode</code> / <code>--to</code> — <code>future</code>, <code>past</code>, or <code>live</code></li>
+            <li><code>--count</code> — how many rows to clone</li>
+            <li><code>--featured</code> — how many of those cloned events are marked featured</li>
+            <li><code>--feature</code> — verify slice: <code>all</code>, <code>featured</code>, <code>upcoming</code>, <code>hero</code>, <code>live</code>, <code>sponsors</code>, <code>team</code>, <code>sections</code></li>
+            <li><code>--name</code> — packaged scenario name</li>
+            <li><code>--events</code> / <code>--team</code> / <code>--sponsors</code> — <code>on</code> or <code>off</code> for tenant settings</li>
+        </ul>
+    </div>
+
+    <div class="section-container usage" id="usage">
+        <div class="section-header usage">Commands you can run</div>
+        <p>All commands are one line for Windows. Change the tenant id in the boxes, then use Copy.</p>
+
+        <div class="command-block setup"
+             data-command-type="setup"
+             data-command-base="node scripts/homepage-rules-test/homepage-rules-test.mjs status"
+             data-template-command="node scripts/homepage-rules-test/homepage-rules-test.mjs status --tenant-id=keralacenter_org_9">
+            <div class="command-header">
+                <span class="command-type">Status snapshot</span>
+                <div class="command-header-buttons">
+                    <button class="copy-button-template" type="button" onclick="copyTemplateCommand(this, 'hptest-status')" title="Copy template command" aria-label="Copy template command">Template</button>
+                    <button class="copy-button" type="button" onclick="copyCommand(this, 'hptest-status')" title="Copy customized command" aria-label="Copy customized command">Copy</button>
+                </div>
+            </div>
+            <div class="command-parameters">
+                <h5>Customize parameters</h5>
+                <div class="parameter-group single">
+                    <div class="parameter-input">
+                        <label for="hptest-status-tenant-id">tenant-id</label>
+                        <input type="text" id="hptest-status-tenant-id" value="keralacenter_org_9" oninput="updateCommand('hptest-status', 'tenant-id', this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="command-content" id="hptest-status">node scripts/homepage-rules-test/homepage-rules-test.mjs status --tenant-id=keralacenter_org_9</div>
+            <div class="command-single-line" id="hptest-status-single">
+                <div class="command-single-line-label">Windows single-line</div>
+                <code id="hptest-status-single-code">node scripts/homepage-rules-test/homepage-rules-test.mjs status --tenant-id=keralacenter_org_9</code>
+            </div>
+        </div>
+
+        <div class="command-block expedite"
+             data-command-type="expedite"
+             data-command-base="node scripts/homepage-rules-test/homepage-rules-test.mjs scenario"
+             data-template-command="node scripts/homepage-rules-test/homepage-rules-test.mjs scenario --name=upcoming-featured --tenant-id=keralacenter_org_9">
+            <div class="command-header">
+                <span class="command-type">Global or named scenario</span>
+                <div class="command-header-buttons">
+                    <button class="copy-button-template" type="button" onclick="copyTemplateCommand(this, 'hptest-scenario')" title="Copy template command" aria-label="Copy template command">Template</button>
+                    <button class="copy-button" type="button" onclick="copyCommand(this, 'hptest-scenario')" title="Copy customized command" aria-label="Copy customized command">Copy</button>
+                </div>
+            </div>
+            <div class="command-parameters">
+                <h5>Customize parameters</h5>
+                <div class="parameter-group">
+                    <div class="parameter-input">
+                        <label for="hptest-scenario-name">name</label>
+                        <input type="text" id="hptest-scenario-name" value="upcoming-featured" placeholder="upcoming-featured | all | cleanup" oninput="updateCommand('hptest-scenario', 'name', this.value)">
+                    </div>
+                    <div class="parameter-input">
+                        <label for="hptest-scenario-tenant-id">tenant-id</label>
+                        <input type="text" id="hptest-scenario-tenant-id" value="keralacenter_org_9" oninput="updateCommand('hptest-scenario', 'tenant-id', this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="command-content" id="hptest-scenario">node scripts/homepage-rules-test/homepage-rules-test.mjs scenario --name=upcoming-featured --tenant-id=keralacenter_org_9</div>
+            <div class="command-single-line" id="hptest-scenario-single">
+                <div class="command-single-line-label">Windows single-line</div>
+                <code id="hptest-scenario-single-code">node scripts/homepage-rules-test/homepage-rules-test.mjs scenario --name=upcoming-featured --tenant-id=keralacenter_org_9</code>
+            </div>
+        </div>
+
+        <div class="command-block advance"
+             data-command-type="advance"
+             data-command-base="node scripts/homepage-rules-test/homepage-rules-test.mjs seed-events"
+             data-template-command="node scripts/homepage-rules-test/homepage-rules-test.mjs seed-events --mode=future --count=2 --featured=1 --tenant-id=keralacenter_org_9">
+            <div class="command-header">
+                <span class="command-type">Individual: clone events</span>
+                <div class="command-header-buttons">
+                    <button class="copy-button-template" type="button" onclick="copyTemplateCommand(this, 'hptest-seed')" title="Copy template command" aria-label="Copy template command">Template</button>
+                    <button class="copy-button" type="button" onclick="copyCommand(this, 'hptest-seed')" title="Copy customized command" aria-label="Copy customized command">Copy</button>
+                </div>
+            </div>
+            <div class="command-parameters">
+                <h5>Customize parameters</h5>
+                <div class="parameter-group">
+                    <div class="parameter-input">
+                        <label for="hptest-seed-mode">mode</label>
+                        <input type="text" id="hptest-seed-mode" value="future" oninput="updateCommand('hptest-seed', 'mode', this.value)">
+                    </div>
+                    <div class="parameter-input">
+                        <label for="hptest-seed-count">count</label>
+                        <input type="text" id="hptest-seed-count" value="2" oninput="updateCommand('hptest-seed', 'count', this.value)">
+                    </div>
+                </div>
+                <div class="parameter-group">
+                    <div class="parameter-input">
+                        <label for="hptest-seed-featured">featured</label>
+                        <input type="text" id="hptest-seed-featured" value="1" oninput="updateCommand('hptest-seed', 'featured', this.value)">
+                    </div>
+                    <div class="parameter-input">
+                        <label for="hptest-seed-tenant-id">tenant-id</label>
+                        <input type="text" id="hptest-seed-tenant-id" value="keralacenter_org_9" oninput="updateCommand('hptest-seed', 'tenant-id', this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="command-content" id="hptest-seed">node scripts/homepage-rules-test/homepage-rules-test.mjs seed-events --mode=future --count=2 --featured=1 --tenant-id=keralacenter_org_9</div>
+            <div class="command-single-line" id="hptest-seed-single">
+                <div class="command-single-line-label">Windows single-line</div>
+                <code id="hptest-seed-single-code">node scripts/homepage-rules-test/homepage-rules-test.mjs seed-events --mode=future --count=2 --featured=1 --tenant-id=keralacenter_org_9</code>
+            </div>
+        </div>
+
+        <div class="command-block verify"
+             data-command-type="verify"
+             data-command-base="node scripts/homepage-rules-test/homepage-rules-test.mjs verify"
+             data-template-command="node scripts/homepage-rules-test/homepage-rules-test.mjs verify --feature=featured --tenant-id=keralacenter_org_9">
+            <div class="command-header">
+                <span class="command-type">Verify one feature</span>
+                <div class="command-header-buttons">
+                    <button class="copy-button-template" type="button" onclick="copyTemplateCommand(this, 'hptest-verify')" title="Copy template command" aria-label="Copy template command">Template</button>
+                    <button class="copy-button" type="button" onclick="copyCommand(this, 'hptest-verify')" title="Copy customized command" aria-label="Copy customized command">Copy</button>
+                </div>
+            </div>
+            <div class="command-parameters">
+                <h5>Customize parameters</h5>
+                <div class="parameter-group">
+                    <div class="parameter-input">
+                        <label for="hptest-verify-feature">feature</label>
+                        <input type="text" id="hptest-verify-feature" value="featured" oninput="updateCommand('hptest-verify', 'feature', this.value)">
+                    </div>
+                    <div class="parameter-input">
+                        <label for="hptest-verify-tenant-id">tenant-id</label>
+                        <input type="text" id="hptest-verify-tenant-id" value="keralacenter_org_9" oninput="updateCommand('hptest-verify', 'tenant-id', this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="command-content" id="hptest-verify">node scripts/homepage-rules-test/homepage-rules-test.mjs verify --feature=featured --tenant-id=keralacenter_org_9</div>
+            <div class="command-single-line" id="hptest-verify-single">
+                <div class="command-single-line-label">Windows single-line</div>
+                <code id="hptest-verify-single-code">node scripts/homepage-rules-test/homepage-rules-test.mjs verify --feature=featured --tenant-id=keralacenter_org_9</code>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-container output" id="scenarios">
+        <div class="section-header output">Feature scenarios vs homepage rules</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Scenario name</th>
+                    <th>What the script does</th>
+                    <th>Rule to check on the homepage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>upcoming-featured</code></td>
+                    <td>Deletes old dummies; clones two future events; marks one featured; turns the events section on; verifies Featured</td>
+                    <td>Upcoming list shows the two dummies. Featured shows the one featured future event (max 3)</td>
+                </tr>
+                <tr>
+                    <td><code>no-future-past</code></td>
+                    <td>Deletes dummy events; verifies remaining real data</td>
+                    <td>If no real future events remain: Featured shows past featured (max 3) and the list becomes Past Events (max 6)</td>
+                </tr>
+                <tr>
+                    <td><code>live-today</code></td>
+                    <td>Clones one event dated today</td>
+                    <td>Live Events appears (max 3)</td>
+                </tr>
+                <tr>
+                    <td><code>sponsors-team</code></td>
+                    <td>Clones two sponsors and two team members; turns those sections on</td>
+                    <td>Team and Our Sponsors show the dummy cards (caps 6 and 8)</td>
+                </tr>
+                <tr>
+                    <td><code>sections-off</code> / <code>sections-on</code></td>
+                    <td>Flips the three homepage display switches</td>
+                    <td>Upcoming / Team / Sponsors hide or return. Hero and Featured are unchanged</td>
+                </tr>
+                <tr>
+                    <td><code>shift-past</code> / <code>shift-future</code></td>
+                    <td>Moves existing dummy events only</td>
+                    <td>Same dummy rows flip from Upcoming + Featured-future to Past + Featured-past, or back</td>
+                </tr>
+                <tr>
+                    <td><code>all</code></td>
+                    <td>Runs upcoming-featured, sponsors-team, live-today, shift-past, shift-future, then status</td>
+                    <td>Global pass through the main data shapes. Clean up afterward</td>
+                </tr>
+                <tr>
+                    <td><code>cleanup</code></td>
+                    <td>Deletes all [HPTEST] rows and turns the three sections back on</td>
+                    <td>Homepage returns to real tenant content</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Individual commands (same script, one feature at a time)</h3>
+        <ul class="rules">
+            <li><code>seed-events --mode=future|past|live</code></li>
+            <li><code>shift-events --to=past|future|live</code></li>
+            <li><code>seed-sponsors</code> / <code>delete-sponsors</code></li>
+            <li><code>seed-team</code> / <code>delete-team</code></li>
+            <li><code>toggle --events=off --team=on --sponsors=off</code></li>
+            <li><code>verify --feature=hero</code> (or featured, upcoming, live, sponsors, team, sections)</li>
+        </ul>
+    </div>
+
+    <div class="section-container" id="browser">
+        <div class="section-header">What you still verify in the browser</div>
+        <p>
+            The script proves the <em>data</em> matches the rules. The homepage is client-rendered, so a
+            <code class="code-highlight">curl</code> of <code class="code-highlight">/</code> will not show the cards.
+            After each scenario:
+        </p>
+        <ul class="rules">
+            <li>Reload the homepage (dummy titles start with <code class="code-highlight">[HPTEST]</code>).</li>
+            <li>If a section toggle does not change, wait out the five-minute tenant-settings cache or do a hard reload.</li>
+            <li>Confirm hero posters are not cropped, Featured never paginates, and empty Featured is hidden when upcoming exist but none are featured.</li>
+        </ul>
+        <div class="info">
+            <strong>Not a Playwright replacement yet.</strong>
+            Browser clicking can be added later on top of these same seed commands.
+            The data layer is the part that was missing.
+        </div>
+    </div>
+
+    <div class="section-container output" id="cleanup">
+        <div class="section-header output">Cleanup</div>
+        <div class="command-block verify"
+             data-command-type="verify"
+             data-command-base="node scripts/homepage-rules-test/homepage-rules-test.mjs cleanup"
+             data-template-command="node scripts/homepage-rules-test/homepage-rules-test.mjs cleanup --tenant-id=keralacenter_org_9">
+            <div class="command-header">
+                <span class="command-type">Remove all dummy rows</span>
+                <div class="command-header-buttons">
+                    <button class="copy-button-template" type="button" onclick="copyTemplateCommand(this, 'hptest-cleanup')" title="Copy template command" aria-label="Copy template command">Template</button>
+                    <button class="copy-button" type="button" onclick="copyCommand(this, 'hptest-cleanup')" title="Copy customized command" aria-label="Copy customized command">Copy</button>
+                </div>
+            </div>
+            <div class="command-parameters">
+                <h5>Customize parameters</h5>
+                <div class="parameter-group single">
+                    <div class="parameter-input">
+                        <label for="hptest-cleanup-tenant-id">tenant-id</label>
+                        <input type="text" id="hptest-cleanup-tenant-id" value="keralacenter_org_9" oninput="updateCommand('hptest-cleanup', 'tenant-id', this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="command-content" id="hptest-cleanup">node scripts/homepage-rules-test/homepage-rules-test.mjs cleanup --tenant-id=keralacenter_org_9</div>
+            <div class="command-single-line" id="hptest-cleanup-single">
+                <div class="command-single-line-label">Windows single-line</div>
+                <code id="hptest-cleanup-single-code">node scripts/homepage-rules-test/homepage-rules-test.mjs cleanup --tenant-id=keralacenter_org_9</code>
+            </div>
+        </div>
+        <div class="success">
+            Always run cleanup when you are done testing so dummy future events do not stay on the public homepage.
+        </div>
+    </div>
+
+    <script>
+        const commandParams = {};
+        const PARAM_ORDER = ['name', 'mode', 'count', 'featured', 'to', 'feature', 'events', 'team', 'sponsors', 'tenant-id'];
+
+        function updateCommandFromParams(commandId) {
+            const commandElement = document.getElementById(commandId);
+            if (!commandElement) return;
+            const commandBlock = commandElement.closest('.command-block');
+            if (!commandBlock) return;
+            let command = commandBlock.getAttribute('data-command-base') || '';
+            const params = commandParams[commandId] || {};
+            PARAM_ORDER.forEach(function (key) {
+                const value = params[key];
+                if (!value || !String(value).trim()) return;
+                const trimmed = String(value).trim();
+                command += trimmed.indexOf(' ') >= 0 ? ' --' + key + '="' + trimmed + '"' : ' --' + key + '=' + trimmed;
+            });
+            commandElement.textContent = command;
+            const single = document.getElementById(commandId + '-single-code');
+            if (single) single.textContent = command;
+        }
+
+        function updateCommand(commandId, paramName, paramValue) {
+            if (!commandParams[commandId]) commandParams[commandId] = {};
+            commandParams[commandId][paramName] = paramValue;
+            updateCommandFromParams(commandId);
+        }
+
+        function fallbackCopy(text, button, resetLabel) {
+            const area = document.createElement('textarea');
+            area.value = text;
+            area.setAttribute('readonly', '');
+            area.style.position = 'absolute';
+            area.style.left = '-9999px';
+            document.body.appendChild(area);
+            area.select();
+            try {
+                document.execCommand('copy');
+                button.classList.add('copied');
+                const original = resetLabel;
+                button.textContent = 'Copied';
+                setTimeout(function () {
+                    button.classList.remove('copied');
+                    button.textContent = original;
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+            document.body.removeChild(area);
+        }
+
+        function copyText(button, text, resetLabel) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    button.classList.add('copied');
+                    button.textContent = 'Copied';
+                    setTimeout(function () {
+                        button.classList.remove('copied');
+                        button.textContent = resetLabel;
+                    }, 2000);
+                }).catch(function () {
+                    fallbackCopy(text, button, resetLabel);
+                });
+            } else {
+                fallbackCopy(text, button, resetLabel);
+            }
+        }
+
+        function copyCommand(button, commandId) {
+            const el = document.getElementById(commandId);
+            if (!el) return;
+            copyText(button, el.textContent.trim(), 'Copy');
+        }
+
+        function copyTemplateCommand(button, commandId) {
+            const block = button.closest('.command-block');
+            if (!block) return;
+            let template = block.getAttribute('data-template-command') || '';
+            template = template.replace(/&quot;/g, '"');
+            copyText(button, template, 'Template');
+        }
+
+        function initializeCommands() {
+            document.querySelectorAll('.command-block[data-command-base]').forEach(function (block) {
+                const commandContent = block.querySelector('.command-content');
+                if (!commandContent || !commandContent.id) return;
+                const commandId = commandContent.id;
+                block.querySelectorAll('.parameter-input input').forEach(function (input) {
+                    if (!input.id || input.id.indexOf(commandId + '-') !== 0) return;
+                    const paramName = input.id.substring(commandId.length + 1);
+                    if (!commandParams[commandId]) commandParams[commandId] = {};
+                    commandParams[commandId][paramName] = input.value || '';
+                });
+                updateCommandFromParams(commandId);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeCommands);
+    </script>
+</body>
+</html>
