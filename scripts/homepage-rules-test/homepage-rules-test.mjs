@@ -23,9 +23,9 @@ const TEAM_FIRST = '[HPTEST]';
 const SPONSOR_PREFIX = '[HPTEST]';
 
 const DEFAULTS = {
-  container: process.env.HPTEST_PG_CONTAINER || 'event_site_manager_db-postgresql-1',
+  container: process.env.HPTEST_PG_CONTAINER || 'kluvo_ai_db-postgresql-1',
   user: process.env.HPTEST_PG_USER || 'event_site_admin',
-  db: process.env.HPTEST_PG_DB || 'event_site_manager_db',
+  db: process.env.HPTEST_PG_DB || 'kluvo_ai_db',
 };
 
 function loadDotEnvLocal() {

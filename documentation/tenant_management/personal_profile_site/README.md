@@ -1,6 +1,6 @@
 # Personal Profile Site — Documentation Index
 
-Hand this folder to backend, frontend, and ops teams. **Frontend (`mosc-temp` / kcnj-prod) Phase A/B/C and Audience CRM are implemented.** Backend Phase B (booking / projects / media_kind) and Phase C (`profile_service` / `/api/profile-services`) are implemented in `event-site-manager-service` — **deploy so Liquibase 003 and `20261008120000_profile_service.xml` apply**.
+Hand this folder to backend, frontend, and ops teams. **Frontend (`mosc-temp` / kcnj-prod) Phase A/B/C and Audience CRM are implemented.** Backend Phase B (booking / projects / media_kind) and Phase C (`profile_service` / `/api/profile-services`) are implemented in `kluvo-ai-service` — **deploy so Liquibase 003 and `20261008120000_profile_service.xml` apply**.
 
 ## Start here
 
@@ -24,8 +24,8 @@ Hand this folder to backend, frontend, and ops teams. **Frontend (`mosc-temp` / 
 |------|------|------------------|
 | `mosc-temp` | Next.js app, proxies, admin CMS, public profile UI, Audience tab | Done |
 | `event-site-manager` | Multi-tenant admin; Audience tab parity | Done |
-| `event-site-manager-service` | Spring Boot REST API, Liquibase migrations, JPA entities | **Deploy Phase C** Liquibase `20261008120000_profile_service.xml` + `/api/profile-services` |
-| `event-site-manager-batch-jobs` | Spring Batch; `PROFILE_AUDIENCE` email; SQL + TenantSettings flags for projects/services | **Yes for bulk send**; restart after Liquibase so Hibernate validate sees new columns |
+| `kluvo-ai-service` | Spring Boot REST API, Liquibase migrations, JPA entities | **Deploy Phase C** Liquibase `20261008120000_profile_service.xml` + `/api/profile-services` |
+| `kluvo-ai-batch-jobs` | Spring Batch; `PROFILE_AUDIENCE` email; SQL + TenantSettings flags for projects/services | **Yes for bulk send**; restart after Liquibase so Hibernate validate sees new columns |
 
 Canonical SQL (all repos): `code_html_template/SQLS/Current_Sqls/Latest_Schema_Post__Blob_Claude_12.sql`
 

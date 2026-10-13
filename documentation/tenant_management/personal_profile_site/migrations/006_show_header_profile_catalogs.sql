@@ -1,6 +1,6 @@
 -- Personal profile — header menu: Achievements, Affiliations, Projects
 -- (independent of homepage section flags)
--- Apply via Liquibase in event-site-manager-service; canonical DDL in Event_Site_Manager_Latest_Schema.sql
+-- Apply via Liquibase in kluvo-ai-service; canonical DDL in Event_Site_Manager_Latest_Schema.sql
 
 ALTER TABLE public.tenant_settings
   ADD COLUMN IF NOT EXISTS show_header_achievements boolean,

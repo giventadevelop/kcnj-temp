@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Profile Site — event-site-manager-service PRD</title>
+    <title>Personal Profile Site — kluvo-ai-service PRD</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 1100px; margin: 0 auto; padding: 20px 20px 48px; }
@@ -28,8 +28,8 @@
 
     <h1>Personal Profile Site — Backend PRD</h1>
     <p class="doc-meta">
-        <strong>Project:</strong> <code>event-site-manager-service</code> (Spring Boot / JHipster-style REST)<br>
-        <strong>Repo path:</strong> <code>F:/project_workspace/event-site-manager-service</code><br>
+        <strong>Project:</strong> <code>kluvo-ai-service</code> (Spring Boot / JHipster-style REST)<br>
+        <strong>Repo path:</strong> <code>F:/project_workspace/kluvo-ai-service</code><br>
         <strong>Index:</strong> <a href="personal_profile_site_prd.html">personal_profile_site_prd.html</a> ·
         <strong>Schema:</strong> <a href="personal_profile_database_schema.html">personal_profile_database_schema.html</a> ·
         <strong>Fields:</strong> <a href="personal_profile_attribute_catalog.md">personal_profile_attribute_catalog.md</a> ·
@@ -246,7 +246,7 @@ fileType, fileSizeBytes, isDownloadable, requiresEmail</pre>
 
     <h2>9. Phase B (implemented) — booking, projects, media kind</h2>
     <div class="info-box">
-        <p><strong>Status (2026-07-19):</strong> Landed in <code>event-site-manager-service</code>. Frontend (<code>mosc-temp</code>) already calls these fields/endpoints.</p>
+        <p><strong>Status (2026-07-19):</strong> Landed in <code>kluvo-ai-service</code>. Frontend (<code>mosc-temp</code>) already calls these fields/endpoints.</p>
         <p><strong>Liquibase:</strong> <code>config/liquibase/changelog/20260719120000_profile_booking_projects_media_kind.xml</code> (included from <code>master.xml</code>)</p>
         <p><strong>Manual SQL:</strong> <code>migrations/003_profile_booking_projects_media_kind.sql</code></p>
     </div>
@@ -261,7 +261,7 @@ fileType, fileSizeBytes, isDownloadable, requiresEmail</pre>
     </table>
     <h3>9.1 Deploy checklist</h3>
     <ol>
-        <li>Deploy / restart <code>event-site-manager-service</code> so Liquibase applies 003.</li>
+        <li>Deploy / restart <code>kluvo-ai-service</code> so Liquibase applies 003.</li>
         <li>Confirm <code>GET /api/profile-projects?tenantId.equals=…</code> returns 200 (empty list OK).</li>
         <li>Confirm <code>PATCH</code> public profile with <code>bookingUrl</code> and media asset with <code>mediaKind</code>.</li>
         <li>Re-test admin Profile site → Projects tab + Booking URL in mosc-temp.</li>
@@ -269,7 +269,7 @@ fileType, fileSizeBytes, isDownloadable, requiresEmail</pre>
 
     <h2>9.2 Phase C — professional services catalog</h2>
     <div class="info-box">
-        <p><strong>Status (2026-10-08):</strong> Implemented. Frontend (kcnj-prod) plus admin (<code>event-site-manager</code>), Liquibase + REST in <code>event-site-manager-service</code>, and schema/TenantSettings mapping in <code>event-site-manager-batch-jobs</code>.</p>
+        <p><strong>Status (2026-10-08):</strong> Implemented. Frontend (kcnj-prod) plus admin (<code>event-site-manager</code>), Liquibase + REST in <code>kluvo-ai-service</code>, and schema/TenantSettings mapping in <code>kluvo-ai-batch-jobs</code>.</p>
         <p><strong>Liquibase:</strong> <code>config/liquibase/changelog/20261008120000_profile_service.xml</code> (included from <code>master.xml</code>)</p>
         <p><strong>Manual SQL:</strong> <code>migrations/004_profile_service.sql</code></p>
         <p><strong>Canonical DDL:</strong> <code>Event_Site_Manager_Latest_Schema.sql</code> in the database repo, service <code>sqls</code> copy, batch-jobs <code>database</code> copy, and kcnj-prod <code>code_html_template</code>.</p>
@@ -288,8 +288,8 @@ fileType, fileSizeBytes, isDownloadable, requiresEmail</pre>
     <p>Enums: category <code>TAX|FINANCIAL|LEGAL|CONSULTING|COACHING|TECHNOLOGY|HEALTHCARE|EDUCATION|OTHER</code>; price unit <code>HOUR|SESSION|PROJECT|MONTH|YEAR|CUSTOM</code> (nullable). Sequence: <code>profile_service_id_seq</code>.</p>
     <h3>9.3 Phase C deploy checklist</h3>
     <ol>
-        <li>Deploy / restart <code>event-site-manager-service</code> so Liquibase applies <code>20261008120000_profile_service.xml</code>.</li>
-        <li>Restart <code>event-site-manager-batch-jobs</code> after the column exists (Hibernate validate on TenantSettings).</li>
+        <li>Deploy / restart <code>kluvo-ai-service</code> so Liquibase applies <code>20261008120000_profile_service.xml</code>.</li>
+        <li>Restart <code>kluvo-ai-batch-jobs</code> after the column exists (Hibernate validate on TenantSettings).</li>
         <li>Confirm <code>GET /api/profile-services?tenantId.equals=…&amp;isActive.equals=true</code> returns 200 (empty list OK).</li>
         <li>Re-test kcnj-prod admin Profile site → Services tab; public homepage + <code>/services</code>.</li>
         <li>Re-test event-site-manager admin Profile site → Professional Services collection + tenant toggle.</li>
