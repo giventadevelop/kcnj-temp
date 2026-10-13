@@ -21,7 +21,7 @@
     The script uses AWS Route 53 change-batch API to create all records in a single operation.
 
 .PARAMETER Domain
-    The primary domain name (without www prefix). Example: event-site-manager.com
+    The primary domain name (without www prefix). Example: kluvo.ai
 
 .PARAMETER HostedZoneId
     The Route 53 hosted zone ID for the domain. If not provided, script will attempt to find it.
@@ -34,19 +34,19 @@
     Time to live for DNS records. Default: 3600 (1 hour).
 
 .EXAMPLE
-    .\Add-ClerkDnsRecords.ps1 -Domain "event-site-manager.com" -HostedZoneId "Z0123456789ABCDEF" -ClerkMailInstanceId "ulg16gghuyou"
+    .\Add-ClerkDnsRecords.ps1 -Domain "kluvo.ai" -HostedZoneId "Z0123456789ABCDEF" -ClerkMailInstanceId "ulg16gghuyou"
 
-    Creates all 5 CNAME records for event-site-manager.com in the specified hosted zone.
+    Creates all 5 CNAME records for kluvo.ai in the specified hosted zone.
 
 .EXAMPLE
-    .\Add-ClerkDnsRecords.ps1 -Domain "event-site-manager.com"
+    .\Add-ClerkDnsRecords.ps1 -Domain "kluvo.ai"
 
     Prompts for hosted zone ID and Clerk mail instance ID, then creates records.
 #>
 
 [CmdletBinding(SupportsShouldProcess=$true)]
 param(
-    [Parameter(Mandatory=$true, HelpMessage="Domain name (e.g., event-site-manager.com)")]
+    [Parameter(Mandatory=$true, HelpMessage="Domain name (e.g., kluvo.ai)")]
     [string]$Domain,
 
     [Parameter(Mandatory=$false, HelpMessage="Route 53 hosted zone ID")]
