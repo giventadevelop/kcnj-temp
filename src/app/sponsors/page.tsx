@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { EventSponsorsDTO } from '@/types';
@@ -21,6 +21,12 @@ export default function SponsorsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const pendingScrollToTopRef = useRef(false);
+  const sawPageFetchRef = useRef(false);
+
+  const scrollPageToTop = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  };
 
   useLayoutEffect(() => {
     document.body.classList.add('modernist-home', 'organic-home');
@@ -99,6 +105,25 @@ export default function SponsorsPage() {
     setCurrentPage(1);
     setIsSearching(false);
   };
+
+  const goToPage = (page: number) => {
+    if (page === currentPage) return;
+    pendingScrollToTopRef.current = true;
+    setCurrentPage(page);
+    scrollPageToTop();
+  };
+
+  useLayoutEffect(() => {
+    if (!pendingScrollToTopRef.current) return;
+    if (loading) {
+      sawPageFetchRef.current = true;
+      return;
+    }
+    if (!sawPageFetchRef.current) return;
+    sawPageFetchRef.current = false;
+    pendingScrollToTopRef.current = false;
+    scrollPageToTop();
+  }, [loading, sponsors]);
 
   const hasPrevPage = currentPage > 1;
   const hasNextPage = currentPage < totalPages;
@@ -325,7 +350,7 @@ export default function SponsorsPage() {
             <div className="mh-events-pagination">
               <div className="mh-events-pagination-row">
                 <button
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() => goToPage(Math.max(1, currentPage - 1))}
                   disabled={!hasPrevPage || loading}
                   className="mh-btn mh-btn-readmore mh-events-page-btn"
                   title="Previous Page"
@@ -354,7 +379,7 @@ export default function SponsorsPage() {
                 </div>
 
                 <button
-                  onClick={() => setCurrentPage((p) => p + 1)}
+                  onClick={() => goToPage(currentPage + 1)}
                   disabled={!hasNextPage || loading}
                   className="mh-btn mh-btn-readmore mh-events-page-btn"
                   title="Next Page"
