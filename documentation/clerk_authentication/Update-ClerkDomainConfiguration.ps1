@@ -13,7 +13,7 @@
 .DESCRIPTION
     This script updates domain references in both primary and satellite projects:
     - Old: adwiise.com (primary), mosc-temp.com (satellite)
-    - New: kluvo.ai (primary), mcefee-temp.com (satellite)
+    - New: adwiiseagent.ai (primary), mcefee-temp.com (satellite)
 
 .PARAMETER PrimaryProjectPath
     Path to the primary domain project (event-site-manager).
@@ -63,11 +63,11 @@ $oldSatelliteDomain = "mosc-temp.com"
 $oldSatelliteDomainWithWww = "www.mosc-temp.com"
 $oldSatelliteDomainFull = "https://www.mosc-temp.com"
 
-$newPrimaryDomain = "kluvo.ai"
-$newPrimaryDomainWithWww = "www.kluvo.ai"
-$newPrimaryDomainFull = "https://www.kluvo.ai"
-$newPrimaryClerkDomain = "clerk.kluvo.ai"
-$newPrimaryClerkDomainFull = "https://clerk.kluvo.ai"
+$newPrimaryDomain = "adwiiseagent.ai"
+$newPrimaryDomainWithWww = "www.adwiiseagent.ai"
+$newPrimaryDomainFull = "https://www.adwiiseagent.ai"
+$newPrimaryClerkDomain = "clerk.adwiiseagent.ai"
+$newPrimaryClerkDomainFull = "https://clerk.adwiiseagent.ai"
 
 $newSatelliteDomain = "mcefee-temp.com"
 $newSatelliteDomainWithWww = "www.mcefee-temp.com"
@@ -205,12 +205,12 @@ function Update-SatelliteProject {
     # 1. src/app/layout.tsx
     $layoutFile = Join-Path $ProjectPath "src\app\layout.tsx"
     $replacements = @{
-        "# Primary domain: www.adwiise.com" = "# Primary domain: www.kluvo.ai"
+        "# Primary domain: www.adwiise.com" = "# Primary domain: www.adwiiseagent.ai"
         "# Satellite domains: www.mosc-temp.com" = "# Satellite domains: www.mcefee-temp.com"
         "hostname.includes('mosc-temp.com')" = "hostname.includes('mcefee-temp.com')"
         "domain: 'mosc-temp.com'" = "domain: 'mcefee-temp.com'"
-        "signInUrl: 'https://www.adwiise.com/sign-in'" = "signInUrl: 'https://www.kluvo.ai/sign-in'"
-        "signUpUrl: 'https://www.adwiise.com/sign-up'" = "signUpUrl: 'https://www.kluvo.ai/sign-up'"
+        "signInUrl: 'https://www.adwiise.com/sign-in'" = "signInUrl: 'https://www.adwiiseagent.ai/sign-in'"
+        "signUpUrl: 'https://www.adwiise.com/sign-up'" = "signUpUrl: 'https://www.adwiiseagent.ai/sign-up'"
         "allowedRedirectOrigins: isProd ? ['https://www.mosc-temp.com']" = "allowedRedirectOrigins: isProd ? ['https://www.mcefee-temp.com']"
         "'https://www.mosc-temp.com'" = "'https://www.mcefee-temp.com'"
     }
@@ -223,8 +223,8 @@ function Update-SatelliteProject {
     $replacements = @{
         "includes('mosc-temp.com')" = "includes('mcefee-temp.com')"
         "'mosc-temp.com'" = "'mcefee-temp.com'"
-        "'https://www.adwiise.com/sign-in'" = "'https://www.kluvo.ai/sign-in'"
-        "signInUrl: process.env.NEXT_PUBLIC_APP_URL?.includes('amplifyapp.com') || process.env.NEXT_PUBLIC_APP_URL?.includes('mosc-temp.com')`n    ? 'https://www.adwiise.com/sign-in'" = "signInUrl: process.env.NEXT_PUBLIC_APP_URL?.includes('amplifyapp.com') || process.env.NEXT_PUBLIC_APP_URL?.includes('mcefee-temp.com')`n    ? 'https://www.kluvo.ai/sign-in'"
+        "'https://www.adwiise.com/sign-in'" = "'https://www.adwiiseagent.ai/sign-in'"
+        "signInUrl: process.env.NEXT_PUBLIC_APP_URL?.includes('amplifyapp.com') || process.env.NEXT_PUBLIC_APP_URL?.includes('mosc-temp.com')`n    ? 'https://www.adwiise.com/sign-in'" = "signInUrl: process.env.NEXT_PUBLIC_APP_URL?.includes('amplifyapp.com') || process.env.NEXT_PUBLIC_APP_URL?.includes('mcefee-temp.com')`n    ? 'https://www.adwiiseagent.ai/sign-in'"
     }
     if (Update-FileContent -FilePath $middlewareFile -Replacements $replacements -IsDryRun $IsDryRun) {
         $filesUpdated++
@@ -235,7 +235,7 @@ function Update-SatelliteProject {
     if (Test-Path -LiteralPath $signInFile) {
         $replacements = @{
             "hostname.includes('mosc-temp.com')" = "hostname.includes('mcefee-temp.com')"
-            "https://www.adwiise.com/sign-in" = "https://www.kluvo.ai/sign-in"
+            "https://www.adwiise.com/sign-in" = "https://www.adwiiseagent.ai/sign-in"
         }
         if (Update-FileContent -FilePath $signInFile -Replacements $replacements -IsDryRun $IsDryRun) {
             $filesUpdated++
@@ -249,7 +249,7 @@ function Update-SatelliteProject {
     if (Test-Path -LiteralPath $signUpFile) {
         $replacements = @{
             "hostname.includes('mosc-temp.com')" = "hostname.includes('mcefee-temp.com')"
-            "https://www.adwiise.com/sign-up" = "https://www.kluvo.ai/sign-up"
+            "https://www.adwiise.com/sign-up" = "https://www.adwiiseagent.ai/sign-up"
         }
         if (Update-FileContent -FilePath $signUpFile -Replacements $replacements -IsDryRun $IsDryRun) {
             $filesUpdated++
@@ -262,8 +262,8 @@ function Update-SatelliteProject {
     $clerkProxyFile = Join-Path $ProjectPath "src\app\__clerk\[...path]\route.ts"
     if (Test-Path -LiteralPath $clerkProxyFile) {
         $replacements = @{
-            "clerk.adwiise.com" = "clerk.kluvo.ai"
-            "https://clerk.adwiise.com" = "https://clerk.kluvo.ai"
+            "clerk.adwiise.com" = "clerk.adwiiseagent.ai"
+            "https://clerk.adwiise.com" = "https://clerk.adwiiseagent.ai"
         }
         if (Update-FileContent -FilePath $clerkProxyFile -Replacements $replacements -IsDryRun $IsDryRun) {
             $filesUpdated++

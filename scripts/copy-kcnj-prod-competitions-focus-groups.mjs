@@ -12,7 +12,7 @@
  *   node scripts/copy-kcnj-prod-competitions-focus-groups.mjs
  *
  * Optional:
- *   COPY_API_BASE_URL=https://api-dev.kluvo.ai
+ *   COPY_API_BASE_URL=https://api-dev.adwiiseagent.ai
  *   SOURCE_TENANT=keralacenter_org_9
  *   TARGET_TENANT=kcnj_parsippany_8
  *   SOURCE_EVENT_ID=38
@@ -37,7 +37,7 @@ for (const line of readFileSync(resolve(root, '.env.local'), 'utf8').split(/\r?\
 const API =
   process.env.COPY_API_BASE_URL ||
   process.env.MOSC_API_BASE_URL ||
-  'https://api-dev.kluvo.ai';
+  'https://api-dev.adwiiseagent.ai';
 const SRC = process.env.SOURCE_TENANT || 'keralacenter_org_9';
 const DST = process.env.TARGET_TENANT || process.env.NEXT_PUBLIC_TENANT_ID || 'kcnj_parsippany_8';
 const SOURCE_EVENT_ID = Number(process.env.SOURCE_EVENT_ID || 38);
