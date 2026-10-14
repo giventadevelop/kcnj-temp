@@ -26,7 +26,7 @@
 
 .EXAMPLE
     .\Update-ClerkDomainConfiguration.ps1 `
-      -PrimaryProjectPath "E:\project_workspace\kluvo-ai-admin" `
+      -PrimaryProjectPath "E:\project_workspace\adwiise-agent-admin" `
       -SatelliteProjectPath "E:\project_workspace\mcefee-temp"
 
     Updates all domain references in both projects.
@@ -40,7 +40,7 @@
 [CmdletBinding(SupportsShouldProcess=$true)]
 param(
     [Parameter(Mandatory=$false)]
-    [string]$PrimaryProjectPath = "E:\project_workspace\kluvo-ai-admin",
+    [string]$PrimaryProjectPath = "E:\project_workspace\adwiise-agent-admin",
 
     [Parameter(Mandatory=$false)]
     [string]$SatelliteProjectPath = "E:\project_workspace\mcefee-temp",

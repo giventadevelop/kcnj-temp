@@ -1,5 +1,5 @@
 -- Personal profile — professional services catalog
--- Apply via Liquibase in kluvo-ai-service; canonical DDL in Event_Site_Manager_Latest_Schema.sql
+-- Apply via Liquibase in adwiise-agent-service; canonical DDL in Event_Site_Manager_Latest_Schema.sql
 -- Use this changelog on existing databases that already have public_profile / profile_project.
 
 ALTER TABLE public.tenant_settings

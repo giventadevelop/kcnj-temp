@@ -1,5 +1,5 @@
 ---
-description: Standard commit-and-push workflow for the three core backend/frontend repos (mosc-temp, kluvo-ai-batch-jobs, kluvo-ai-service) on Windows
+description: Standard commit-and-push workflow for the three core backend/frontend repos (mosc-temp, adwiise-agent-batch-jobs, adwiise-agent-service) on Windows
 globs: **/*
 alwaysApply: false
 ---
@@ -16,15 +16,15 @@ When the user asks to **commit and push** (or "commit push these projects") for 
 
 This rule covers the **three-repo batch** workflow for batch-jobs and service (and mosc-temp when named in the trio).
 
-**Single-repo requests** (e.g. only `kluvo-ai-service`) use the same **Step 0 pull → Step 2 `git add -A` + secret scan → commit → push** workflow; stage all **` M` / `??`** paths that pass the filter — including unstaged `src/main/java/**` and `src/test/java/**`.
+**Single-repo requests** (e.g. only `adwiise-agent-service`) use the same **Step 0 pull → Step 2 `git add -A` + secret scan → commit → push** workflow; stage all **` M` / `??`** paths that pass the filter — including unstaged `src/main/java/**` and `src/test/java/**`.
 
 ## **Repositories (canonical paths & branches)**
 
 | Repo | Path | Default branch | Remote |
 |------|------|----------------|--------|
 | **mosc-temp** | `F:\project_workspace\mosc-temp` | `MOSC-redesign-sub-poc-2` | `origin` |
-| **kluvo-ai-batch-jobs** | `F:\project_workspace\kluvo-ai-batch-jobs` | `main` | `origin` |
-| **kluvo-ai-service** | `F:\project_workspace\kluvo-ai-service` | `feature_Freelance_Work` | `origin` |
+| **adwiise-agent-batch-jobs** | `F:\project_workspace\adwiise-agent-batch-jobs` | `main` | `origin` |
+| **adwiise-agent-service** | `F:\project_workspace\adwiise-agent-service` | `feature_Freelance_Work` | `origin` |
 
 - **DO** verify `git branch --show-current` before push; branch names above are defaults, not assumptions.
 - **DO NOT** change `git config` (no global credential or SSL config edits).
@@ -115,10 +115,10 @@ $env:GIT_SSL_NO_VERIFY = 'true'
 cd "F:\project_workspace\mosc-temp"
 git push origin MOSC-redesign-sub-poc-2
 
-cd "F:\project_workspace\kluvo-ai-batch-jobs"
+cd "F:\project_workspace\adwiise-agent-batch-jobs"
 git push origin main
 
-cd "F:\project_workspace\kluvo-ai-service"
+cd "F:\project_workspace\adwiise-agent-service"
 git push origin feature_Freelance_Work
 ```
 
@@ -207,7 +207,7 @@ git push origin <branch-name>
 Remove-Item Env:GIT_SSL_NO_VERIFY
 ```
 
-- **kluvo-ai-service** often pushes without this; **mosc-temp** and **batch-jobs** may need it on this machine.
+- **adwiise-agent-service** often pushes without this; **mosc-temp** and **batch-jobs** may need it on this machine.
 - Full SSL troubleshooting: [git_local_push.mdc](mdc:.cursor/rules/git_local_push.mdc).
 - Inform the user if SSL bypass was used; suggest fixing CA bundle separately if pushes fail repeatedly.
 
@@ -224,10 +224,10 @@ After push from HP Omen, on the other machine:
 cd "F:\project_workspace\mosc-temp"
 git pull origin MOSC-redesign-sub-poc-2
 
-cd "F:\project_workspace\kluvo-ai-batch-jobs"
+cd "F:\project_workspace\adwiise-agent-batch-jobs"
 git pull origin main
 
-cd "F:\project_workspace\kluvo-ai-service"
+cd "F:\project_workspace\adwiise-agent-service"
 git pull origin feature_Freelance_Work
 ```
 
