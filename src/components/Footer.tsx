@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTenantSettings } from "@/components/TenantSettingsProvider";
 import GoogleAdSenseRegion from "@/components/ads/GoogleAdSenseRegion";
+import AdSenseConsentBanner from "@/components/ads/AdSenseConsentBanner";
 import { SocialIconLink } from "@/components/social/SocialIconLink";
 import { scrollToHomepageHash } from "@/lib/homepageHashScroll";
 
@@ -359,10 +360,20 @@ const Footer = () => {
                 www.giventa.com
               </a>
             </p>
+            <nav aria-label="Legal" className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+              <Link href="/privacy" className="text-gray-400 hover:text-gray-200 font-inter text-[11px] md:text-xs underline-offset-2 hover:underline">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="text-gray-400 hover:text-gray-200 font-inter text-[11px] md:text-xs underline-offset-2 hover:underline">
+                Terms and Conditions
+              </Link>
+              <AdSenseConsentBanner variant="settings-link" />
+            </nav>
           </div>
         </div>
       </div>
 
+      <AdSenseConsentBanner />
       <BackToTopButton />
     </footer>
   );

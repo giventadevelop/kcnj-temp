@@ -13,6 +13,8 @@ export interface AdminListSearchComboboxProps<T extends AdminListSearchItem> {
   /** Committed filter value that drives list filtering / refetch — not updated on every keystroke. */
   committedValue: string;
   onCommit: (value: string) => void;
+  /** Fired on every keystroke so Search buttons can stay in sync with the draft without refetching. */
+  onInputChange?: (value: string) => void;
   /** Return all strings that should match the query for an item. */
   getSearchFields: (item: T) => Array<string | number | null | undefined>;
   /** Value written into the input / committed filter when an suggestion is selected. */
@@ -74,6 +76,7 @@ export default function AdminListSearchCombobox<T extends AdminListSearchItem>({
   items,
   committedValue,
   onCommit,
+  onInputChange,
   getSearchFields,
   getCommitValue,
   formatPrimary,
@@ -109,7 +112,8 @@ export default function AdminListSearchCombobox<T extends AdminListSearchItem>({
 
   useEffect(() => {
     setInputValue(committedValue);
-  }, [committedValue]);
+    onInputChange?.(committedValue);
+  }, [committedValue]); // eslint-disable-line react-hooks/exhaustive-deps -- sync draft when parent commits/clears
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -168,8 +172,9 @@ export default function AdminListSearchCombobox<T extends AdminListSearchItem>({
 
   const commitTypedOrSelected = (value: string) => {
     const next = value.trim();
-    onCommit(next);
     setInputValue(next);
+    onInputChange?.(next);
+    onCommit(next);
     setOpen(false);
   };
 
@@ -179,6 +184,7 @@ export default function AdminListSearchCombobox<T extends AdminListSearchItem>({
 
   const handleClear = () => {
     setInputValue('');
+    onInputChange?.('');
     onCommit('');
     setSuggestions(mergeItems(items, cachedItems, keyFn).slice(0, SUGGESTION_LIMIT));
     setOpen(true);
@@ -224,6 +230,7 @@ export default function AdminListSearchCombobox<T extends AdminListSearchItem>({
           onChange={(e) => {
             const next = e.target.value;
             setInputValue(next);
+            onInputChange?.(next);
             setOpen(true);
             runSearch(next);
           }}

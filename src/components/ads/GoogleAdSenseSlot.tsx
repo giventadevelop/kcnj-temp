@@ -1,8 +1,9 @@
 'use client';
 
 import Script from 'next/script';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AdsenseRegionId } from '@/lib/adsense/parseAdsensePlacements';
+import { ADSENSE_CONSENT_EVENT, readAdsenseConsent } from '@/lib/adsense/adsenseConsent';
 
 declare global {
   interface Window {
@@ -30,10 +31,18 @@ export default function GoogleAdSenseSlot({
   minHeight = 90,
 }: GoogleAdSenseSlotProps) {
   const pushedRef = useRef(false);
-  const shouldLoadScript = !loadedPublisherScripts.has(publisherId);
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const shouldLoadScript = consentAccepted && !loadedPublisherScripts.has(publisherId);
 
   useEffect(() => {
-    if (pushedRef.current || !publisherId || !slotId) {
+    const sync = () => setConsentAccepted(readAdsenseConsent() === 'accepted');
+    sync();
+    window.addEventListener(ADSENSE_CONSENT_EVENT, sync);
+    return () => window.removeEventListener(ADSENSE_CONSENT_EVENT, sync);
+  }, []);
+
+  useEffect(() => {
+    if (!consentAccepted || pushedRef.current || !publisherId || !slotId) {
       return;
     }
     try {
@@ -42,9 +51,9 @@ export default function GoogleAdSenseSlot({
     } catch (error) {
       console.warn('[GoogleAdSenseSlot] Failed to initialize ad region:', region, error);
     }
-  }, [publisherId, slotId, region]);
+  }, [consentAccepted, publisherId, slotId, region]);
 
-  if (!publisherId?.trim() || !slotId?.trim()) {
+  if (!consentAccepted || !publisherId?.trim() || !slotId?.trim()) {
     return null;
   }
 

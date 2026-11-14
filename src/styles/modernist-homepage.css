@@ -2861,6 +2861,82 @@ body.modernist-home .mh-events-search {
   background: var(--mh-surface);
   border-top: 2px solid var(--mh-text);
   padding: 20px;
+  overflow: visible;
+}
+
+/* Public listing typeahead (PublicListSearchCombobox) */
+body.modernist-home .mh-events-search .mh-typeahead {
+  position: relative;
+  width: 100%;
+  z-index: 20;
+}
+
+body.modernist-home .mh-events-search .mh-typeahead-input {
+  width: 100%;
+  font-family: var(--mh-font);
+  font-size: 15px;
+  color: var(--mh-text);
+  background: var(--mh-bg);
+  border: 1px solid var(--mh-neutral-300);
+  border-radius: 0;
+  padding: 12px 36px 12px 14px;
+}
+
+body.modernist-home .mh-events-search .mh-typeahead-input:focus {
+  outline: 2px solid var(--mh-accent);
+  outline-offset: 1px;
+  border-color: var(--mh-accent);
+}
+
+body.modernist-home .mh-events-search .mh-typeahead [role='listbox'] {
+  position: absolute;
+  z-index: 50;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  max-height: 18rem;
+  overflow-y: auto;
+  background: var(--mh-surface);
+  border: 1px solid var(--mh-neutral-300);
+  border-radius: 0;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+  padding: 4px 0;
+}
+
+body.modernist-home .mh-events-search .mh-typeahead [role='option'] button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--mh-font);
+  color: var(--mh-text);
+}
+
+body.modernist-home .mh-events-search .mh-typeahead [role='option'] button:hover {
+  background: color-mix(in srgb, var(--mh-accent) 12%, transparent);
+}
+
+/* Sponsors catalog: name-only search + "Click Enter for more" */
+body.modernist-home .mh-events-search--sponsors {
+  grid-template-columns: 1fr auto;
+}
+
+body.modernist-home .mh-sponsors-search-more {
+  border-top: 1px solid var(--mh-neutral-300);
+  margin-top: 2px;
+  color: var(--mh-accent);
+  background: transparent;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  cursor: pointer;
+  font-family: var(--mh-font);
+}
+
+body.modernist-home .mh-sponsors-search-more:hover {
+  background: color-mix(in srgb, var(--mh-accent) 12%, transparent);
 }
 
 body.modernist-home .mh-events-search label {

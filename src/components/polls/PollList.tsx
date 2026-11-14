@@ -5,6 +5,8 @@ import Link from 'next/link';
 import type { EventPollDTO, EventPollOptionDTO } from '@/types';
 import { fetchEventPollsServer, fetchEventPollOptionsServer } from '@/app/admin/polls/ApiServerActions';
 import { PollVotingCard } from './PollVotingCard';
+import PublicListSearchCombobox from '@/components/public/PublicListSearchCombobox';
+import { fetchPublicTypeahead } from '@/lib/publicTypeaheadSearch';
 import '@/styles/modernist-homepage.css';
 
 interface PollListProps {
@@ -58,9 +60,14 @@ export function PollList({ eventId, userId, onPollSelect }: PollListProps) {
     loadPolls();
   }, [eventId, currentPage, searchTerm]);
 
-  const handleSearch = () => {
-    setSearchTerm(searchInput.trim());
+  const commitSearch = (value: string) => {
+    setSearchInput(value);
+    setSearchTerm(value.trim());
     setCurrentPage(0);
+  };
+
+  const handleSearch = () => {
+    commitSearch(searchInput);
   };
 
   const handleClearSearch = () => {
@@ -176,18 +183,36 @@ export function PollList({ eventId, userId, onPollSelect }: PollListProps) {
         <div className="mh-events-search">
           <div>
             <label htmlFor="pollSearchTitle">Search by Title</label>
-            <input
-              type="text"
-              id="pollSearchTitle"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleSearch();
-                }
-              }}
+            <PublicListSearchCombobox<EventPollDTO & Record<string, unknown>>
+              items={polls as (EventPollDTO & Record<string, unknown>)[]}
+              committedValue={searchTerm}
+              onCommit={commitSearch}
+              onInputChange={setSearchInput}
+              inputId="pollSearchTitle"
               placeholder="Enter poll title..."
+              searchRemote={(query) => {
+                const extraParams: Record<string, string> = {
+                  'isActive.equals': 'true',
+                  sort: 'createdAt,desc',
+                };
+                if (eventId != null) {
+                  extraParams['eventId.equals'] = String(eventId);
+                }
+                return fetchPublicTypeahead<EventPollDTO & Record<string, unknown>>({
+                  resource: 'event-polls',
+                  query,
+                  containsFields: ['title', 'description'],
+                  extraParams,
+                });
+              }}
+              getSearchFields={(p) => [p.title, p.description, p.id]}
+              getCommitValue={(p) => p.title || ''}
+              formatPrimary={(p) => p.title || 'Untitled poll'}
+              formatSecondary={(p) =>
+                [p.description, p.id != null ? `ID: ${p.id}` : null]
+                  .filter(Boolean)
+                  .join(' · ')
+              }
             />
           </div>
           <div className="mh-events-search-actions">

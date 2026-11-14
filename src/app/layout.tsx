@@ -439,8 +439,13 @@ export default async function RootLayout({
   return (
       <html lang="en" suppressHydrationWarning>
         <head>
-          {/* Google AdSense account association (Model A shared Publisher ID — giventa.com) */}
+          {/* Google AdSense ownership check. The crawler reads this script from the raw HTML. */}
           <meta name="google-adsense-account" content={sharedAdsensePublisherId} />
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${sharedAdsensePublisherId}`}
+            crossOrigin="anonymous"
+          />
           {/* Header Design System Fonts - DM Serif Display + Plus Jakarta Sans */}
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

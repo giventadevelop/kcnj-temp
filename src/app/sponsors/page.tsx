@@ -7,6 +7,7 @@ import type { EventSponsorsDTO } from '@/types';
 import { proxyApiPath } from '@/lib/proxyApiPath';
 import { SponsorContactSocialIconRow } from '@/components/sponsors/SponsorCard';
 import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
+import SponsorsCatalogSearch from '@/components/sponsors/SponsorsCatalogSearch';
 import '@/styles/modernist-homepage.css';
 
 const PAGE_SIZE = 20;
@@ -160,21 +161,21 @@ export default function SponsorsPage() {
             possible.
           </p>
 
-          <div className="mh-events-search">
+          <div className="mh-events-search mh-events-search--sponsors">
             <div>
               <label htmlFor="sponsorSearch">Search by Name</label>
-              <input
-                type="text"
-                id="sponsorSearch"
-                value={searchDraft}
-                onChange={(e) => setSearchDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSearch();
-                  }
+              <SponsorsCatalogSearch
+                committedValue={searchTerm}
+                onCommit={(value) => {
+                  setIsSearching(true);
+                  setSearchDraft(value);
+                  setSearchTerm(value.trim());
+                  setCurrentPage(1);
                 }}
+                onInputChange={setSearchDraft}
+                inputId="sponsorSearch"
                 placeholder="Enter sponsor name…"
+                disabled={loading || isSearching}
               />
             </div>
 

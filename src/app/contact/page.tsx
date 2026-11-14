@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import {
   fetchPublishedPublicProfileForPagesServer,
   fetchTenantOrganizationForProfilePagesServer,
@@ -7,6 +6,8 @@ import {
 import { ProfileContactPageClient } from '@/components/profile/ProfileContactPageClient';
 
 export const dynamic = 'force-dynamic';
+
+const KCNJ_EMAIL = 'keralacenternj@gmail.com';
 
 function formatOrgAddress(org: {
   addressLine1?: string | null;
@@ -27,9 +28,11 @@ export default async function ProfileContactPage() {
     fetchPublishedPublicProfileForPagesServer(),
     fetchTenantOrganizationForProfilePagesServer(),
   ]);
-  if (!profile) notFound();
 
+  const orgName = org?.organizationName?.trim() || 'Kerala Center of New Jersey (KCNJ)';
   const address = org ? formatOrgAddress(org) : null;
+  const phone = org?.contactPhone?.trim() || '';
+  const email = org?.contactEmail?.trim() || KCNJ_EMAIL;
 
   return (
     <main className="min-h-screen bg-background pt-28 pb-16">
@@ -37,17 +40,30 @@ export default async function ProfileContactPage() {
         <p className="font-caption text-sm uppercase tracking-widest text-primary mb-2">Contact</p>
         <h1 className="font-heading text-4xl font-semibold text-foreground mb-4">Get in touch</h1>
         <p className="font-body text-muted-foreground mb-8">
-          Collaboration, speaking, or a Perspectives subscription — pick what fits.
+          Kerala Center of New Jersey (KCNJ) is based in New Jersey, USA. Reach us by email for events, sponsorship, or
+          general questions.
         </p>
 
-        {address && (
-          <div className="mb-8 p-4 bg-muted/50 rounded-xl border border-border/30">
-            <p className="font-caption text-xs uppercase tracking-wide text-primary mb-1">Address</p>
-            <p className="font-body text-foreground">{address}</p>
-          </div>
-        )}
+        <div className="mb-8 p-4 bg-muted/50 rounded-xl border border-border/30 space-y-2">
+          <p className="font-caption text-xs uppercase tracking-wide text-primary mb-1">Organization</p>
+          <p className="font-body text-foreground">{orgName}</p>
+          <p className="font-body text-foreground">New Jersey, USA</p>
+          {address ? <p className="font-body text-foreground">{address}</p> : null}
+          {phone ? (
+            <p className="font-body text-foreground">
+              <a href={`tel:${phone.replace(/\s+/g, '')}`} className="text-primary font-semibold hover:underline">
+                {phone}
+              </a>
+            </p>
+          ) : null}
+          <p className="font-body text-foreground">
+            <a href={`mailto:${email}`} className="text-primary font-semibold hover:underline">
+              {email}
+            </a>
+          </p>
+        </div>
 
-        <ProfileContactPageClient profile={profile} />
+        {profile ? <ProfileContactPageClient profile={profile} /> : null}
 
         <div className="mt-10 flex flex-wrap gap-4">
           <Link href="/about" className="text-primary font-semibold hover:underline">

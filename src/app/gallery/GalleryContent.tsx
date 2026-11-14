@@ -165,8 +165,20 @@ export function GalleryContent() {
       <div className="mh-gallery-search-panel">
         <p className="mh-gallery-search-panel-label">Filter gallery</p>
         <GallerySearch
+          key={activeTab}
           onSearch={handleSearch}
           loading={loading}
+          mode={activeTab}
+          committedSearchTerm={searchFilters.searchTerm}
+          committedStartDate={searchFilters.startDate ?? ''}
+          committedEndDate={searchFilters.endDate ?? ''}
+          localItems={
+            activeTab === 'albums'
+              ? (albumsData?.albumsWithMedia?.map((a) => a.album as unknown as Record<string, unknown>) ??
+                [])
+              : (galleryData?.eventsWithMedia?.map((e) => e.event as unknown as Record<string, unknown>) ??
+                [])
+          }
           placeholder={
             activeTab === 'albums' ? 'Enter album title…' : 'Enter event title…'
           }
