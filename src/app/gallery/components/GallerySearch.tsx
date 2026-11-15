@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import type { EventDetailsDTO, GalleryAlbumDTO } from '@/types';
 import PublicListSearchCombobox from '@/components/public/PublicListSearchCombobox';
-import { fetchPublicTypeahead } from '@/lib/publicTypeaheadSearch';
+import {
+  fetchPublicTypeahead,
+  PUBLIC_EVENT_SEARCH_FIELDS,
+  PUBLIC_GALLERY_ALBUM_SEARCH_FIELDS,
+} from '@/lib/publicTypeaheadSearch';
 
 type GallerySearchMode = 'albums' | 'events';
 
@@ -86,14 +90,20 @@ export function GallerySearch({
               fetchPublicTypeahead<GalleryAlbumDTO & Record<string, unknown>>({
                 resource: 'gallery-albums',
                 query,
-                containsFields: ['title', 'description'],
+                containsFields: PUBLIC_GALLERY_ALBUM_SEARCH_FIELDS,
                 extraParams: {
                   'isPublic.equals': 'true',
                   sort: 'eventDateStart,desc',
                 },
               })
             }
-            getSearchFields={(a) => [a.title, a.description, a.id]}
+            getSearchFields={(a) => [
+              a.searchText,
+              a.title,
+              a.description,
+              a.eventLocation,
+              a.id,
+            ]}
             getCommitValue={(a) => a.title || ''}
             formatPrimary={(a) => a.title || 'Untitled album'}
             formatSecondary={(a) =>
@@ -115,14 +125,21 @@ export function GallerySearch({
               fetchPublicTypeahead<EventDetailsDTO & Record<string, unknown>>({
                 resource: 'event-details',
                 query,
-                containsFields: ['title', 'caption'],
+                containsFields: PUBLIC_EVENT_SEARCH_FIELDS,
                 extraParams: {
                   'isActive.equals': 'true',
                   sort: 'startDate,desc',
                 },
               })
             }
-            getSearchFields={(ev) => [ev.title, ev.caption, ev.description, ev.id]}
+            getSearchFields={(ev) => [
+              ev.searchText,
+              ev.title,
+              ev.caption,
+              ev.description,
+              ev.location,
+              ev.id,
+            ]}
             getCommitValue={(ev) => ev.title || ''}
             formatPrimary={(ev) => ev.title || 'Untitled event'}
             formatSecondary={(ev) =>

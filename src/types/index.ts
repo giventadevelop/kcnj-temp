@@ -76,6 +76,8 @@ export interface EventDetailsDTO {
   caption?: string;
   /** Event description */
   description?: string;
+  /** Denormalized search blob, including text read from uploaded images */
+  searchText?: string;
   /** Event start date (YYYY-MM-DD) */
   startDate: string;
   /** Event end date (YYYY-MM-DD) */
@@ -323,6 +325,8 @@ export interface GalleryAlbumDTO {
   tenantId?: string;
   title: string;
   description?: string;
+  /** Denormalized search blob, including text read from the cover image */
+  searchText?: string;
   coverImageUrl?: string;
   isPublic?: boolean;
   displayOrder?: number;
@@ -889,6 +893,8 @@ export interface FocusGroupDTO {
   name: string;
   slug: string;
   description?: string;
+  /** Denormalized search blob, including text read from the cover image */
+  searchText?: string;
   coverImageUrl?: string;
   isActive?: boolean;
   createdAt: string;
@@ -1177,6 +1183,10 @@ export interface EventSponsorsDTO {
   companyName?: string;
   tagline?: string;
   description?: string;
+  /** OCR text extracted from sponsor images (logo/hero/banner). */
+  ocrText?: string;
+  /** Denormalized search blob (name + company + tagline + description + type + ocr). */
+  searchText?: string;
   websiteUrl?: string;
   contactEmail?: string;
   contactPhone?: string;

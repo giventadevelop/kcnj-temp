@@ -1,79 +1,188 @@
 import { proxyApiPath } from '@/lib/proxyApiPath';
 
-const SUGGESTION_LIMIT = 20;
+export const PUBLIC_TYPEAHEAD_LIMIT = 20;
 
-export interface FetchPublicTypeaheadOptions {
-  /** Backend resource under `/api/proxy/{resource}` (e.g. `event-sponsors`). */
-  resource: string;
-  query: string;
-  /** Fields to query with `.contains` in parallel. */
-  containsFields: string[];
-  /** Extra criteria (do NOT include tenantId.equals — proxy injects it). */
-  extraParams?: Record<string, string>;
-  size?: number;
+/** Parallel `.contains` fields for public `/events` and gallery events. */
+export const PUBLIC_EVENT_SEARCH_FIELDS = [
+  'searchText',
+  'title',
+  'caption',
+  'description',
+  'location',
+] as const;
+
+/** Parallel `.contains` fields for public gallery albums. */
+export const PUBLIC_GALLERY_ALBUM_SEARCH_FIELDS = [
+  'searchText',
+  'title',
+  'description',
+  'eventLocation',
+] as const;
+
+/** Parallel `.contains` fields for public `/sponsors`. */
+export const PUBLIC_SPONSOR_SEARCH_FIELDS = [
+  'searchText',
+  'name',
+  'companyName',
+  'tagline',
+  'description',
+  'type',
+] as const;
+
+export function parseProxyList<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === 'object') {
+    const obj = data as Record<string, unknown>;
+    if (Array.isArray(obj.content)) return obj.content as T[];
+    const embedded = obj._embedded;
+    if (embedded && typeof embedded === 'object') {
+      const first = Object.values(embedded as Record<string, unknown>)[0];
+      if (Array.isArray(first)) return first as T[];
+    }
+  }
+  return [];
 }
 
-function itemKey(item: Record<string, unknown>): string {
-  if (item.id != null) return `id:${item.id}`;
-  return `row:${JSON.stringify(item).slice(0, 80)}`;
-}
-
-function mergeById<T extends Record<string, unknown>>(lists: T[][]): T[] {
+export function mergePublicSearchItems<T extends { id?: number | string | null }>(
+  lists: T[][],
+  limit: number,
+): T[] {
   const byKey = new Map<string, T>();
   for (const list of lists) {
     for (const item of list) {
-      const key = itemKey(item);
+      const key = item.id != null ? `id:${item.id}` : null;
       if (!key || byKey.has(key)) continue;
       byKey.set(key, item);
     }
   }
-  return Array.from(byKey.values()).slice(0, SUGGESTION_LIMIT);
+  return Array.from(byKey.values()).slice(0, limit);
 }
 
-async function fetchProxyList<T>(
+export interface PublicSearchPageResult<T> {
+  items: T[];
+  totalCount: number;
+}
+
+async function fetchProxyJob<T>(
   resource: string,
   params: URLSearchParams,
-): Promise<T[]> {
-  const path = proxyApiPath(`/api/proxy/${resource}?${params.toString()}`);
-  const response = await fetch(path, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    cache: 'no-store',
-  });
-  if (!response.ok) return [];
-  const data = await response.json();
-  return Array.isArray(data) ? (data as T[]) : [];
+): Promise<{ items: T[]; totalCount: number }> {
+  const res = await fetch(
+    proxyApiPath(`/api/proxy/${resource}?${params.toString()}`),
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+    },
+  );
+  if (!res.ok) return { items: [], totalCount: 0 };
+  const items = parseProxyList<T>(await res.json());
+  const header = res.headers.get('x-total-count');
+  const totalCount = header ? parseInt(header, 10) : items.length;
+  return {
+    items,
+    totalCount: Number.isFinite(totalCount) ? totalCount : items.length,
+  };
 }
 
-/**
- * Multi-field public typeahead against `/api/proxy/{resource}`.
- * Parallel `.contains` queries (+ numeric `id.equals` when query is an integer), then merge/dedupe.
- */
-export async function fetchPublicTypeahead<T extends Record<string, unknown>>(
-  options: FetchPublicTypeaheadOptions,
-): Promise<T[]> {
+function buildParallelJobs<T extends { id?: number | string | null }>(options: {
+  resource: string;
+  query: string;
+  containsFields: string[];
+  extraParams?: Record<string, string>;
+  page: number;
+  size: number;
+}): Promise<{ items: T[]; totalCount: number }>[] {
   const trimmed = options.query.trim();
-  if (!trimmed) return [];
-
-  const size = String(options.size ?? SUGGESTION_LIMIT);
-  const base = new URLSearchParams({
-    page: '0',
-    size,
+  const base = {
+    page: String(options.page),
+    size: String(options.size),
     ...(options.extraParams ?? {}),
-  });
+  };
 
-  const requests: Promise<T[]>[] = options.containsFields.map((field) => {
-    const params = new URLSearchParams(base);
-    params.set(`${field}.contains`, trimmed);
-    return fetchProxyList<T>(options.resource, params);
-  });
+  const jobs: Promise<{ items: T[]; totalCount: number }>[] = options.containsFields.map(
+    (field) => {
+      const params = new URLSearchParams(base);
+      params.set(`${field}.contains`, trimmed);
+      return fetchProxyJob<T>(options.resource, params);
+    },
+  );
 
   if (/^\d+$/.test(trimmed)) {
     const params = new URLSearchParams(base);
     params.set('id.equals', trimmed);
-    requests.push(fetchProxyList<T>(options.resource, params));
+    jobs.push(fetchProxyJob<T>(options.resource, params));
   }
 
-  const results = await Promise.all(requests);
-  return mergeById(results);
+  return jobs;
+}
+
+/**
+ * Public listing typeahead: same-origin `/api/proxy/*` (no tenantId.equals).
+ * Matches contains-fields in parallel plus numeric id, then merges/dedupes.
+ */
+export async function fetchPublicTypeahead<T extends { id?: number | string | null }>(options: {
+  resource: string;
+  query: string;
+  containsFields: readonly string[] | string[];
+  extraParams?: Record<string, string>;
+}): Promise<T[]> {
+  const trimmed = options.query.trim();
+  if (!trimmed) return [];
+
+  const jobs = buildParallelJobs<T>({
+    resource: options.resource,
+    query: trimmed,
+    containsFields: [...options.containsFields],
+    extraParams: options.extraParams,
+    page: 0,
+    size: PUBLIC_TYPEAHEAD_LIMIT,
+  });
+  const results = await Promise.all(jobs);
+  return mergePublicSearchItems(
+    results.map((r) => r.items),
+    PUBLIC_TYPEAHEAD_LIMIT,
+  );
+}
+
+/**
+ * Paginated public listing search: parallel `.contains` (OR via merge) + numeric id.
+ * totalCount is max(x-total-count) across jobs.
+ */
+export async function fetchPublicSearchPage<T extends { id?: number | string | null }>(options: {
+  resource: string;
+  query: string;
+  containsFields: readonly string[] | string[];
+  extraParams?: Record<string, string>;
+  page: number;
+  size: number;
+}): Promise<PublicSearchPageResult<T>> {
+  const trimmed = options.query.trim();
+  if (!trimmed) {
+    const params = new URLSearchParams({
+      page: String(options.page),
+      size: String(options.size),
+      ...(options.extraParams ?? {}),
+    });
+    return fetchProxyJob<T>(options.resource, params);
+  }
+
+  const jobs = buildParallelJobs<T>({
+    resource: options.resource,
+    query: trimmed,
+    containsFields: [...options.containsFields],
+    extraParams: options.extraParams,
+    page: options.page,
+    size: options.size,
+  });
+  const results = await Promise.all(jobs);
+  const items = mergePublicSearchItems(
+    results.map((r) => r.items),
+    options.size,
+  );
+  const totalCount = Math.max(
+    items.length,
+    ...results.map((r) => r.totalCount),
+  );
+  return { items, totalCount };
 }

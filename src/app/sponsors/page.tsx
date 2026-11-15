@@ -5,6 +5,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { EventSponsorsDTO } from '@/types';
 import { proxyApiPath } from '@/lib/proxyApiPath';
+import {
+  fetchPublicSearchPage,
+  parseProxyList,
+  PUBLIC_SPONSOR_SEARCH_FIELDS,
+} from '@/lib/publicTypeaheadSearch';
 import { SponsorContactSocialIconRow } from '@/components/sponsors/SponsorCard';
 import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import SponsorsCatalogSearch from '@/components/sponsors/SponsorsCatalogSearch';
@@ -41,44 +46,57 @@ export default function SponsorsPage() {
       setLoading(true);
       setFetchError(false);
       try {
-        const params = new URLSearchParams({
+        const extraParams = {
           sort: 'priorityRanking,asc',
-          page: (currentPage - 1).toString(),
-          size: PAGE_SIZE.toString(),
           'isActive.equals': 'true',
-        });
+        };
+
+        let sponsorsList: EventSponsorsDTO[] = [];
+        let count = 0;
 
         if (searchTerm.trim()) {
-          params.append('name.contains', searchTerm.trim());
-        }
-
-        const response = await fetch(
-          proxyApiPath(`/api/proxy/event-sponsors?${params.toString()}`),
-          {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            cache: 'no-store',
+          const pageResult = await fetchPublicSearchPage<EventSponsorsDTO>({
+            resource: 'event-sponsors',
+            query: searchTerm.trim(),
+            containsFields: PUBLIC_SPONSOR_SEARCH_FIELDS,
+            extraParams,
+            page: currentPage - 1,
+            size: PAGE_SIZE,
+          });
+          sponsorsList = pageResult.items;
+          count = pageResult.totalCount;
+        } else {
+          const params = new URLSearchParams({
+            ...extraParams,
+            page: (currentPage - 1).toString(),
+            size: PAGE_SIZE.toString(),
+          });
+          const response = await fetch(
+            proxyApiPath(`/api/proxy/event-sponsors?${params.toString()}`),
+            {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+              cache: 'no-store',
+            }
+          );
+          if (!response.ok) {
+            setFetchError(true);
+            setSponsors([]);
+            setTotalCount(0);
+            setTotalPages(0);
+            return;
           }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          const sponsorsList = Array.isArray(data) ? data : [];
+          sponsorsList = parseProxyList<EventSponsorsDTO>(await response.json());
           const totalCountHeader = response.headers.get('x-total-count');
-          const count = totalCountHeader
+          count = totalCountHeader
             ? parseInt(totalCountHeader, 10)
             : sponsorsList.length;
-          const pages = Math.ceil(count / PAGE_SIZE) || 1;
-
-          setSponsors(sponsorsList);
-          setTotalCount(count);
-          setTotalPages(pages);
-        } else {
-          setFetchError(true);
-          setSponsors([]);
-          setTotalCount(0);
-          setTotalPages(0);
         }
+
+        const pages = Math.ceil(count / PAGE_SIZE) || 1;
+        setSponsors(sponsorsList);
+        setTotalCount(count);
+        setTotalPages(pages);
       } catch (error) {
         console.error('Error fetching sponsors:', error);
         setFetchError(true);
@@ -94,10 +112,20 @@ export default function SponsorsPage() {
     fetchSponsors();
   }, [currentPage, searchTerm]);
 
-  const handleSearch = () => {
-    setIsSearching(true);
-    setSearchTerm(searchDraft.trim());
+  const commitSearch = (value: string) => {
+    const next = value.trim();
+    setSearchDraft(next);
+    if (next === searchTerm && currentPage === 1) {
+      setIsSearching(false);
+      return;
+    }
+    setSearchTerm(next);
     setCurrentPage(1);
+    setIsSearching(true);
+  };
+
+  const handleSearch = () => {
+    commitSearch(searchDraft);
   };
 
   const clearSearch = () => {
@@ -161,28 +189,29 @@ export default function SponsorsPage() {
             possible.
           </p>
 
-          <div className="mh-events-search mh-events-search--sponsors">
+          <form
+            className="mh-events-search mh-events-search--sponsors"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSearch();
+            }}
+          >
             <div>
-              <label htmlFor="sponsorSearch">Search by Name</label>
+              <label htmlFor="sponsorSearch">Search sponsors</label>
               <SponsorsCatalogSearch
                 committedValue={searchTerm}
-                onCommit={(value) => {
-                  setIsSearching(true);
-                  setSearchDraft(value);
-                  setSearchTerm(value.trim());
-                  setCurrentPage(1);
-                }}
+                onCommit={commitSearch}
                 onInputChange={setSearchDraft}
+                localItems={sponsors}
                 inputId="sponsorSearch"
-                placeholder="Enter sponsor name…"
-                disabled={loading || isSearching}
+                placeholder="Search by name, company, type, or id…"
+                disabled={loading && sponsors.length === 0}
               />
             </div>
 
             <div className="mh-events-search-actions">
               <button
-                type="button"
-                onClick={handleSearch}
+                type="submit"
                 disabled={loading || isSearching}
                 className="mh-btn mh-btn-primary"
                 title="Search"
@@ -224,11 +253,10 @@ export default function SponsorsPage() {
 
             {searchTerm && (
               <p className="mh-events-search-active">
-                <strong>Search active:</strong> Name contains &quot;{searchTerm}
-                &quot;
+                <strong>Search active:</strong> Matches &quot;{searchTerm}&quot;
               </p>
             )}
-          </div>
+          </form>
         </div>
 
         {loading ? (

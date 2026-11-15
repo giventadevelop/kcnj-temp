@@ -160,6 +160,19 @@ export function getSiteTypePresetSettings(siteType: TenantSiteType): SiteTypePre
       return HYBRID_PRESET;
     case 'GAS_STATION':
       return GAS_STATION_PRESET;
+    case 'SCHOOL':
+      return {
+        ...EVENT_ORG_PRESET,
+        showSponsorsSectionInHomePage: false,
+        showTeamMembersSectionInHomePage: false,
+        showExecutiveCommitteeSectionInHomePage: false,
+        showHeaderNews: true,
+        showHeaderDownloads: true,
+        showHeaderGallery: true,
+        showHeaderContact: true,
+        showHeaderAbout: true,
+        showHeaderEvents: true,
+      };
     case 'EVENT_ORG':
     default:
       return EVENT_ORG_PRESET;

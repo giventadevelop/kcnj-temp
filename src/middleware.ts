@@ -47,6 +47,8 @@ const isPublicRouteClerk = createRouteMatcher([
   '/sign-up(.*)',
   '/sso-callback(.*)',
   '/api/webhooks(.*)',
+  '/api/school(.*)',
+  '/school(.*)',
   '/api/auth/admin-status',
   '/api/public(.*)',
   '/api/proxy(.*)',

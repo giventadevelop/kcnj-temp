@@ -261,6 +261,7 @@ export default function TenantOrganizationForm({
                 <option value="PERSONAL_PROFILE">Personal Profile</option>
                 <option value="HYBRID">Hybrid (Profile + Events)</option>
                 <option value="GAS_STATION">Gas Station (AI COO)</option>
+                <option value="SCHOOL">School</option>
               </select>
               <p className="mt-1 text-sm text-gray-500">
                 Changing the site type re-applies the matching homepage section presets to tenant settings

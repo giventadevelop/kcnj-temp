@@ -2,7 +2,11 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import type { EventSponsorsDTO } from '@/types';
-import { proxyApiPath } from '@/lib/proxyApiPath';
+import {
+  fetchPublicSearchPage,
+  mergePublicSearchItems,
+  PUBLIC_SPONSOR_SEARCH_FIELDS,
+} from '@/lib/publicTypeaheadSearch';
 
 const SUGGESTION_LIMIT = 20;
 const SEARCH_DEBOUNCE_MS = 280;
@@ -11,6 +15,7 @@ export interface SponsorsCatalogSearchProps {
   committedValue: string;
   onCommit: (value: string) => void;
   onInputChange?: (value: string) => void;
+  localItems?: EventSponsorsDTO[];
   inputId?: string;
   placeholder?: string;
   disabled?: boolean;
@@ -18,15 +23,17 @@ export interface SponsorsCatalogSearchProps {
 
 /**
  * Public `/sponsors` catalog search (rule: typeahead_search_combobox).
- * Typing updates the suggestion menu only (name.contains). Catalog refetch
- * happens on Enter, suggestion pick, "Click Enter for more", or Clear.
+ * Typing updates the suggestion menu only (searchText.contains — name, company,
+ * tagline, description, OCR). Catalog refetch happens on Enter, suggestion pick,
+ * "Click Enter for more", or Clear.
  */
 export default function SponsorsCatalogSearch({
   committedValue,
   onCommit,
   onInputChange,
+  localItems = [],
   inputId = 'sponsorSearch',
-  placeholder = 'Enter sponsor name…',
+  placeholder = 'Search by name, company, type, or id…',
   disabled = false,
 }: SponsorsCatalogSearchProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -74,32 +81,37 @@ export default function SponsorsCatalogSearch({
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({
-          'isActive.equals': 'true',
-          sort: 'priorityRanking,asc',
-          page: '0',
-          size: String(SUGGESTION_LIMIT),
-          'name.contains': trimmed,
-        });
-        const response = await fetch(
-          proxyApiPath(`/api/proxy/event-sponsors?${params.toString()}`),
-          {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            cache: 'no-store',
-          },
+        const q = trimmed.toLowerCase();
+        const localMatches = localItems.filter((sponsor) =>
+          [
+            sponsor.searchText,
+            sponsor.name,
+            sponsor.companyName,
+            sponsor.tagline,
+            sponsor.description,
+            sponsor.type,
+            sponsor.id,
+          ].some((v) => (v == null ? '' : String(v)).toLowerCase().includes(q)),
         );
-        if (!response.ok) {
-          setSuggestions([]);
-          setSuggestionTotal(0);
-          return;
-        }
-        const data = await response.json();
-        const list = Array.isArray(data) ? (data as EventSponsorsDTO[]) : [];
-        const totalHeader = response.headers.get('x-total-count');
-        const total = totalHeader ? parseInt(totalHeader, 10) : list.length;
-        setSuggestions(list.slice(0, SUGGESTION_LIMIT));
-        setSuggestionTotal(Number.isFinite(total) ? total : list.length);
+
+        const remote = await fetchPublicSearchPage<EventSponsorsDTO>({
+          resource: 'event-sponsors',
+          query: trimmed,
+          containsFields: PUBLIC_SPONSOR_SEARCH_FIELDS,
+          extraParams: {
+            'isActive.equals': 'true',
+            sort: 'priorityRanking,asc',
+          },
+          page: 0,
+          size: SUGGESTION_LIMIT,
+        });
+
+        const merged = mergePublicSearchItems(
+          [localMatches, remote.items],
+          SUGGESTION_LIMIT,
+        );
+        setSuggestions(merged);
+        setSuggestionTotal(Math.max(remote.totalCount, merged.length));
       } catch {
         setSuggestions([]);
         setSuggestionTotal(0);
@@ -212,6 +224,17 @@ export default function SponsorsCatalogSearch({
                       <span className="block text-sm font-medium">
                         {sponsor.name || 'Unnamed sponsor'}
                       </span>
+                      {sponsor.companyName || sponsor.type || sponsor.id != null ? (
+                        <span className="block text-xs text-[var(--mh-neutral-700)] mt-0.5">
+                          {[
+                            sponsor.companyName,
+                            sponsor.type,
+                            sponsor.id != null ? `ID: ${sponsor.id}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </span>
+                      ) : null}
                     </button>
                   </li>
                 );

@@ -8,7 +8,8 @@ export type TenantSiteType =
   | 'CHURCH_ORG'
   | 'PERSONAL_PROFILE'
   | 'HYBRID'
-  | 'GAS_STATION';
+  | 'GAS_STATION'
+  | 'SCHOOL';
 
 export type ProfileWritingType = 'ORIGINAL' | 'REPUBLISHED' | 'EXTERNAL_LINK';
 export type ProfileWritingStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
@@ -290,4 +291,5 @@ export const TENANT_SITE_TYPE_LABELS: Record<TenantSiteType, string> = {
   PERSONAL_PROFILE: 'Personal profile / portfolio',
   HYBRID: 'Hybrid (profile + events)',
   GAS_STATION: 'Gas station (AI COO)',
+  SCHOOL: 'School',
 };
