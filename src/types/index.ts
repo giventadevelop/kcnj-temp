@@ -1183,10 +1183,6 @@ export interface EventSponsorsDTO {
   companyName?: string;
   tagline?: string;
   description?: string;
-  /** OCR text extracted from sponsor images (logo/hero/banner). */
-  ocrText?: string;
-  /** Denormalized search blob (name + company + tagline + description + type + ocr). */
-  searchText?: string;
   websiteUrl?: string;
   contactEmail?: string;
   contactPhone?: string;

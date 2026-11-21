@@ -156,6 +156,10 @@ export default function SponsorsCatalogSearch({
           className="mh-typeahead-input"
           onChange={(e) => {
             const next = e.target.value;
+            if (!next.trim()) {
+              handleClear();
+              return;
+            }
             setInputValue(next);
             onInputChange?.(next);
             setOpen(true);
