@@ -104,6 +104,12 @@ const nextConfig = {
   // Configure headers if needed
   async headers() {
     return [
+      {
+        source: '/ads.txt',
+        headers: [
+          { key: 'Content-Type', value: 'text/plain; charset=utf-8' },
+        ],
+      },
       // Global CORS headers for all API routes (essential for mobile browsers)
       {
         source: '/api/:path*',

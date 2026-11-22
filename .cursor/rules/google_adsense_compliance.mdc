@@ -24,8 +24,10 @@ Each domain is judged on its own published HTML. Another property's rejection do
 
 - **ads.txt matches the publisher ID**
   - `public/ads.txt` is served at `https://DOMAIN/ads.txt` and returns HTTP 200 with `Content-Type: text/plain`.
+  - In `next.config` `headers()`, set `Content-Type: text/plain; charset=utf-8` for `source: '/ads.txt'`.
   - Fetch the live URL. A file in the repo does not count until that URL returns the line.
-  - If the bare host redirects to `www`, follow that one hop and confirm the same path still returns the file. Google treats "Not found" as the crawler's last fetch, which can lag behind a file that is already live. Use **Check for updates** in the sites table after the file is correct.
+  - If the bare host redirects to `www`, follow that one hop and confirm the same path still returns the file. One same-site redirect is allowed.
+  - A correct live file can still show **Not found** until Google recrawls. Use **Check for updates** in the sites table. Do not delete the site and add it again.
 
 - **Account meta tag and verification script**
   - `src/app/layout.tsx` includes `<meta name="google-adsense-account" content="ca-pub-...">`.
@@ -61,6 +63,7 @@ Each domain is judged on its own published HTML. Another property's rejection do
 
 - **Public routes**
   - `src/middleware.ts` keeps `/`, `/ads.txt`, `/privacy(.*)`, `/terms(.*)`, `/about(.*)`, and `/contact(.*)` off the sign-in wall.
+  - The middleware matcher does not skip `.txt`, so Clerk runs on `/ads.txt`. The public matcher must include the literal `'/ads.txt'`. Without it, `auth.protect()` can send Google a sign-in page and the sites table stays **Not found**.
   - A signed-out request must not be sent to sign-in. `auth.protect()` must not run for these paths. A crawler that lands on the sign-in page fails ownership and ads.txt.
 
 - **Cookie choice before ad units**
@@ -107,18 +110,3 @@ Do these in order before clicking Verify:
 Write the pass or fail result in **that project's** `.cursor/rules/google_adsense_compliance.mdc`. One line per checklist item, with the file or live URL. Copy this rule into that repo if it does not have one yet.
 
 Do not add a site's status, domain, contact details, commit, or Amplify app id to this file. This file stays the shared checklist.
-
-## Repo record (kcnj-temp)
-
-Local implementation as of 14 Nov 2026. Live crawler proof still requires a signed-out fetch of the published host after deploy.
-
-- ads.txt matches publisher ID — **pass (repo):** [`public/ads.txt`](mdc:public/ads.txt) `google.com, pub-1016198353275904, DIRECT, f08c47fec0942fa0`. Live URL pending deploy.
-- Account meta tag and verification script — **pass (repo):** [`src/app/layout.tsx`](mdc:src/app/layout.tsx) has `google-adsense-account` and `adsbygoogle.js?client=` in `<head>`.
-- Tenant settings — **not verified here:** `enableGoogleAdsense`, publisher ID, and slot mappings live in tenant settings / admin, not in this change.
-- About and contact — **pass (repo):** [`src/app/about/page.tsx`](mdc:src/app/about/page.tsx) and [`src/app/contact/page.tsx`](mdc:src/app/contact/page.tsx) no longer 404 without a profile; they name Kerala Center of New Jersey, New Jersey, USA, and `keralacenternj@gmail.com`. Phone is shown only when the tenant organization record has `contactPhone`.
-- Privacy policy — **pass (repo):** [`src/app/privacy/page.tsx`](mdc:src/app/privacy/page.tsx) names KCNJ, AdSense, Google privacy, adssettings.google.com, and distinguishes the head snippet from ad units after Accept.
-- Terms — **pass (repo):** [`src/app/terms/page.tsx`](mdc:src/app/terms/page.tsx) names KCNJ, links `/privacy`, and states Google AdSense ads are third-party.
-- Footer links — **pass (repo):** [`src/components/Footer.tsx`](mdc:src/components/Footer.tsx) links `/privacy`, `/terms`, and Cookie settings.
-- Public routes — **pass (repo):** [`src/middleware.ts`](mdc:src/middleware.ts) public matcher includes `/privacy(.*)`, `/terms(.*)`, `/ads.txt`, `/about(.*)`, `/contact(.*)`.
-- Cookie choice before ad units — **pass (repo):** [`src/components/ads/AdSenseConsentBanner.tsx`](mdc:src/components/ads/AdSenseConsentBanner.tsx); [`src/components/ads/GoogleAdSenseSlot.tsx`](mdc:src/components/ads/GoogleAdSenseSlot.tsx) renders `ins` / `push` only after Accept.
-- One organization — **pass (repo legal pages):** placeholder `malayalees-us.org` / `(555) 123-4567` removed from privacy and terms. Homepage server-rendered listings are unchanged by this work.
