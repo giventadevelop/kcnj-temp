@@ -30,7 +30,13 @@ Typeahead is **not** a single-column name search. Wherever a user might type an 
 
 Entities with image OCR may store extracted text in `ocrText` / `ocr_text`, then fold it into **`searchText` / `search_text`**. Include **`searchText.contains` as one parallel job**. **Never** `ocrText.contains`. **Never** query `searchText.contains` alone for typeahead or the listing after Enter.
 
-This repo does **not** ship `src/lib/search/buildSearchText.ts`. The blob is often empty, so a title like “Parsippany…” matches local `title` in the menu and then returns an empty grid if Enter only sends `searchText.contains`.
+This repo does **not** ship `src/lib/search/buildSearchText.ts`. The blob is often empty, so a title like “Parsippany…” matches local `title` in the menu and then returns an empty grid if Enter only sends `searchText.contains`. Hyphens in the stored blob are spaces (`AI-based` → `ai based`).
+
+**Query normalize + token AND** (in [`publicTypeaheadSearch.ts`](mdc:src/lib/publicTypeaheadSearch.ts)):
+
+- `normalizePublicSearchQuery(raw)` — lowercase, `-` → space, collapse whitespace; tokens with length ≥ 2.
+- `matchesPublicSearchFields(fields, query)` — join fields, same normalize, **every token** must appear (so `ai solutions` matches `ai based solutions`). Use this for local filters (`AdminListSearchCombobox`, `SponsorsCatalogSearch`, focus-groups).
+- `applyContainsTokens` — one token → `${field}.contains=phrase`; several tokens → each token as `${field}.contains` on the **same** request (JHipster ANDs `.contains` on one URL). Numeric `id.equals` is unchanged.
 
 JHipster **ANDs** multiple `.contains` on one request. Run **one field per request**, then merge by `id` (`fetchPublicTypeahead` / `fetchPublicSearchPage`). Numeric queries also run `id.equals` when `/^\d+$/`.
 

@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import type { EventDetailsDTO, GalleryAlbumDTO } from '@/types';
 import PublicListSearchCombobox from '@/components/public/PublicListSearchCombobox';
-import { fetchPublicTypeahead } from '@/lib/publicTypeaheadSearch';
+import {
+  fetchPublicTypeahead,
+  PUBLIC_EVENT_SEARCH_FIELDS,
+  PUBLIC_GALLERY_ALBUM_SEARCH_FIELDS,
+} from '@/lib/publicTypeaheadSearch';
 
 type GallerySearchMode = 'albums' | 'events';
 
@@ -86,7 +90,7 @@ export function GallerySearch({
               fetchPublicTypeahead<GalleryAlbumDTO & Record<string, unknown>>({
                 resource: 'gallery-albums',
                 query,
-                containsFields: ['title', 'description'],
+                containsFields: PUBLIC_GALLERY_ALBUM_SEARCH_FIELDS,
                 extraParams: {
                   'isPublic.equals': 'true',
                   sort: 'eventDateStart,desc',
@@ -115,7 +119,7 @@ export function GallerySearch({
               fetchPublicTypeahead<EventDetailsDTO & Record<string, unknown>>({
                 resource: 'event-details',
                 query,
-                containsFields: ['title', 'caption'],
+                containsFields: PUBLIC_EVENT_SEARCH_FIELDS,
                 extraParams: {
                   'isActive.equals': 'true',
                   sort: 'startDate,desc',

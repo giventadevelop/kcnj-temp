@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { EventSponsorsDTO } from '@/types';
 import {
   fetchPublicSearchPage,
+  matchesPublicSearchFields,
   mergePublicSearchItems,
   PUBLIC_SPONSOR_SEARCH_FIELDS,
 } from '@/lib/publicTypeaheadSearch';
@@ -81,17 +82,19 @@ export default function SponsorsCatalogSearch({
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const q = trimmed.toLowerCase();
         const localMatches = localItems.filter((sponsor) =>
-          [
-            sponsor.searchText,
-            sponsor.name,
-            sponsor.companyName,
-            sponsor.tagline,
-            sponsor.description,
-            sponsor.type,
-            sponsor.id,
-          ].some((v) => (v == null ? '' : String(v)).toLowerCase().includes(q)),
+          matchesPublicSearchFields(
+            [
+              sponsor.searchText,
+              sponsor.name,
+              sponsor.companyName,
+              sponsor.tagline,
+              sponsor.description,
+              sponsor.type,
+              sponsor.id,
+            ],
+            trimmed,
+          ),
         );
 
         const remote = await fetchPublicSearchPage<EventSponsorsDTO>({

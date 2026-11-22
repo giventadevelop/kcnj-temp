@@ -2,6 +2,13 @@
 
 import { fetchWithJwtRetry } from '@/lib/proxyHandler';
 import { getTenantId, getApiBaseUrl } from '@/lib/env';
+import {
+  applyContainsTokens,
+  mergePublicSearchItems,
+  parseProxyList,
+  PUBLIC_EVENT_SEARCH_FIELDS,
+  PUBLIC_GALLERY_ALBUM_SEARCH_FIELDS,
+} from '@/lib/publicTypeaheadSearch';
 import type {
   EventDetailsDTO,
   EventMediaDTO,
@@ -37,6 +44,47 @@ export interface GalleryEventFilterOptions {
 // Lazy getter — evaluated at call time, not module load time (critical for Lambda cold starts)
 function getApiBase() {
   return getApiBaseUrl();
+}
+
+async function fetchBackendSearchPage<T extends { id?: number | string | null }>(options: {
+  backendPath: string;
+  query: string;
+  containsFields: readonly string[];
+  extraParams: URLSearchParams;
+  page: number;
+  size: number;
+}): Promise<{ items: T[]; totalCount: number }> {
+  const raw = options.query.trim();
+  const fetchBy = async (apply: (params: URLSearchParams) => void) => {
+    const params = new URLSearchParams(options.extraParams.toString());
+    params.set('page', String(options.page));
+    params.set('size', String(options.size));
+    apply(params);
+    const response = await fetchWithJwtRetry(
+      `${getApiBase()}${options.backendPath}?${params.toString()}`,
+      { cache: 'no-store' },
+    );
+    if (!response.ok) return { items: [] as T[], totalCount: 0 };
+    const items = parseProxyList<T>(await response.json());
+    const header = response.headers.get('X-Total-Count') || response.headers.get('x-total-count');
+    const totalCount = header ? parseInt(header, 10) : items.length;
+    return { items, totalCount: Number.isFinite(totalCount) ? totalCount : items.length };
+  };
+
+  const jobs: Promise<{ items: T[]; totalCount: number }>[] = options.containsFields.map(
+    (field) => fetchBy((p) => applyContainsTokens(p, field, raw)),
+  );
+  if (/^\d+$/.test(raw)) {
+    jobs.push(fetchBy((p) => p.set('id.equals', raw)));
+  }
+
+  const results = await Promise.all(jobs);
+  const items = mergePublicSearchItems(
+    results.map((r) => r.items),
+    options.size,
+  );
+  const totalCount = Math.max(items.length, ...results.map((r) => r.totalCount));
+  return { items, totalCount };
 }
 
 export interface GalleryEventWithMedia {
@@ -79,13 +127,7 @@ export async function fetchEventsForGallery(
         const eventParams = new URLSearchParams();
         eventParams.append('tenantId.equals', tenantId);
         eventParams.append('isActive.equals', 'true');
-        eventParams.append('page', page.toString());
-        eventParams.append('size', size.toString());
         eventParams.append('sort', 'startDate,desc');
-
-        if (searchTerm) {
-          eventParams.append('searchText.contains', searchTerm);
-        }
 
         if (extraFilters?.year && !startDate && !endDate) {
           eventParams.append('startDate.greaterThanOrEqual', `${extraFilters.year}-01-01`);
@@ -107,23 +149,40 @@ export async function fetchEventsForGallery(
           eventParams.append('eventTypeId.equals', extraFilters.eventTypeId.toString());
         }
 
-    // Fetch events
-    const eventsUrl = `${getApiBase()}/api/event-details?${eventParams.toString()}`;
-    const eventsResponse = await fetchWithJwtRetry(eventsUrl, { cache: 'no-store' });
+    let eventsArray: EventDetailsDTO[] = [];
+    let totalEvents = 0;
 
-    if (!eventsResponse.ok) {
-      console.error(`Failed to fetch events for gallery: ${eventsResponse.statusText}`);
-      return {
-        eventsWithMedia: [],
-        totalEvents: 0,
-        currentPage: page,
-        totalPages: 0
-      };
+    if (searchTerm.trim()) {
+      const pageResult = await fetchBackendSearchPage<EventDetailsDTO>({
+        backendPath: '/api/event-details',
+        query: searchTerm.trim(),
+        containsFields: PUBLIC_EVENT_SEARCH_FIELDS,
+        extraParams: eventParams,
+        page,
+        size,
+      });
+      eventsArray = pageResult.items;
+      totalEvents = pageResult.totalCount;
+    } else {
+      eventParams.append('page', page.toString());
+      eventParams.append('size', size.toString());
+      const eventsUrl = `${getApiBase()}/api/event-details?${eventParams.toString()}`;
+      const eventsResponse = await fetchWithJwtRetry(eventsUrl, { cache: 'no-store' });
+
+      if (!eventsResponse.ok) {
+        console.error(`Failed to fetch events for gallery: ${eventsResponse.statusText}`);
+        return {
+          eventsWithMedia: [],
+          totalEvents: 0,
+          currentPage: page,
+          totalPages: 0
+        };
+      }
+
+      totalEvents = parseInt(eventsResponse.headers.get('X-Total-Count') || '0', 10);
+      const events: EventDetailsDTO[] = await eventsResponse.json();
+      eventsArray = Array.isArray(events) ? events : [];
     }
-
-    const totalEvents = parseInt(eventsResponse.headers.get('X-Total-Count') || '0', 10);
-    const events: EventDetailsDTO[] = await eventsResponse.json();
-    const eventsArray = Array.isArray(events) ? events : [];
 
     // Fetch media for each event
     const eventsWithMedia: GalleryEventWithMedia[] = [];
@@ -242,11 +301,8 @@ export async function searchEventsForGallery(
     const params = new URLSearchParams();
     params.append('tenantId.equals', tenantId);
     params.append('isActive.equals', 'true');
-    params.append('searchText.contains', searchTerm);
     params.append('sort', 'startDate,desc');
-    params.append('size', '50');
 
-    // Add date range filtering
     if (startDate) {
       params.append('startDate.greaterThanOrEqual', startDate);
     }
@@ -254,16 +310,15 @@ export async function searchEventsForGallery(
       params.append('startDate.lessThanOrEqual', endDate);
     }
 
-    const url = `${getApiBase()}/api/event-details?${params.toString()}`;
-    const response = await fetchWithJwtRetry(url, { cache: 'no-store' });
-
-    if (!response.ok) {
-      console.error(`Failed to search events: ${response.statusText}`);
-      return [];
-    }
-
-    const data = await response.json();
-    return Array.isArray(data) ? data : [];
+    const pageResult = await fetchBackendSearchPage<EventDetailsDTO>({
+      backendPath: '/api/event-details',
+      query: searchTerm.trim(),
+      containsFields: PUBLIC_EVENT_SEARCH_FIELDS,
+      extraParams: params,
+      page: 0,
+      size: 50,
+    });
+    return pageResult.items;
 
   } catch (error) {
     console.error('Error searching events:', error);
@@ -294,15 +349,9 @@ export async function fetchAlbumsForGallery(
     const albumParams = new URLSearchParams();
     albumParams.append('tenantId.equals', tenantId);
     albumParams.append('isPublic.equals', 'true'); // Public albums only for gallery
-    albumParams.append('page', page.toString());
-    albumParams.append('size', size.toString());
     albumParams.append('sort', 'eventDateStart,desc');
     albumParams.append('sort', 'albumYear,desc');
     albumParams.append('sort', 'createdAt,desc');
-
-    if (searchTerm) {
-      albumParams.append('searchText.contains', searchTerm);
-    }
 
     if (extraFilters?.categoryId) {
       albumParams.append('galleryCategoryId.equals', extraFilters.categoryId.toString());
@@ -321,23 +370,40 @@ export async function fetchAlbumsForGallery(
       albumParams.append('eventDateStart.lessThanOrEqual', endDate);
     }
 
-    // Fetch albums
-    const albumsUrl = `${getApiBase()}/api/gallery-albums?${albumParams.toString()}`;
-    const albumsResponse = await fetchWithJwtRetry(albumsUrl, { cache: 'no-store' });
+    let albumsArray: GalleryAlbumDTO[] = [];
+    let totalAlbums = 0;
 
-    if (!albumsResponse.ok) {
-      console.error(`Failed to fetch albums for gallery: ${albumsResponse.statusText}`);
-      return {
-        albumsWithMedia: [],
-        totalAlbums: 0,
-        currentPage: page,
-        totalPages: 0
-      };
+    if (searchTerm.trim()) {
+      const pageResult = await fetchBackendSearchPage<GalleryAlbumDTO>({
+        backendPath: '/api/gallery-albums',
+        query: searchTerm.trim(),
+        containsFields: PUBLIC_GALLERY_ALBUM_SEARCH_FIELDS,
+        extraParams: albumParams,
+        page,
+        size,
+      });
+      albumsArray = pageResult.items;
+      totalAlbums = pageResult.totalCount;
+    } else {
+      albumParams.append('page', page.toString());
+      albumParams.append('size', size.toString());
+      const albumsUrl = `${getApiBase()}/api/gallery-albums?${albumParams.toString()}`;
+      const albumsResponse = await fetchWithJwtRetry(albumsUrl, { cache: 'no-store' });
+
+      if (!albumsResponse.ok) {
+        console.error(`Failed to fetch albums for gallery: ${albumsResponse.statusText}`);
+        return {
+          albumsWithMedia: [],
+          totalAlbums: 0,
+          currentPage: page,
+          totalPages: 0
+        };
+      }
+
+      totalAlbums = parseInt(albumsResponse.headers.get('X-Total-Count') || '0', 10);
+      const albums: GalleryAlbumDTO[] = await albumsResponse.json();
+      albumsArray = Array.isArray(albums) ? albums : [];
     }
-
-    const totalAlbums = parseInt(albumsResponse.headers.get('X-Total-Count') || '0', 10);
-    const albums: GalleryAlbumDTO[] = await albumsResponse.json();
-    const albumsArray = Array.isArray(albums) ? albums : [];
 
     // Fetch media for each album
     const albumsWithMedia: GalleryAlbumWithMedia[] = [];

@@ -29,6 +29,48 @@ export const PUBLIC_SPONSOR_SEARCH_FIELDS = [
   'type',
 ] as const;
 
+/** Lowercase, hyphens to spaces, collapse whitespace. Tokens are words of length >= 2. */
+export function normalizePublicSearchQuery(raw: string): { phrase: string; tokens: string[] } {
+  const phrase = raw
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const tokens = phrase.split(' ').filter((token) => token.length >= 2);
+  return { phrase, tokens };
+}
+
+/** Local match: every token must appear in the joined, hyphen-normalized haystack. */
+export function matchesPublicSearchFields(
+  fields: Array<string | number | null | undefined>,
+  query: string,
+): boolean {
+  const { phrase, tokens } = normalizePublicSearchQuery(query);
+  if (!phrase) return true;
+  const haystack = fields
+    .map((value) => (value == null ? '' : String(value)))
+    .join(' ')
+    .toLowerCase()
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ');
+  if (tokens.length === 0) return haystack.includes(phrase);
+  return tokens.every((token) => haystack.includes(token));
+}
+
+/** Append field.contains for the phrase, or each token (JHipster ANDs repeated .contains). Never ocrText. */
+export function applyContainsTokens(params: URLSearchParams, field: string, query: string): void {
+  const { phrase, tokens } = normalizePublicSearchQuery(query);
+  if (!phrase) return;
+  if (tokens.length <= 1) {
+    params.append(`${field}.contains`, phrase);
+    return;
+  }
+  for (const token of tokens) {
+    params.append(`${field}.contains`, token);
+  }
+}
+
 export function parseProxyList<T>(data: unknown): T[] {
   if (Array.isArray(data)) return data as T[];
   if (data && typeof data === 'object') {
@@ -66,6 +108,7 @@ export interface PublicSearchPageResult<T> {
 async function fetchProxyJob<T>(
   resource: string,
   params: URLSearchParams,
+  signal?: AbortSignal,
 ): Promise<{ items: T[]; totalCount: number }> {
   const res = await fetch(
     proxyApiPath(`/api/proxy/${resource}?${params.toString()}`),
@@ -73,6 +116,7 @@ async function fetchProxyJob<T>(
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       cache: 'no-store',
+      signal,
     },
   );
   if (!res.ok) return { items: [], totalCount: 0 };
@@ -92,26 +136,29 @@ function buildParallelJobs<T extends { id?: number | string | null }>(options: {
   extraParams?: Record<string, string>;
   page: number;
   size: number;
+  signal?: AbortSignal;
 }): Promise<{ items: T[]; totalCount: number }>[] {
-  const trimmed = options.query.trim();
+  const raw = options.query.trim();
+  const { phrase } = normalizePublicSearchQuery(raw);
   const base = {
     page: String(options.page),
     size: String(options.size),
     ...(options.extraParams ?? {}),
   };
 
-  const jobs: Promise<{ items: T[]; totalCount: number }>[] = options.containsFields.map(
-    (field) => {
+  const jobs: Promise<{ items: T[]; totalCount: number }>[] = [];
+  if (phrase) {
+    for (const field of options.containsFields) {
       const params = new URLSearchParams(base);
-      params.set(`${field}.contains`, trimmed);
-      return fetchProxyJob<T>(options.resource, params);
-    },
-  );
+      applyContainsTokens(params, field, raw);
+      jobs.push(fetchProxyJob<T>(options.resource, params, options.signal));
+    }
+  }
 
-  if (/^\d+$/.test(trimmed)) {
+  if (/^\d+$/.test(raw)) {
     const params = new URLSearchParams(base);
-    params.set('id.equals', trimmed);
-    jobs.push(fetchProxyJob<T>(options.resource, params));
+    params.set('id.equals', raw);
+    jobs.push(fetchProxyJob<T>(options.resource, params, options.signal));
   }
 
   return jobs;
@@ -126,6 +173,7 @@ export async function fetchPublicTypeahead<T extends { id?: number | string | nu
   query: string;
   containsFields: readonly string[] | string[];
   extraParams?: Record<string, string>;
+  signal?: AbortSignal;
 }): Promise<T[]> {
   const trimmed = options.query.trim();
   if (!trimmed) return [];
@@ -137,6 +185,7 @@ export async function fetchPublicTypeahead<T extends { id?: number | string | nu
     extraParams: options.extraParams,
     page: 0,
     size: PUBLIC_TYPEAHEAD_LIMIT,
+    signal: options.signal,
   });
   const results = await Promise.all(jobs);
   return mergePublicSearchItems(
@@ -156,6 +205,7 @@ export async function fetchPublicSearchPage<T extends { id?: number | string | n
   extraParams?: Record<string, string>;
   page: number;
   size: number;
+  signal?: AbortSignal;
 }): Promise<PublicSearchPageResult<T>> {
   const trimmed = options.query.trim();
   if (!trimmed) {
@@ -164,7 +214,7 @@ export async function fetchPublicSearchPage<T extends { id?: number | string | n
       size: String(options.size),
       ...(options.extraParams ?? {}),
     });
-    return fetchProxyJob<T>(options.resource, params);
+    return fetchProxyJob<T>(options.resource, params, options.signal);
   }
 
   const jobs = buildParallelJobs<T>({
@@ -174,6 +224,7 @@ export async function fetchPublicSearchPage<T extends { id?: number | string | n
     extraParams: options.extraParams,
     page: options.page,
     size: options.size,
+    signal: options.signal,
   });
   const results = await Promise.all(jobs);
   const items = mergePublicSearchItems(

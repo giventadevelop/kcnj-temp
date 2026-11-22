@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { matchesPublicSearchFields } from '@/lib/publicTypeaheadSearch';
 
 const SUGGESTION_LIMIT = 20;
 const SEARCH_DEBOUNCE_MS = 280;
@@ -34,23 +35,15 @@ export interface AdminListSearchComboboxProps<T extends AdminListSearchItem> {
   showClear?: boolean;
 }
 
-function normalizeFields(fields: Array<string | number | null | undefined>): string[] {
-  return fields
-    .map((v) => (v == null ? '' : String(v)).trim())
-    .filter(Boolean);
-}
-
 function filterLocally<T extends AdminListSearchItem>(
   items: T[],
   query: string,
   getSearchFields: (item: T) => Array<string | number | null | undefined>,
 ): T[] {
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   if (!q) return items.slice(0, SUGGESTION_LIMIT);
   return items
-    .filter((item) =>
-      normalizeFields(getSearchFields(item)).some((v) => v.toLowerCase().includes(q)),
-    )
+    .filter((item) => matchesPublicSearchFields(getSearchFields(item), q))
     .slice(0, SUGGESTION_LIMIT);
 }
 

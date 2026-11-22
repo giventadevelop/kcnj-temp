@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import AdminListSearchCombobox from '@/components/admin/AdminListSearchCombobox';
+import { matchesPublicSearchFields } from '@/lib/publicTypeaheadSearch';
 
 interface FocusGroupWithEvents {
   id: number;
   name?: string;
   slug?: string;
   description?: string;
+  searchText?: string;
   coverImageUrl?: string;
   events?: any[];
 }
@@ -23,11 +25,9 @@ export default function FocusGroupsGridWithSearch({ groups, total }: FocusGroups
   const pageSize = 20;
 
   const filteredGroups = searchTerm.trim()
-    ? groups.filter((g) => {
-        const q = searchTerm.trim().toLowerCase();
-        return [g.name, g.slug, g.description, g.id]
-          .some((v) => (v == null ? '' : String(v)).toLowerCase().includes(q));
-      })
+    ? groups.filter((g) =>
+        matchesPublicSearchFields([g.searchText, g.name, g.slug, g.description, g.id], searchTerm),
+      )
     : groups;
 
   const filteredCount = filteredGroups.length;

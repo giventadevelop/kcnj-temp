@@ -11,7 +11,11 @@ import { resolveBuyTicketsTarget, resolveRegisterTarget } from '@/lib/eventcube/
 import PageHeaderRibbonMedia from '@/components/PageHeaderRibbonMedia';
 import EventCardResultsPanel from '@/components/competitions/EventCardResultsPanel';
 import PublicListSearchCombobox from '@/components/public/PublicListSearchCombobox';
-import { fetchPublicTypeahead } from '@/lib/publicTypeaheadSearch';
+import {
+  fetchPublicTypeahead,
+  fetchPublicSearchPage,
+  PUBLIC_EVENT_SEARCH_FIELDS,
+} from '@/lib/publicTypeaheadSearch';
 import '@/styles/modernist-homepage.css';
 
 const EVENTS_PAGE_SIZE = 20; // Minimum events to display per page
@@ -146,57 +150,54 @@ export default function EventsPage() {
           }
         }
 
-        const queryParams = new URLSearchParams({
+        const extraParams: Record<string, string> = {
           sort: loadingPastEvents ? 'startDate,desc' : 'startDate,asc',
-          page: page.toString(),
-          size: BACKEND_FETCH_SIZE.toString(), // Fetch more to account for filtering
-          'isActive.equals': 'true' // Only show active events
-        });
+          'isActive.equals': 'true',
+        };
 
-        // Add search filters
-        if (searchTitle.trim()) {
-          queryParams.append('searchText.contains', searchTitle.trim());
-        }
-
-        // Handle date filtering - prioritize search date range over toggle
         if (searchDateFrom || searchDateTo) {
-          // If user has specified date range, use that instead of toggle logic
           if (searchDateFrom) {
-            queryParams.append('startDate.greaterThanOrEqual', searchDateFrom);
+            extraParams['startDate.greaterThanOrEqual'] = searchDateFrom;
           }
           if (searchDateTo) {
-            queryParams.append('startDate.lessThanOrEqual', searchDateTo);
+            extraParams['startDate.lessThanOrEqual'] = searchDateTo;
           }
+        } else if (loadingPastEvents) {
+          extraParams['endDate.lessThan'] = today;
         } else {
-          // No search date range specified, use toggle logic (use loadingPastEvents which respects auto-switch)
-          if (loadingPastEvents) {
-            // Show events that ended before today
-            queryParams.append('endDate.lessThan', today);
-          } else {
-            // Show events that start today or later (future events including today)
-            queryParams.append('startDate.greaterThanOrEqual', today);
-          }
+          extraParams['startDate.greaterThanOrEqual'] = today;
         }
 
-        // Fetch paginated events with date filtering
-        const eventsRes = await fetch(`/api/proxy/event-details?${queryParams.toString()}`, { cache: 'no-store' });
-        if (!eventsRes.ok) throw new Error('Failed to fetch events');
-
-        // Get total count from response header (as per UI style guide)
-        const totalCountHeader = eventsRes.headers.get('x-total-count');
-        const totalCountValue = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
-        setTotalCount(totalCountValue);
-
-        // Calculate total pages based on backend fetch size (not displayed size)
-        // This accounts for the fact that we fetch more than we display
-        const calculatedTotalPages = Math.max(1, Math.ceil(totalCountValue / BACKEND_FETCH_SIZE));
-        setTotalPages(calculatedTotalPages);
-
-        const events: EventDetailsDTO[] = await eventsRes.json();
-        let eventList = Array.isArray(events) ? events : [events];
-
-        // Check if we got a full page of events (indicates there might be more)
-        setHasMoreEvents(eventList.length === BACKEND_FETCH_SIZE);
+        let eventList: EventDetailsDTO[] = [];
+        if (searchTitle.trim()) {
+          const pageResult = await fetchPublicSearchPage<EventDetailsDTO>({
+            resource: 'event-details',
+            query: searchTitle,
+            containsFields: PUBLIC_EVENT_SEARCH_FIELDS,
+            extraParams,
+            page,
+            size: BACKEND_FETCH_SIZE,
+          });
+          eventList = pageResult.items;
+          setTotalCount(pageResult.totalCount);
+          setTotalPages(Math.max(1, Math.ceil(pageResult.totalCount / BACKEND_FETCH_SIZE)));
+          setHasMoreEvents(eventList.length === BACKEND_FETCH_SIZE);
+        } else {
+          const queryParams = new URLSearchParams({
+            ...extraParams,
+            page: page.toString(),
+            size: BACKEND_FETCH_SIZE.toString(),
+          });
+          const eventsRes = await fetch(`/api/proxy/event-details?${queryParams.toString()}`, { cache: 'no-store' });
+          if (!eventsRes.ok) throw new Error('Failed to fetch events');
+          const totalCountHeader = eventsRes.headers.get('x-total-count');
+          const totalCountValue = totalCountHeader ? parseInt(totalCountHeader, 10) : 0;
+          setTotalCount(totalCountValue);
+          setTotalPages(Math.max(1, Math.ceil(totalCountValue / BACKEND_FETCH_SIZE)));
+          const events: EventDetailsDTO[] = await eventsRes.json();
+          eventList = Array.isArray(events) ? events : [events];
+          setHasMoreEvents(eventList.length === BACKEND_FETCH_SIZE);
+        }
 
         // Process recurring events to show only next occurrence (same logic as HeroSection)
         const todayDate = new Date();
@@ -473,7 +474,7 @@ export default function EventsPage() {
                   fetchPublicTypeahead<EventDetailsDTO & Record<string, unknown>>({
                     resource: 'event-details',
                     query,
-                    containsFields: ['title', 'caption'],
+                    containsFields: PUBLIC_EVENT_SEARCH_FIELDS,
                     extraParams: { 'isActive.equals': 'true', sort: 'startDate,asc' },
                   })
                 }
