@@ -348,6 +348,55 @@ export function isRecurringEvent(event: EventDetailsDTO): boolean {
   return Boolean(metadata.isRecurring);
 }
 
+function eventListingLocalDate(dateValue?: string | null): Date | null {
+  if (!dateValue) return null;
+  const day = dateValue.split('T')[0];
+  const [year, month, dayNum] = day.split('-').map(Number);
+  if (!year || !month || !dayNum) return null;
+  const date = new Date(year, month - 1, dayNum);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+/**
+ * True when the event has already started but has not ended yet
+ * (startDate < today ≤ endDate). Used for listing date labels under the
+ * endDate-based upcoming/future filter.
+ */
+export function isEventInProgress(
+  event: Pick<EventDetailsDTO, 'startDate' | 'endDate'>
+): boolean {
+  const start = eventListingLocalDate(event.startDate);
+  const end = eventListingLocalDate(event.endDate || event.startDate);
+  if (!start || !end) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return start < today && end >= today;
+}
+
+/**
+ * Card/list date label for homepage and /events.
+ * In-progress multi-day events show "Through {endDate}" so a past startDate
+ * is not mistaken for a wrongly labeled upcoming event.
+ */
+export function formatEventListingDateLabel(
+  event: Pick<EventDetailsDTO, 'startDate' | 'endDate' | 'timezone'>,
+  formatDate: (dateString: string, timezone?: string) => string
+): string {
+  const start = event.startDate;
+  if (!start) return '';
+  const timezone = event.timezone || 'America/New_York';
+  const end = event.endDate || start;
+  const startDay = start.split('T')[0];
+  const endDay = end.split('T')[0];
+
+  if (isEventInProgress({ startDate: start, endDate: end }) && endDay !== startDay) {
+    return `Through ${formatDate(end, timezone)}`;
+  }
+
+  return formatDate(start, timezone);
+}
+
 /**
  * Creates donation metadata object for fundraiser/charity configuration
  * This is a simplified version that returns only the donation-related fields

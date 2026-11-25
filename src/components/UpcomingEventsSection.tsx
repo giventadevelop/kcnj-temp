@@ -7,7 +7,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { EventWithMedia, EventDetailsDTO } from "@/types";
 import { formatInTimeZone } from 'date-fns-tz';
-import { isRecurringEvent, getNextOccurrenceDate } from '@/lib/eventUtils';
+import {
+  isRecurringEvent,
+  getNextOccurrenceDate,
+  formatEventListingDateLabel,
+} from '@/lib/eventUtils';
 import { isDonationBasedEvent, isTicketedFundraiserEvent } from '@/lib/donation/utils';
 import { resolveBuyTicketsTarget, resolveRegisterTarget } from '@/lib/eventcube/utils';
 import { getTenantId } from '@/lib/env';
@@ -91,7 +95,9 @@ function ModernistUpcomingEventCard({
 
       <div className="mh-event-card-body">
         <div className="mh-event-card-meta">
-          <span className="mh-event-card-date">{formatDate(event.startDate, event.timezone)}</span>
+          <span className="mh-event-card-date">
+            {formatEventListingDateLabel(event, formatDate)}
+          </span>
           <span className="mh-event-card-admission">{admissionLabel(event)}</span>
         </div>
 
@@ -351,7 +357,9 @@ function UpcomingEventGlassCard({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <span className="text-lg font-semibold">{formatDate(event.startDate, event.timezone)}</span>
+                <span className="text-lg font-semibold">
+                  {formatEventListingDateLabel(event, formatDate)}
+                </span>
               </div>
               <div className="flex w-full items-start gap-3 text-gray-700">
                 <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-green-100 transition-transform duration-300 group-hover:scale-110">
